@@ -1,62 +1,72 @@
 import React from 'react';
 import Link from 'next/link';
-import { InputField } from '@/components/ui/InputField';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { MdOutlineSecurity, MdArrowForward } from 'react-icons/md';
 
 export default function LoginPage() {
   return (
     <>
-      <header className="mb-12">
+      <header className="mb-10">
         <div className="inline-flex items-center gap-2 mb-8">
-          <span className="material-symbols-outlined text-3xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>shield_with_heart</span>
+          <MdOutlineSecurity className="text-3xl text-primary" />
           <span className="text-2xl font-black tracking-tight text-primary uppercase font-sans">Empanti</span>
         </div>
         <h1 className="text-4xl font-black text-on-surface tracking-tight mb-2 font-sans">Selamat Datang Kembali</h1>
         <p className="text-on-surface-variant leading-relaxed font-sans">Silakan masuk untuk melanjutkan akses ke sistem manajemen panti.</p>
       </header>
 
+      {/* Verification Banner */}
+      <div className="mb-8 p-4 bg-red-50 rounded-lg flex items-center justify-between">
+        <span className="text-sm font-semibold text-red-700">Email Anda belum diverifikasi</span>
+        <button type="button" className="text-xs font-bold text-red-700 hover:text-red-800 underline tracking-wider uppercase">
+          Kirim Ulang Verifikasi
+        </button>
+      </div>
+
       {/* Login Form */}
-      <form action="#" className="space-y-6">
-        <div className="space-y-4">
-          <InputField 
-            id="email"
-            label="Alamat Email"
-            type="email"
-            placeholder="nama@email.com"
-          />
+      <form action="#" className="space-y-8">
+        <div className="space-y-6">
+          {/* Email Input */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="email" className="text-[11px] font-public-sans font-bold text-on-surface-variant uppercase tracking-widest">
+              Alamat Email
+            </label>
+            <input 
+              id="email"
+              type="email"
+              placeholder="nama@email.com"
+              className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 text-on-surface transition-colors outline-none"
+            />
+          </div>
           
-          <div className="space-y-1">
-            <div className="flex justify-between items-end mb-1">
-                <span className="invisible text-xs">Spacer</span>
-                <Link href="/forgot-password" className="text-xs font-bold text-primary hover:text-on-primary-fixed-variant transition-colors font-public-sans uppercase tracking-widest">
-                    Lupa Sandi?
-                </Link>
+          {/* Password Input */}
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between items-center">
+              <label htmlFor="password" className="text-[11px] font-public-sans font-bold text-on-surface-variant uppercase tracking-widest">
+                Kata Sandi
+              </label>
+              <Link href="/forgot-password" className="text-[11px] font-bold text-primary hover:text-on-primary-fixed-variant transition-colors font-public-sans uppercase tracking-widest">
+                  Lupa Sandi?
+              </Link>
             </div>
-            {/* 
-               Wrapping InputField lightly to visually align the Lupa Sandi block. 
-               The InputField takes label="KATA SANDI" so we position the forget-password element nicely
-            */}
-            <div className="-mt-6">
-                <InputField 
-                    id="password"
-                    label="Kata Sandi"
-                    type="password"
-                    placeholder="••••••••"
-                />
-            </div>
+            <input 
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 text-on-surface transition-colors outline-none"
+            />
           </div>
         </div>
 
         <div className="flex items-center gap-3 py-2">
-          <input className="rounded border-outline-variant/50 text-primary focus:ring-primary-container h-4 w-4 bg-surface-container-lowest" id="remember" type="checkbox" />
-          <label className="text-sm text-on-surface-variant font-sans" htmlFor="remember">Ingat saya di perangkat ini</label>
+          <input className="rounded border-gray-300 text-primary focus:ring-primary-container h-4 w-4 bg-transparent cursor-pointer" id="remember" type="checkbox" />
+          <label className="text-sm text-on-surface-variant font-sans cursor-pointer" htmlFor="remember">Ingat saya di perangkat ini</label>
         </div>
 
-        <div className="space-y-4 pt-4">
-          <PrimaryButton className="w-full py-[18px] flex justify-center items-center gap-2 text-lg">
+        <div className="space-y-4 pt-2">
+          <button type="submit" className="w-full py-4 bg-primary hover:bg-primary-container text-white hover:text-on-primary-container rounded-xl font-bold flex justify-center items-center gap-2 text-lg transition-colors shadow-sm">
             Masuk Ke Akun
-            <span className="material-symbols-outlined">arrow_forward</span>
-          </PrimaryButton>
+            <MdArrowForward className="text-xl" />
+          </button>
 
           {/* Divider */}
           <div className="relative py-4">
@@ -69,7 +79,7 @@ export default function LoginPage() {
           </div>
 
           {/* Secondary Button / SSO */}
-          <button className="w-full py-[16px] bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest hover:scale-[1.01] transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-pointer" type="button">
+          <button className="w-full py-4 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-pointer" type="button">
             <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
@@ -81,14 +91,20 @@ export default function LoginPage() {
         </div>
       </form>
 
-      {/* Toggle Links */}
-      <div className="mt-12 text-center">
-        <p className="text-on-surface-variant font-sans">
+      {/* Toggle Links & Footer */}
+      <div className="mt-12 text-center flex flex-col gap-8">
+        <p className="text-on-surface-variant font-sans text-sm">
           Belum memiliki akun?{' '}
           <Link className="text-primary font-bold hover:underline ml-1" href="/register">
             Daftar sekarang
           </Link>
         </p>
+        
+        <div className="flex items-center justify-center gap-6 font-public-sans text-xs uppercase tracking-widest text-on-surface-variant/60">
+            <Link href="/privasi" className="hover:text-primary transition-colors">Kebijakan Privasi</Link>
+            <span>&bull;</span>
+            <Link href="/ketentuan" className="hover:text-primary transition-colors">Ketentuan Layanan</Link>
+        </div>
       </div>
     </>
   );

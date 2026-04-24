@@ -10,6 +10,7 @@ import {
   FiShield,
 } from 'react-icons/fi';
 import { FaRegHeart, FaRunning } from 'react-icons/fa';
+import { MdAddShoppingCart, MdOutlineDeleteOutline, MdArrowBack } from 'react-icons/md';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 
 /* ──────────────────────────────────────────
@@ -72,7 +73,41 @@ export default function DetailPengunjungPage() {
   const [tujuanField, setTujuanField] = useState('');
   const [showModal, setShowModal] = useState(false);
 
-  const currentStep = 2;
+  // Multistep Logic
+  const [formStep, setFormStep] = useState<'detail' | 'cart'>('detail');
+
+  // Mini Smart Cart State
+  const [cartItems, setCartItems] = useState<{id: number; name: string; qty: number}[]>([]);
+  const [itemName, setItemName] = useState('');
+  const [itemQty, setItemQty] = useState('');
+
+  const currentStep = formStep === 'detail' ? 2 : 2; // Keep stepper at 2 for both to imply they are part of "Detail" step, or we could change it.
+
+  const handleNext = () => {
+    if (bringDonation && formStep === 'detail') {
+      setFormStep('cart');
+    } else {
+      setShowModal(true);
+      // Simulate Unified Payload compilation
+      console.log('--- UNIFIED PAYLOAD READY TO SUBMIT ---');
+      console.log({
+        visit: { identityType, namaField, whatsappField, selectedCategory, tujuanField },
+        donations: bringDonation ? cartItems : []
+      });
+    }
+  };
+
+  const handleAddToCart = () => {
+    if (itemName.trim() && itemQty) {
+      setCartItems([...cartItems, { id: Date.now(), name: itemName, qty: parseInt(itemQty) }]);
+      setItemName('');
+      setItemQty('');
+    }
+  };
+
+  const handleRemoveItem = (id: number) => {
+    setCartItems(cartItems.filter(item => item.id !== id));
+  };
 
   return (
     <div className="bg-surface min-h-screen">
@@ -144,7 +179,9 @@ export default function DetailPengunjungPage() {
         <div className="max-w-2xl mx-auto">
 
           {/* ── JENIS IDENTITAS ── */}
-          <div className="mb-8">
+          {formStep === 'detail' ? (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="mb-8">
             <h3 className="font-public-sans text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface-variant text-center mb-4">
               Jenis Identitas
             </h3>
@@ -342,11 +379,68 @@ export default function DetailPengunjungPage() {
               CTA BUTTON
              ═══════════════════════════════════════ */}
           <PrimaryButton
-            onClick={() => setShowModal(true)}
+            onClick={handleNext}
             className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
           >
-            Lanjut ke Konfirmasi
+            {bringDonation && formStep === 'detail' ? 'Lanjut Isi Data Barang' : 'Lanjut ke Konfirmasi'}
           </PrimaryButton>
+          </div>
+          ) : (
+            <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+              <div className="mb-6 flex items-center gap-4">
+                <button onClick={() => setFormStep('detail')} className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-colors">
+                  <MdArrowBack className="text-xl" />
+                </button>
+                <div>
+                  <h3 className="font-sans font-black text-xl text-on-surface">Data Barang Bawaan</h3>
+                  <p className="font-sans text-xs text-on-surface-variant mt-1">Tambahkan barang yang akan Anda bawa saat kunjungan.</p>
+                </div>
+              </div>
+
+              <GlassContainer className="p-6 mb-8">
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <label className="text-xs font-public-sans font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">Nama Barang</label>
+                    <input type="text" value={itemName} onChange={(e)=>setItemName(e.target.value)} placeholder="Misal: Buku Cerita Anak" className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/15 focus:border-primary/40 focus:ring-0 font-sans text-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none" />
+                  </div>
+                  <div className="w-24">
+                    <label className="text-xs font-public-sans font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">Jumlah</label>
+                    <input type="number" value={itemQty} onChange={(e)=>setItemQty(e.target.value)} placeholder="0" className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/15 focus:border-primary/40 focus:ring-0 font-sans text-sm text-on-surface text-center outline-none" />
+                  </div>
+                  <button type="button" onClick={handleAddToCart} className="h-[46px] px-6 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl font-bold flex items-center justify-center transition-colors">
+                    <MdAddShoppingCart className="text-xl" />
+                  </button>
+                </div>
+                
+                <div className="mt-8 space-y-3">
+                  {cartItems.length === 0 ? (
+                    <div className="text-center py-8 border border-dashed border-outline-variant/20 rounded-xl">
+                      <p className="text-sm text-on-surface-variant font-sans">Belum ada barang ditambahkan.</p>
+                    </div>
+                  ) : (
+                    cartItems.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm">
+                        <div>
+                          <p className="font-sans font-bold text-on-surface text-sm">{item.name}</p>
+                          <p className="font-sans text-xs text-on-surface-variant mt-0.5">{item.qty} item</p>
+                        </div>
+                        <button onClick={() => handleRemoveItem(item.id)} className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors">
+                          <MdOutlineDeleteOutline className="text-lg" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </GlassContainer>
+              
+              <PrimaryButton
+                onClick={handleNext}
+                className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
+              >
+                Konfirmasi Seluruh Data
+              </PrimaryButton>
+            </div>
+          )}
 
           {/* Confirmation Modal */}
           <ConfirmationModal

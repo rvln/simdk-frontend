@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiChevronDown, FiDollarSign, FiPackage } from "react-icons/fi";
+import { FiChevronDown, FiDollarSign, FiPackage, FiUser } from "react-icons/fi";
 
 const navLinks = [
   { href: "/", label: "Beranda" },
@@ -31,6 +31,7 @@ const donasiSubmenus = [
 export const Navbar = () => {
   const pathname = usePathname();
   const [donasiOpen, setDonasiOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // MOCK LOGIN STATE
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -140,18 +141,32 @@ export const Navbar = () => {
 
         {/* Auth CTA */}
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="font-sans font-medium text-on-surface-variant hover:text-primary transition-colors text-base px-4 py-2"
-          >
-            Masuk
-          </Link>
-          <Link
-            href="/register"
-            className="font-sans font-bold bg-primary text-white hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-lg px-6 py-2 text-base shadow-sm"
-          >
-            Daftar
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/profil-publik"
+              className="flex items-center gap-2 font-sans font-bold text-on-surface hover:text-primary transition-colors text-sm px-3 py-1.5 bg-surface-container-low rounded-full shadow-sm hover:shadow-md"
+            >
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <FiUser className="text-lg" />
+              </div>
+              <span className="hidden md:block">Profil Saya</span>
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="font-sans font-medium text-on-surface-variant hover:text-primary transition-colors text-base px-4 py-2"
+              >
+                Masuk
+              </Link>
+              <Link
+                href="/register"
+                className="font-sans font-bold bg-primary text-white hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-lg px-6 py-2 text-base shadow-sm"
+              >
+                Daftar
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

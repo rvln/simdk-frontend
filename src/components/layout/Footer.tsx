@@ -34,8 +34,8 @@ export const Footer = () => {
             <ul className="flex flex-col gap-4 font-sans text-sm text-[rgba(209,250,229,0.6)]">
               <li><Link href="/profil" className="hover:text-white transition-colors">Visi dan Misi</Link></li>
               <li><Link href="/jadwal-kunjungan" className="hover:text-white transition-colors">Jadwal Kunjungan</Link></li>
-              <li><Link href="/donasi" className="hover:text-white transition-colors">Donasi Barang</Link></li>
-              <li><Link href="/donasi" className="hover:text-white transition-colors">Donasi Online</Link></li>
+              <li><Link href="/donasi/barang" className="hover:text-white transition-colors">Donasi Barang</Link></li>
+              <li><Link href="/donasi/finansial" className="hover:text-white transition-colors">Donasi Online</Link></li>
               <li><Link href="/profil" className="hover:text-white transition-colors">Sejarah</Link></li>
             </ul>
           </div>

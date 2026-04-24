@@ -1,57 +1,75 @@
 import React from 'react';
 import Link from 'next/link';
-import { InputField } from '@/components/ui/InputField';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { MdOutlineSecurity, MdArrowForward, MdInfoOutline } from 'react-icons/md';
 
 export default function RegisterPage() {
   return (
     <>
-      <header className="mb-12">
+      <header className="mb-10">
         <div className="inline-flex items-center gap-2 mb-8">
-          <span className="material-symbols-outlined text-3xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>shield_with_heart</span>
+          <MdOutlineSecurity className="text-3xl text-primary" />
           <span className="text-2xl font-black tracking-tight text-primary uppercase font-sans">Empanti</span>
         </div>
-        <h1 className="text-4xl font-black text-on-surface tracking-tight mb-2 font-sans">Buat Akun Baru</h1>
-        <p className="text-on-surface-variant leading-relaxed font-sans">Bergabunglah bersama kami untuk memantau langsung jejak kebaikan Anda.</p>
+        <h1 className="text-4xl font-black text-on-surface tracking-tight mb-2 font-sans">Bergabung Bersama Kami</h1>
+        <p className="text-on-surface-variant leading-relaxed font-sans">Buat akun untuk mulai menjadwalkan kunjungan Anda.</p>
       </header>
 
       {/* Registration Form */}
-      <form action="#" className="space-y-6">
-        <div className="space-y-4">
-          <InputField 
-            id="name"
-            label="Nama Lengkap"
-            type="text"
-            placeholder="John Doe"
-          />
+      <form action="#" className="space-y-8">
+        <div className="space-y-6">
+          {/* Name Input */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="name" className="text-[11px] font-public-sans font-bold text-on-surface-variant uppercase tracking-widest">
+              Nama Lengkap
+            </label>
+            <input 
+              id="name"
+              type="text"
+              placeholder="John Doe"
+              className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 text-on-surface transition-colors outline-none"
+            />
+          </div>
 
-          <InputField 
-            id="email"
-            label="Alamat Email"
-            type="email"
-            placeholder="nama@email.com"
-          />
-
-          <InputField 
-            id="password"
-            label="Kata Sandi"
-            type="password"
-            placeholder="••••••••"
-          />
+          {/* Email Input */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="email" className="text-[11px] font-public-sans font-bold text-on-surface-variant uppercase tracking-widest">
+              Alamat Email
+            </label>
+            <input 
+              id="email"
+              type="email"
+              placeholder="nama@email.com"
+              className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 text-on-surface transition-colors outline-none"
+            />
+          </div>
+          
+          {/* Password Input */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="password" className="text-[11px] font-public-sans font-bold text-on-surface-variant uppercase tracking-widest">
+              Kata Sandi
+            </label>
+            <input 
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 text-on-surface transition-colors outline-none"
+            />
+          </div>
         </div>
 
-        <div className="flex items-start gap-3 py-2 pt-4">
-          <input className="my-1 rounded border-outline-variant/50 text-primary focus:ring-primary-container h-4 w-4 bg-surface-container-lowest flex-shrink-0" id="terms" type="checkbox" />
-          <label className="text-sm text-on-surface-variant font-sans leading-relaxed" htmlFor="terms">
-            Dengan mendaftar, saya menyetujui <span className="text-primary font-semibold hover:underline cursor-pointer">Ketentuan Layanan</span> dan <span className="text-primary font-semibold hover:underline cursor-pointer">Kebijakan Privasi</span> Empanti.
-          </label>
+        {/* Info Box Replacing Checkbox */}
+        <div className="flex items-start gap-3 py-2">
+          <MdInfoOutline className="text-primary mt-0.5 text-lg shrink-0" />
+          <p className="text-sm text-on-surface-variant font-sans leading-relaxed opacity-80">
+            Setelah mendaftar, kami akan mengirimkan tautan verifikasi ke email Anda. Akun Anda baru dapat digunakan setelah email diverifikasi.
+          </p>
         </div>
 
-        <div className="space-y-4 pt-4">
-          <PrimaryButton className="w-full py-[18px] flex justify-center items-center gap-2 text-lg">
-            Daftar Sekarang
-            <span className="material-symbols-outlined">arrow_forward</span>
-          </PrimaryButton>
+        <div className="space-y-4 pt-2">
+          <button type="submit" className="w-full py-4 bg-primary hover:bg-primary-container text-white hover:text-on-primary-container rounded-xl font-bold flex justify-center items-center gap-2 text-lg transition-colors shadow-sm">
+            Daftar Akun
+            <MdArrowForward className="text-xl" />
+          </button>
 
           {/* Divider */}
           <div className="relative py-4">
@@ -64,7 +82,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Secondary Button / SSO */}
-          <button className="w-full py-[16px] bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest hover:scale-[1.01] transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-pointer" type="button">
+          <button className="w-full py-4 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-pointer" type="button">
             <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
@@ -76,14 +94,20 @@ export default function RegisterPage() {
         </div>
       </form>
 
-      {/* Toggle Links */}
-      <div className="mt-12 text-center">
-        <p className="text-on-surface-variant font-sans">
+      {/* Toggle Links & Footer */}
+      <div className="mt-12 text-center flex flex-col gap-8">
+        <p className="text-on-surface-variant font-sans text-sm">
           Sudah memiliki akun?{' '}
           <Link className="text-primary font-bold hover:underline ml-1" href="/login">
             Masuk di sini
           </Link>
         </p>
+        
+        <div className="flex items-center justify-center gap-6 font-public-sans text-xs uppercase tracking-widest text-on-surface-variant/60">
+            <Link href="/privasi" className="hover:text-primary transition-colors">Kebijakan Privasi</Link>
+            <span>&bull;</span>
+            <Link href="/ketentuan" className="hover:text-primary transition-colors">Ketentuan Layanan</Link>
+        </div>
       </div>
     </>
   );

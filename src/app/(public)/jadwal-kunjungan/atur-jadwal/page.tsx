@@ -15,6 +15,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 import { FaRegCalendarCheck } from "react-icons/fa";
+import { MdMailOutline, MdArrowForward } from "react-icons/md";
 
 /* ──────────────────────────────────────────
    Calendar helpers
@@ -147,6 +148,10 @@ const steps: StepInfo[] = [
    COMPONENT
    ══════════════════════════════════════════ */
 export default function AturJadwalPage() {
+  // --- VERIFICATION GATE SIMULATION ---
+  // Default false to show the verification gate for audit purposes
+  const [isVerified, setIsVerified] = useState(false);
+
   const [viewYear, setViewYear] = useState(2024);
   const [viewMonth, setViewMonth] = useState(9); // October
   const [selectedDay, setSelectedDay] = useState<number>(9);
@@ -184,6 +189,31 @@ export default function AturJadwalPage() {
 
   return (
     <div className="bg-surface min-h-screen">
+      {/* ═══════════════════════════════════════
+          VERIFICATION GATE OVERLAY
+         ═══════════════════════════════════════ */}
+      {!isVerified && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-surface/60 backdrop-blur-md">
+          <div className="bg-surface-container-lowest p-8 md:p-12 rounded-2xl shadow-ambient max-w-lg w-full text-center flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <MdMailOutline className="text-3xl text-primary" />
+            </div>
+            <h2 className="text-2xl font-black text-on-surface mb-3 font-sans">Verifikasi Email Diperlukan</h2>
+            <p className="text-on-surface-variant font-sans text-sm leading-relaxed mb-8">
+              Untuk menjaga transparansi dan kenyamanan bersama, setiap pengajuan jadwal kunjungan mewajibkan Anda untuk memverifikasi alamat email terlebih dahulu.
+            </p>
+            <PrimaryButton onClick={() => setIsVerified(true)} className="w-full flex items-center justify-center gap-2 py-4">
+              Kirim Ulang Verifikasi Email
+              <MdArrowForward className="text-lg" />
+            </PrimaryButton>
+            
+            <button onClick={() => setIsVerified(true)} className="mt-6 text-xs text-on-surface-variant/50 hover:text-primary transition-colors cursor-pointer italic font-public-sans uppercase tracking-widest">
+              [DEV] Lewati Simulasi Ini
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ═══════════════════════════════════════
           AUTHENTICATED HEADER BAR
          ═══════════════════════════════════════ */}
@@ -273,7 +303,7 @@ export default function AturJadwalPage() {
                 {MONTH_NAMES[viewMonth]} {viewYear}
               </h2>
               <button
-                onClick={goToNext}
+               onClick={goToNext}
                 aria-label="Bulan berikutnya"
                 className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors"
               >
