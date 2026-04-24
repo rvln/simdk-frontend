@@ -75,10 +75,12 @@ export default function ValidasiDonasiPage() {
   const [activeTab, setActiveTab] = useState<DonationType>("BARANG");
   const [selectedDonation, setSelectedDonation] = useState<DonationItem | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
 
   const handleClose = () => {
     setSelectedDonation(null);
     setRejectReason("");
+    setIsRejecting(false);
   };
 
   const handleTabSwitch = (tab: DonationType) => {
@@ -165,6 +167,7 @@ export default function ValidasiDonasiPage() {
                   onClick={() => {
                     setSelectedDonation(item);
                     setRejectReason("");
+                    setIsRejecting(false);
                   }}
                   className={`group flex items-center p-5 rounded-2xl cursor-pointer transition-all duration-300 ${
                     isSelected
@@ -284,15 +287,17 @@ export default function ValidasiDonasiPage() {
                   </div>
                   
                   {/* Rejection Field */}
-                  <div className="mt-2">
-                    <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-2">Alasan Penolakan (Opsional)</p>
-                    <textarea 
-                      value={rejectReason}
-                      onChange={(e) => setRejectReason(e.target.value)}
-                      placeholder="Alasan Penolakan (Jika barang tidak layak/rusak)..."
-                      className="w-full bg-slate-50 border-none shadow-sm rounded-xl p-4 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all resize-none h-28"
-                    ></textarea>
-                  </div>
+                  {isRejecting && (
+                    <div className="mt-4 animate-in fade-in slide-in-from-top-2">
+                      <p className="text-[10px] font-bold text-red-500 tracking-wider uppercase mb-2">Alasan Penolakan (Wajib Diisi)</p>
+                      <textarea 
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        placeholder="Masukkan alasan penolakan (misal: barang rusak, tidak sesuai kebutuhan)..."
+                        className="w-full bg-red-50/50 border border-red-100 shadow-inner rounded-xl p-4 text-sm text-red-900 placeholder-red-300 focus:outline-none focus:ring-2 focus:ring-red-500/30 transition-all resize-none h-28"
+                      ></textarea>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
@@ -308,28 +313,49 @@ export default function ValidasiDonasiPage() {
             <div className="p-6 flex flex-col gap-3 bg-white border-t border-gray-50/50 mt-auto">
               {selectedDonation.type === "BARANG" ? (
                 <>
+                  {!isRejecting && (
+                    <button 
+                      className="w-full py-3.5 bg-teal-700 text-white font-bold rounded-xl shadow-[0_4px_20px_rgba(15,118,110,0.2)] hover:shadow-[0_6px_24px_rgba(15,118,110,0.3)] hover:-translate-y-0.5 border-none transition-all"
+                      onClick={() => {
+                        alert("Donasi Divalidasi & Disetujui!");
+                        handleClose();
+                      }}
+                    >
+                      Validasi & Masukkan Inventaris
+                    </button>
+                  )}
                   <button 
-                    className="w-full py-3.5 bg-teal-700 text-white font-bold rounded-xl shadow-[0_4px_20px_rgba(15,118,110,0.2)] hover:shadow-[0_6px_24px_rgba(15,118,110,0.3)] hover:-translate-y-0.5 border-none transition-all"
+                    className={`w-full py-3.5 font-bold rounded-xl transition-all border-none ${
+                      isRejecting 
+                        ? 'bg-red-600 text-white hover:bg-red-700 shadow-md hover:-translate-y-0.5' 
+                        : 'text-red-600 bg-transparent hover:bg-red-50'
+                    }`}
                     onClick={() => {
-                      alert("Donasi Divalidasi & Disetujui!");
-                      handleClose();
-                    }}
-                  >
-                    Validasi & Masukkan Inventaris
-                  </button>
-                  <button 
-                    className="w-full py-3.5 text-red-600 bg-transparent border-none font-bold hover:bg-red-50 rounded-xl transition-colors"
-                    onClick={() => {
-                      if(!rejectReason.trim()) {
-                        alert("Mohon isi alasan penolakan terlebih dahulu!");
-                        return;
+                      if (!isRejecting) {
+                        setIsRejecting(true);
+                      } else {
+                        if(!rejectReason.trim()) {
+                          alert("Mohon isi alasan penolakan terlebih dahulu!");
+                          return;
+                        }
+                        alert(`Donasi Ditolak. Alasan tercatat di RejectedLog:\n${rejectReason}`);
+                        handleClose();
                       }
-                      alert(`Donasi Ditolak. Alasan tercatat di RejectedLog:\n${rejectReason}`);
-                      handleClose();
                     }}
                   >
-                    Tolak & Catat Log
+                    {isRejecting ? 'Konfirmasi Tolak & Catat Log' : 'Tolak Donasi'}
                   </button>
+                  {isRejecting && (
+                    <button
+                      className="w-full py-3 text-gray-500 font-bold bg-transparent hover:bg-gray-100 rounded-xl transition-colors border-none"
+                      onClick={() => {
+                        setIsRejecting(false);
+                        setRejectReason("");
+                      }}
+                    >
+                      Batal
+                    </button>
+                  )}
                 </>
               ) : (
                 <div className="w-full py-3.5 bg-green-50 text-green-700 font-bold text-center rounded-xl border border-green-200">

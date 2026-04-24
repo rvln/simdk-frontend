@@ -10,7 +10,8 @@ import {
   MdCheckCircle, 
   MdOutlineTask, 
   MdOutlineHistory, 
-  MdOutlineVerifiedUser 
+  MdOutlineVerifiedUser,
+  MdOutlineCheckCircle
 } from "react-icons/md";
 
 export default function DashboardPage() {
@@ -216,6 +217,69 @@ export default function DashboardPage() {
           </GlassContainer>
         </section>
       </div>
+
+      {/* ──────────────────────────────────────────
+          Audit Timeline Logistik
+          ────────────────────────────────────────── */}
+      <section className="mt-8">
+        <GlassContainer className="p-8 shadow-ambient flex flex-col md:flex-row gap-8">
+          <div className="md:w-1/3">
+            <h3 className="text-xl font-bold text-primary mb-2 font-sans">
+              Audit Trail Logistik
+            </h3>
+            <p className="text-sm text-on-surface-variant font-public-sans mb-6">
+              Lacak histori status dan pergerakan inventaris secara real-time. Memastikan transparansi dari penerimaan hingga distribusi.
+            </p>
+          </div>
+          
+          <div className="md:w-2/3 relative pl-6">
+            {/* Vertical Line */}
+            <div className="absolute left-[35px] top-4 bottom-8 w-[2px] bg-gradient-to-b from-primary via-tertiary to-outline-variant/30"></div>
+            
+            {/* Step 1 */}
+            <div className="flex gap-6 items-start relative mb-8">
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white ring-8 ring-surface-container-lowest z-10 flex-shrink-0 shadow-sm">
+                <MdOutlineInventory2 className="text-lg" />
+              </div>
+              <div className="flex-1 pt-1.5 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white">
+                <h4 className="font-bold text-base text-on-surface font-sans">Barang Diterima & Divalidasi</h4>
+                <p className="text-on-surface-variant text-sm mt-1 flex items-center gap-2">
+                  <span className="font-semibold text-primary">Ahmad Faisal</span> &bull; 10:00 WITA
+                </p>
+                <p className="text-primary font-public-sans text-[10px] font-bold uppercase tracking-widest mt-3 bg-primary/10 w-fit px-2 py-1 rounded">Log 1</p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex gap-6 items-start relative mb-8">
+              <div className="w-10 h-10 rounded-full bg-tertiary flex items-center justify-center text-white ring-8 ring-surface-container-lowest z-10 flex-shrink-0 shadow-sm">
+                <MdOutlineTask className="text-lg" />
+              </div>
+              <div className="flex-1 pt-1.5 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white">
+                <h4 className="font-bold text-base text-on-surface font-sans">Disortir & Masuk Gudang Utama</h4>
+                <p className="text-on-surface-variant text-sm mt-1 flex items-center gap-2">
+                  <span className="font-semibold text-tertiary">Kategori Pakaian</span> &bull; 11:30 WITA
+                </p>
+                <p className="text-tertiary font-public-sans text-[10px] font-bold uppercase tracking-widest mt-3 bg-tertiary/10 w-fit px-2 py-1 rounded">Log 2</p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex gap-6 items-start relative">
+              <div className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-outline ring-8 ring-surface-container-lowest z-10 flex-shrink-0">
+                <MdOutlineCheckCircle className="text-lg" />
+              </div>
+              <div className="flex-1 pt-1.5 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white">
+                <h4 className="font-bold text-base text-on-surface font-sans text-on-surface-variant">Menunggu Distribusi</h4>
+                <p className="text-on-surface-variant/60 text-sm mt-1 flex items-center gap-2">
+                  <span>Target: Asrama Putra</span> &bull; Menunggu Jadwal
+                </p>
+                <p className="text-outline font-public-sans text-[10px] font-bold uppercase tracking-widest mt-3 bg-surface-variant/50 w-fit px-2 py-1 rounded">Log 3</p>
+              </div>
+            </div>
+          </div>
+        </GlassContainer>
+      </section>
 
       {/* Decorative Trust Badge Bottom */}
       <div className="mt-16 flex justify-center opacity-60 pb-8">
