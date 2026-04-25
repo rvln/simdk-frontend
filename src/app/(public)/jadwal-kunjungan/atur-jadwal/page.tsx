@@ -484,7 +484,7 @@ export default function AturJadwalPage() {
          ═══════════════════════════════════════ */}
       <section className="px-6 pb-8">
         <div className="max-w-xl mx-auto">
-          <Link href="/jadwal-kunjungan/detail">
+          <Link href={`/jadwal-kunjungan/detail?capacity_id=${activeSession?.id ?? ''}&date=${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}&session_label=${encodeURIComponent(activeSession?.label ?? '')}&session_time=${encodeURIComponent(activeSession?.time ?? '')}`}>
             <PrimaryButton
               className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
               disabled={!selectedSession}

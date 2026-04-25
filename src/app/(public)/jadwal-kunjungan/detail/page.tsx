@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GlassContainer } from '@/components/ui/GlassContainer';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import {
   FiCalendar,
   FiClock,
   FiShield,
+  FiAlertCircle,
 } from 'react-icons/fi';
 import { FaRegHeart, FaRunning } from 'react-icons/fa';
 import { MdAddShoppingCart, MdOutlineDeleteOutline, MdArrowBack } from 'react-icons/md';
@@ -61,10 +62,29 @@ const visitCategories: VisitCategory[] = [
 ];
 
 /* ══════════════════════════════════════════
+   Inventory item type (fetched from API)
+   ══════════════════════════════════════════ */
+interface InventoryItem {
+  id: string;
+  itemName: string;
+  category: string;
+  stock: number;
+  unit: string;
+}
+
+/* ══════════════════════════════════════════
    COMPONENT
    ══════════════════════════════════════════ */
-export default function DetailPengunjungPage() {
+function DetailPengunjungContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Read schedule selection from URL params (set by atur-jadwal page)
+  const capacityId = searchParams.get('capacity_id') || '';
+  const scheduledDate = searchParams.get('date') || '';
+  const sessionLabel = decodeURIComponent(searchParams.get('session_label') || '');
+  const sessionTime = decodeURIComponent(searchParams.get('session_time') || '');
+
   const [identityType, setIdentityType] = useState<IdentityType>('individu');
   const [selectedCategory, setSelectedCategory] = useState<string>('biasa');
   const [bringDonation, setBringDonation] = useState(false);
@@ -73,39 +93,107 @@ export default function DetailPengunjungPage() {
   const [tujuanField, setTujuanField] = useState('');
   const [showModal, setShowModal] = useState(false);
 
+  // API integration state
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   // Multistep Logic
   const [formStep, setFormStep] = useState<'detail' | 'cart'>('detail');
 
-  // Mini Smart Cart State
-  const [cartItems, setCartItems] = useState<{id: number; name: string; qty: number}[]>([]);
-  const [itemName, setItemName] = useState('');
+  // Smart Cart State (uses inventory UUIDs from API)
+  const [cartItems, setCartItems] = useState<{id: string; name: string; qty: number; inventory_id: string}[]>([]);
+  const [selectedInventoryId, setSelectedInventoryId] = useState('');
   const [itemQty, setItemQty] = useState('');
 
-  const currentStep = formStep === 'detail' ? 2 : 2; // Keep stepper at 2 for both to imply they are part of "Detail" step, or we could change it.
+  // Inventory items fetched from backend
+  const [inventoryList, setInventoryList] = useState<InventoryItem[]>([]);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventories`, {
+      headers: { 'Accept': 'application/json' },
+    })
+      .then(res => res.ok ? res.json() : { data: [] })
+      .then(json => setInventoryList(json.data || []))
+      .catch(() => setInventoryList([]));
+  }, []);
+
+  const currentStep = formStep === 'detail' ? 2 : 2;
 
   const handleNext = () => {
     if (bringDonation && formStep === 'detail') {
       setFormStep('cart');
     } else {
+      setErrorMessage('');
       setShowModal(true);
-      // Simulate Unified Payload compilation
-      console.log('--- UNIFIED PAYLOAD READY TO SUBMIT ---');
-      console.log({
-        visit: { identityType, namaField, whatsappField, selectedCategory, tujuanField },
-        donations: bringDonation ? cartItems : []
+    }
+  };
+
+  const handleSubmitToApi = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+    setShowModal(false);
+
+    const payload: Record<string, unknown> = {
+      capacity_id: capacityId,
+      bringsDonation: bringDonation,
+    };
+
+    if (bringDonation && cartItems.length > 0) {
+      payload.donorPhone = whatsappField;
+      payload.items = cartItems.map(item => ({
+        inventory_id: item.inventory_id,
+        qty: item.qty,
+      }));
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token') || '';
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/visits`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
       });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 422 && data.errors) {
+          const msgs = Object.values(data.errors).flat().join(' ');
+          setErrorMessage(msgs);
+        } else {
+          setErrorMessage(data.message || 'Terjadi kesalahan. Silakan coba lagi.');
+        }
+        return;
+      }
+
+      router.push('/jadwal-kunjungan/konfirmasi');
+    } catch {
+      setErrorMessage('Tidak dapat terhubung ke server. Periksa koneksi Anda.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleAddToCart = () => {
-    if (itemName.trim() && itemQty) {
-      setCartItems([...cartItems, { id: Date.now(), name: itemName, qty: parseInt(itemQty) }]);
-      setItemName('');
+    if (selectedInventoryId && itemQty) {
+      const inv = inventoryList.find(i => i.id === selectedInventoryId);
+      if (!inv) return;
+      setCartItems([...cartItems, {
+        id: `${Date.now()}`,
+        name: `${inv.itemName} (${inv.unit})`,
+        qty: parseInt(itemQty),
+        inventory_id: inv.id,
+      }]);
+      setSelectedInventoryId('');
       setItemQty('');
     }
   };
 
-  const handleRemoveItem = (id: number) => {
+  const handleRemoveItem = (id: string) => {
     setCartItems(cartItems.filter(item => item.id !== id));
   };
 
@@ -337,6 +425,14 @@ export default function DetailPengunjungPage() {
           {/* ═══════════════════════════════════════
               RINGKASAN KUNJUNGAN
              ═══════════════════════════════════════ */}
+          {/* ── ERROR MESSAGE ── */}
+          {errorMessage && (
+            <div className="mb-6 flex items-start gap-3 bg-red-50/80 rounded-xl px-5 py-4 animate-in fade-in duration-300">
+              <FiAlertCircle className="text-red-500 text-base flex-shrink-0 mt-0.5" />
+              <p className="font-sans text-sm text-red-600 leading-relaxed">{errorMessage}</p>
+            </div>
+          )}
+
           <GlassContainer className="p-6 md:p-8 bg-surface-container-low/60 mb-6">
             <h3 className="font-sans font-black text-lg text-on-surface mb-5">
               Ringkasan Kunjungan
@@ -353,7 +449,7 @@ export default function DetailPengunjungPage() {
                     Tanggal Kunjungan
                   </span>
                   <span className="block font-sans text-sm font-bold text-on-surface mt-0.5">
-                    Kamis, 12 Desember 2024
+                    {scheduledDate || 'Belum dipilih'}
                   </span>
                 </div>
               </div>
@@ -368,7 +464,7 @@ export default function DetailPengunjungPage() {
                     Sesi Terpilih
                   </span>
                   <span className="block font-sans text-sm font-bold text-on-surface mt-0.5">
-                    Sesi Siang (13:00 - 15:30)
+                    Sesi {sessionLabel} ({sessionTime})
                   </span>
                 </div>
               </div>
@@ -380,9 +476,10 @@ export default function DetailPengunjungPage() {
              ═══════════════════════════════════════ */}
           <PrimaryButton
             onClick={handleNext}
+            disabled={isLoading}
             className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
           >
-            {bringDonation && formStep === 'detail' ? 'Lanjut Isi Data Barang' : 'Lanjut ke Konfirmasi'}
+            {isLoading ? 'Mengirim...' : bringDonation && formStep === 'detail' ? 'Lanjut Isi Data Barang' : 'Lanjut ke Konfirmasi'}
           </PrimaryButton>
           </div>
           ) : (
@@ -400,8 +497,19 @@ export default function DetailPengunjungPage() {
               <GlassContainer className="p-6 mb-8">
                 <div className="flex gap-3 items-end">
                   <div className="flex-1">
-                    <label className="text-xs font-public-sans font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">Nama Barang</label>
-                    <input type="text" value={itemName} onChange={(e)=>setItemName(e.target.value)} placeholder="Misal: Buku Cerita Anak" className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/15 focus:border-primary/40 focus:ring-0 font-sans text-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none" />
+                    <label className="text-xs font-public-sans font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">Pilih Barang</label>
+                    <select
+                      value={selectedInventoryId}
+                      onChange={(e) => setSelectedInventoryId(e.target.value)}
+                      className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/15 focus:border-primary/40 focus:ring-0 font-sans text-sm text-on-surface outline-none appearance-none"
+                    >
+                      <option value="">— Pilih dari daftar kebutuhan —</option>
+                      {inventoryList.map(inv => (
+                        <option key={inv.id} value={inv.id}>
+                          {inv.itemName} ({inv.unit}) — Stok: {inv.stock}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="w-24">
                     <label className="text-xs font-public-sans font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">Jumlah</label>
@@ -435,9 +543,10 @@ export default function DetailPengunjungPage() {
               
               <PrimaryButton
                 onClick={handleNext}
+                disabled={isLoading || cartItems.length === 0}
                 className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
               >
-                Konfirmasi Seluruh Data
+                {isLoading ? 'Mengirim...' : 'Konfirmasi Seluruh Data'}
               </PrimaryButton>
             </div>
           )}
@@ -446,12 +555,10 @@ export default function DetailPengunjungPage() {
           <ConfirmationModal
             isOpen={showModal}
             onClose={() => setShowModal(false)}
-            onConfirm={() => {
-              setShowModal(false);
-              router.push('/jadwal-kunjungan/konfirmasi');
-            }}
-            date="24 Okt 2023"
-            time="09:00 - 11:00"
+            onConfirm={handleSubmitToApi}
+            confirmText={isLoading ? 'Mengirim...' : 'Ya, Ajukan Kunjungan'}
+            date={scheduledDate}
+            time={`Sesi ${sessionLabel} (${sessionTime})`}
           />
 
           {/* ═══════════════════════════════════════
@@ -470,5 +577,17 @@ export default function DetailPengunjungPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function DetailPengunjungPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-surface min-h-screen flex items-center justify-center">
+        <p className="text-on-surface-variant font-sans text-sm animate-pulse">Memuat halaman...</p>
+      </div>
+    }>
+      <DetailPengunjungContent />
+    </Suspense>
   );
 }
