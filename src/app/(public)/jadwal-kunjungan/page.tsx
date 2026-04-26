@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { GlassContainer } from '@/components/ui/GlassContainer';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import React, { useState, useMemo } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { GlassContainer } from "@/components/ui/GlassContainer";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -13,20 +13,30 @@ import {
   FiCheckCircle,
   FiUsers,
   FiClock,
-} from 'react-icons/fi';
+} from "react-icons/fi";
 
 /* ──────────────────────────────────────────
    Calendar helpers
    ────────────────────────────────────────── */
-const DAY_LABELS = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
+const DAY_LABELS = ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"];
 const MONTH_NAMES = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
 ];
 
 interface CalendarDay {
   date: number;
-  month: 'prev' | 'current' | 'next';
+  month: "prev" | "current" | "next";
   fullDate: Date;
 }
 
@@ -40,16 +50,28 @@ function buildCalendarGrid(year: number, month: number): CalendarDay[] {
   // fill prev-month tail
   for (let i = firstDay - 1; i >= 0; i--) {
     const d = daysInPrev - i;
-    grid.push({ date: d, month: 'prev', fullDate: new Date(year, month - 1, d) });
+    grid.push({
+      date: d,
+      month: "prev",
+      fullDate: new Date(year, month - 1, d),
+    });
   }
   // current month
   for (let d = 1; d <= daysInMonth; d++) {
-    grid.push({ date: d, month: 'current', fullDate: new Date(year, month, d) });
+    grid.push({
+      date: d,
+      month: "current",
+      fullDate: new Date(year, month, d),
+    });
   }
   // next-month head (pad to 42 = 6 rows)
   const remaining = 42 - grid.length;
   for (let d = 1; d <= remaining; d++) {
-    grid.push({ date: d, month: 'next', fullDate: new Date(year, month + 1, d) });
+    grid.push({
+      date: d,
+      month: "next",
+      fullDate: new Date(year, month + 1, d),
+    });
   }
   return grid;
 }
@@ -64,36 +86,36 @@ interface VisitEvent {
   date: string;
   dateObj: Date;
   title: string;
-  status: 'booked' | 'open';
+  status: "booked" | "open";
   statusLabel: string;
   participantsLabel: string;
-  participantsIcon: 'users' | 'check';
+  participantsIcon: "users" | "check";
 }
 
 const upcomingEvents: VisitEvent[] = [
   {
-    id: '1',
-    sessionLabel: 'SESI SIANG (13:00 – 15:00)',
-    sessionTime: '13:00 – 15:00',
-    date: 'Kamis, 15 Okt 2024',
+    id: "1",
+    sessionLabel: "SESI SIANG (13:00 – 15:00)",
+    sessionTime: "13:00 – 15:00",
+    date: "Kamis, 15 Okt 2024",
     dateObj: new Date(2024, 9, 15),
-    title: 'Kunjungan Kasih – BEM Universitas X',
-    status: 'booked',
-    statusLabel: 'TELAH DIPESAN',
-    participantsLabel: '12 PESERTA TERDAFTAR',
-    participantsIcon: 'users',
+    title: "Kunjungan Kasih – BEM Universitas X",
+    status: "booked",
+    statusLabel: "TELAH DIPESAN",
+    participantsLabel: "12 PESERTA TERDAFTAR",
+    participantsIcon: "users",
   },
   {
-    id: '2',
-    sessionLabel: 'SESI PAGI (09:00 – 11:30)',
-    sessionTime: '09:00 – 11:30',
-    date: 'Sabtu, 18 Okt 2024',
+    id: "2",
+    sessionLabel: "SESI PAGI (09:00 – 11:30)",
+    sessionTime: "09:00 – 11:30",
+    date: "Sabtu, 18 Okt 2024",
     dateObj: new Date(2024, 9, 18),
-    title: 'Kegiatan Mewarnai Bersama – Komunitas Peduli Anak',
-    status: 'booked',
-    statusLabel: 'TELAH DIPESAN',
-    participantsLabel: '8 RELAWAN TERVERIFIKASI',
-    participantsIcon: 'check',
+    title: "Kegiatan Mewarnai Bersama – Komunitas Peduli Anak",
+    status: "booked",
+    statusLabel: "TELAH DIPESAN",
+    participantsLabel: "8 RELAWAN TERVERIFIKASI",
+    participantsIcon: "check",
   },
 ];
 
@@ -103,7 +125,7 @@ function dateHasEvent(date: Date): boolean {
     (evt) =>
       evt.dateObj.getFullYear() === date.getFullYear() &&
       evt.dateObj.getMonth() === date.getMonth() &&
-      evt.dateObj.getDate() === date.getDate()
+      evt.dateObj.getDate() === date.getDate(),
   );
 }
 
@@ -115,15 +137,22 @@ export default function JadwalKunjunganPage() {
   const [viewMonth, setViewMonth] = useState(9); // October (0-indexed)
   const [selectedDay, setSelectedDay] = useState<number | null>(15);
 
-  const grid = useMemo(() => buildCalendarGrid(viewYear, viewMonth), [viewYear, viewMonth]);
+  const grid = useMemo(
+    () => buildCalendarGrid(viewYear, viewMonth),
+    [viewYear, viewMonth],
+  );
 
   const goToPrev = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); }
-    else setViewMonth((m) => m - 1);
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear((y) => y - 1);
+    } else setViewMonth((m) => m - 1);
   };
   const goToNext = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); }
-    else setViewMonth((m) => m + 1);
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear((y) => y + 1);
+    } else setViewMonth((m) => m + 1);
   };
 
   return (
@@ -134,14 +163,13 @@ export default function JadwalKunjunganPage() {
       <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 pt-20 pb-16">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-[1.08] text-on-surface mb-6 italic">
-            Agenda Kunjungan &amp;{' '}
-            <br className="hidden sm:block" />
+            Agenda Kunjungan &amp; <br className="hidden sm:block" />
             Interaksi Sosial
           </h1>
           <p className="text-on-surface-variant font-sans text-base md:text-lg leading-relaxed max-w-xl">
-            Pantau jadwal kegiatan secara real-time. Kami menjaga transparansi ruang dan
-            waktu agar setiap kunjungan memberikan dampak maksimal tanpa mengganggu
-            rutinitas belajar dan istirahat anak-anak.
+            Pantau jadwal kegiatan secara real-time. Kami menjaga transparansi
+            ruang dan waktu agar setiap kunjungan memberikan dampak maksimal
+            tanpa mengganggu rutinitas belajar dan istirahat anak-anak.
           </p>
         </div>
       </section>
@@ -191,7 +219,7 @@ export default function JadwalKunjunganPage() {
             {/* Date grid */}
             <div className="grid grid-cols-7">
               {grid.map((cell, i) => {
-                const isOtherMonth = cell.month !== 'current';
+                const isOtherMonth = cell.month !== "current";
                 const isSelected = !isOtherMonth && cell.date === selectedDay;
                 const hasEvent = !isOtherMonth && dateHasEvent(cell.fullDate);
 
@@ -204,13 +232,14 @@ export default function JadwalKunjunganPage() {
                     className={`
                       relative flex flex-col items-center justify-center py-3 md:py-4 rounded-xl
                       transition-all duration-200 text-sm font-sans font-medium
-                      ${isOtherMonth
-                        ? 'text-on-surface-variant/30 cursor-default'
-                        : isSelected
-                          ? 'bg-primary text-white font-bold shadow-ambient'
-                          : hasEvent
-                            ? 'bg-primary/10 text-primary font-bold hover:bg-primary/20 cursor-pointer'
-                            : 'text-on-surface hover:bg-surface-container-low cursor-pointer'
+                      ${
+                        isOtherMonth
+                          ? "text-on-surface-variant/30 cursor-default"
+                          : isSelected
+                            ? "bg-primary text-white font-bold shadow-ambient"
+                            : hasEvent
+                              ? "bg-primary/10 text-primary font-bold hover:bg-primary/20 cursor-pointer"
+                              : "text-on-surface hover:bg-surface-container-low cursor-pointer"
                       }
                     `}
                   >
@@ -236,7 +265,10 @@ export default function JadwalKunjunganPage() {
 
             <div className="space-y-5">
               {upcomingEvents.map((evt) => (
-                <GlassContainer key={evt.id} className="p-5 flex flex-col gap-3">
+                <GlassContainer
+                  key={evt.id}
+                  className="p-5 flex flex-col gap-3"
+                >
                   {/* Top row: session badge + status */}
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary font-public-sans text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-primary/20">
@@ -259,7 +291,7 @@ export default function JadwalKunjunganPage() {
 
                   {/* Participants */}
                   <div className="flex items-center gap-2 pt-1">
-                    {evt.participantsIcon === 'users' ? (
+                    {evt.participantsIcon === "users" ? (
                       <FiUsers className="text-primary text-sm" />
                     ) : (
                       <FiCheckCircle className="text-primary text-sm" />
@@ -294,13 +326,13 @@ export default function JadwalKunjunganPage() {
               Rencanakan Momen Berharga Anda
             </h2>
             <p className="text-on-surface-variant font-sans text-base leading-relaxed max-w-md mb-8">
-              Bawa kehangatan untuk anak-anak di Empanti. Untuk memastikan kenyamanan
-              bersama, setiap kunjungan memerlukan akun terverifikasi dan persetujuan
-              jadwal.
+              Bawa kehangatan untuk anak-anak di Empanti. Untuk memastikan
+              kenyamanan bersama, setiap kunjungan memerlukan akun terverifikasi
+              dan persetujuan jadwal.
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <Link href="/login">
+              <Link href="/jadwal-kunjungan/atur-jadwal">
                 <PrimaryButton className="flex items-center gap-2.5 px-7 py-4 text-sm font-bold tracking-wide">
                   <FiCalendar className="text-base" />
                   Jadwalkan Kunjungan Sekarang

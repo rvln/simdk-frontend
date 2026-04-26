@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { GlassContainer } from "@/components/ui/GlassContainer";
@@ -187,6 +188,32 @@ export default function AturJadwalPage() {
     rows.push(grid.slice(i, i + 7));
   }
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    // Cek token di memori peramban
+    const token = localStorage.getItem("auth_token");
+
+    if (!token) {
+      // Jika tidak ada token, tendang ke halaman login dengan membawa parameter tujuan
+      // encodeURIComponent memastikan karakter '/' aman di dalam URL
+      router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
+    } else {
+      setIsAuthorized(true);
+    }
+  }, [pathname, router]);
+
+  // Mencegah kedipan UI (FOUC) saat sedang mengecek token
+  if (!isAuthorized) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Memeriksa otorisasi...
+      </div>
+    );
+  }
+
   return (
     <div className="bg-surface min-h-screen">
       {/* ═══════════════════════════════════════
@@ -198,16 +225,26 @@ export default function AturJadwalPage() {
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
               <MdMailOutline className="text-3xl text-primary" />
             </div>
-            <h2 className="text-2xl font-black text-on-surface mb-3 font-sans">Verifikasi Email Diperlukan</h2>
+            <h2 className="text-2xl font-black text-on-surface mb-3 font-sans">
+              Verifikasi Email Diperlukan
+            </h2>
             <p className="text-on-surface-variant font-sans text-sm leading-relaxed mb-8">
-              Untuk menjaga transparansi dan kenyamanan bersama, setiap pengajuan jadwal kunjungan mewajibkan Anda untuk memverifikasi alamat email terlebih dahulu.
+              Untuk menjaga transparansi dan kenyamanan bersama, setiap
+              pengajuan jadwal kunjungan mewajibkan Anda untuk memverifikasi
+              alamat email terlebih dahulu.
             </p>
-            <PrimaryButton onClick={() => setIsVerified(true)} className="w-full flex items-center justify-center gap-2 py-4">
+            <PrimaryButton
+              onClick={() => setIsVerified(true)}
+              className="w-full flex items-center justify-center gap-2 py-4"
+            >
               Kirim Ulang Verifikasi Email
               <MdArrowForward className="text-lg" />
             </PrimaryButton>
-            
-            <button onClick={() => setIsVerified(true)} className="mt-6 text-xs text-on-surface-variant/50 hover:text-primary transition-colors cursor-pointer italic font-public-sans uppercase tracking-widest">
+
+            <button
+              onClick={() => setIsVerified(true)}
+              className="mt-6 text-xs text-on-surface-variant/50 hover:text-primary transition-colors cursor-pointer italic font-public-sans uppercase tracking-widest"
+            >
               [DEV] Lewati Simulasi Ini
             </button>
           </div>
@@ -303,7 +340,7 @@ export default function AturJadwalPage() {
                 {MONTH_NAMES[viewMonth]} {viewYear}
               </h2>
               <button
-               onClick={goToNext}
+                onClick={goToNext}
                 aria-label="Bulan berikutnya"
                 className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors"
               >
@@ -484,7 +521,9 @@ export default function AturJadwalPage() {
          ═══════════════════════════════════════ */}
       <section className="px-6 pb-8">
         <div className="max-w-xl mx-auto">
-          <Link href={`/jadwal-kunjungan/detail?capacity_id=${activeSession?.id ?? ''}&date=${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}&session_label=${encodeURIComponent(activeSession?.label ?? '')}&session_time=${encodeURIComponent(activeSession?.time ?? '')}`}>
+          <Link
+            href={`/jadwal-kunjungan/detail?capacity_id=${activeSession?.id ?? ""}&date=${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}&session_label=${encodeURIComponent(activeSession?.label ?? "")}&session_time=${encodeURIComponent(activeSession?.time ?? "")}`}
+          >
             <PrimaryButton
               className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
               disabled={!selectedSession}
