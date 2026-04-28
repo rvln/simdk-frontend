@@ -80,8 +80,8 @@ export default function ProfilPublikPage() {
     formState: { errors },
   } = useForm<ProfileFormData>({
     defaultValues: {
-      fullName: "Ahmad Faisal",
-      email: "ahmad.faisal@gmail.com",
+      fullName: "Budi Santoso",
+      email: "budi.santoso@gmail.com",
       phone: "081234567890",
     },
   });
@@ -180,13 +180,13 @@ export default function ProfilPublikPage() {
         <div className="bg-white/80 backdrop-blur-xl shadow-sm rounded-3xl p-8 flex flex-col md:flex-row items-center md:items-start gap-8">
           {/* Avatar */}
           <div className="w-28 h-28 rounded-full overflow-hidden shadow-sm flex-shrink-0 bg-teal-100 flex items-center justify-center">
-            <span className="text-4xl font-bold text-teal-700">AF</span>
+            <span className="text-4xl font-bold text-teal-700">BS</span>
           </div>
 
           <div className="flex-1 text-center md:text-left">
             <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-3 mb-2">
               <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                Ahmad Faisal
+                Budi Santoso
               </h1>
               <span className="px-3 py-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs font-bold tracking-wider uppercase rounded-full shadow-sm">
                 Donatur Tetap

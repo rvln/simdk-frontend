@@ -26,12 +26,13 @@ export function HeaderStaff() {
 
         {/* Separator using gradient instead of solid border */}
         <div className="w-[1px] h-8 bg-gradient-to-b from-transparent via-black/10 to-transparent mx-2"></div>
-        
-        <Link href="/profil-pengurus-panti" className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+
+        <Link
+          href="/profil-saya"
+          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+        >
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-gray-800">
-              Budi Staf
-            </p>
+            <p className="text-sm font-semibold text-gray-800">Admin</p>
             <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
               Pengurus Panti
             </p>
