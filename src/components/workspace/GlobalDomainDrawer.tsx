@@ -15,7 +15,7 @@ import { DistribusiContent, DistribusiInventoryItem, DistribusiFormInputs } from
    ────────────────────────────────────────────────────────────────────────────── */
 export type DrawerDomain =
   | { domain: "APPROVAL"; data: ApprovalData; onApprove: () => void; onReject: () => void }
-  | { domain: "VALIDASI"; data: ValidasiData; onValidate: () => void; onReject: (reason: string) => void }
+  | { domain: "VALIDASI"; data: ValidasiData; token: string | null; onSuccess: () => void }
   | { domain: "KEBUTUHAN"; data?: KebutuhanData | null; onSubmit: (data: KebutuhanFormInputs) => Promise<void> }
   | { domain: "DISTRIBUSI"; data: DistribusiInventoryItem; onSubmit: (data: DistribusiFormInputs) => void };
 
@@ -74,8 +74,8 @@ function DrawerContentFactory(
       return (
         <ValidasiContent
           data={props.data}
-          onValidate={props.onValidate}
-          onReject={props.onReject}
+          token={props.token}
+          onSuccess={props.onSuccess}
           onClose={props.onClose}
         />
       );
