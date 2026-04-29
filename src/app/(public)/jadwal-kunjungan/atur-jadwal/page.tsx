@@ -89,46 +89,20 @@ function buildCalendarGrid(year: number, month: number): CalendarDay[] {
   return grid;
 }
 
-/* ──────────────────────────────────────────
-   Session data
-   ────────────────────────────────────────── */
-interface Session {
+interface Capacity {
   id: string;
-  label: string;
-  time: string;
-  status: "available" | "full";
-  capacity: { booked: number; total: number };
+  date: string;
+  slot: string;
+  quota: number;
+  booked: number;
+  is_active: boolean;
 }
 
-const sessionsData: Session[] = [
-  {
-    id: "pagi",
-    label: "PAGI",
-    time: "09:00 - 11:00",
-    status: "available",
-    capacity: { booked: 1, total: 4 },
-  },
-  {
-    id: "siang",
-    label: "SIANG",
-    time: "13:00 - 15:00",
-    status: "available",
-    capacity: { booked: 2, total: 4 },
-  },
-  {
-    id: "sore",
-    label: "SORE",
-    time: "15:30 - 17:30",
-    status: "available",
-    capacity: { booked: 3, total: 4 },
-  },
-  {
-    id: "malam",
-    label: "MALAM",
-    time: "Penuh",
-    status: "full",
-    capacity: { booked: 4, total: 4 },
-  },
+const SLOT_DEF = [
+  { id: 'MORNING', label: 'PAGI', time: '08:00 - 10:00' },
+  { id: 'AFTERNOON', label: 'SIANG', time: '13:00 - 15:00' },
+  { id: 'EVENING', label: 'SORE', time: '15:30 - 18:00' },
+  { id: 'NIGHT', label: 'MALAM', time: '19:00 - 20:00' },
 ];
 
 /* ──────────────────────────────────────────
@@ -156,7 +130,18 @@ export default function AturJadwalPage() {
   const [viewYear, setViewYear] = useState(2024);
   const [viewMonth, setViewMonth] = useState(9); // October
   const [selectedDay, setSelectedDay] = useState<number>(9);
-  const [selectedSession, setSelectedSession] = useState<string>("siang");
+  const [selectedSession, setSelectedSession] = useState<string>("");
+
+  const [capacities, setCapacities] = useState<Capacity[]>([]);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/capacities`, {
+      headers: { 'Accept': 'application/json' },
+    })
+      .then(res => res.ok ? res.json() : { data: [] })
+      .then(json => setCapacities(json.data || []))
+      .catch(() => setCapacities([]));
+  }, []);
 
   const grid = useMemo(
     () => buildCalendarGrid(viewYear, viewMonth),
@@ -176,7 +161,9 @@ export default function AturJadwalPage() {
     } else setViewMonth((m) => m + 1);
   };
 
-  const activeSession = sessionsData.find((s) => s.id === selectedSession);
+  const selectedDateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
+  const slotsForDate = capacities.filter((c) => c.date.startsWith(selectedDateStr));
+
   const selectedDate = new Date(viewYear, viewMonth, selectedDay);
   const dayName = DAY_FULL[selectedDate.getDay()];
 
@@ -413,21 +400,41 @@ export default function AturJadwalPage() {
 
           {/* Session buttons */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {sessionsData.map((session) => {
-              const isActive = selectedSession === session.id;
-              const isFull = session.status === "full";
+            {SLOT_DEF.map((def) => {
+              const cap = slotsForDate.find((c) => c.slot === def.id);
+              let isDisabled = true;
+              let isFull = false;
+              let isClosed = false;
+              let statusLabel = "Tidak Tersedia";
+
+              if (cap) {
+                if (!cap.is_active) {
+                  isDisabled = true;
+                  isClosed = true;
+                  statusLabel = "Tutup";
+                } else if (cap.booked >= cap.quota) {
+                  isDisabled = true;
+                  isFull = true;
+                  statusLabel = "Penuh";
+                } else {
+                  isDisabled = false;
+                  statusLabel = "Tersedia";
+                }
+              }
+
+              const isActive = cap && selectedSession === cap.id;
 
               return (
                 <button
-                  key={session.id}
+                  key={def.id}
                   onClick={() => {
-                    if (!isFull) setSelectedSession(session.id);
+                    if (!isDisabled && cap) setSelectedSession(cap.id);
                   }}
-                  disabled={isFull}
+                  disabled={isDisabled}
                   className={`
                     flex flex-col items-center gap-1 py-4 px-3 rounded-xl text-center transition-all duration-200
                     ${
-                      isFull
+                      isDisabled
                         ? "bg-surface-dim/40 text-on-surface-variant/50 cursor-not-allowed"
                         : isActive
                           ? "bg-gradient-to-br from-primary to-primary-container text-white shadow-ambient"
@@ -437,21 +444,21 @@ export default function AturJadwalPage() {
                 >
                   <span
                     className={`font-public-sans text-[10px] font-bold uppercase tracking-[0.14em] ${
-                      isFull
+                      isDisabled
                         ? "text-on-surface-variant/40"
                         : isActive
                           ? "text-white/70"
                           : "text-on-surface-variant"
                     }`}
                   >
-                    {session.label}
+                    {def.label}
                   </span>
                   <span
                     className={`font-sans font-bold text-sm tracking-tight ${
-                      isFull ? "text-on-surface-variant/50 italic" : ""
+                      isDisabled ? "text-on-surface-variant/50 italic" : ""
                     }`}
                   >
-                    {session.time}
+                    {isDisabled ? statusLabel : def.time}
                   </span>
                 </button>
               );
@@ -463,74 +470,87 @@ export default function AturJadwalPage() {
       {/* ═══════════════════════════════════════
           RINGKASAN KUNJUNGAN
          ═══════════════════════════════════════ */}
-      {activeSession && (
-        <section className="px-6 pb-10">
-          <div className="max-w-xl mx-auto">
-            <GlassContainer className="p-6 md:p-8 bg-surface-container-low/60">
-              {/* Icon */}
-              <div className="flex justify-center mb-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <FaRegCalendarCheck className="text-primary text-xl" />
+      {(() => {
+        const activeCap = capacities.find((c) => c.id === selectedSession);
+        const activeDef = activeCap ? SLOT_DEF.find((d) => d.id === activeCap.slot) : null;
+        if (!activeCap || !activeDef) return null;
+
+        return (
+          <section className="px-6 pb-10">
+            <div className="max-w-xl mx-auto">
+              <GlassContainer className="p-6 md:p-8 bg-surface-container-low/60">
+                {/* Icon */}
+                <div className="flex justify-center mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <FaRegCalendarCheck className="text-primary text-xl" />
+                  </div>
                 </div>
-              </div>
 
-              {/* Title */}
-              <h3 className="font-sans font-black text-lg text-on-surface text-center mb-1">
-                Ringkasan Kunjungan
-              </h3>
+                {/* Title */}
+                <h3 className="font-sans font-black text-lg text-on-surface text-center mb-1">
+                  Ringkasan Kunjungan
+                </h3>
 
-              {/* Date + Time */}
-              <p className="font-sans text-sm text-on-surface-variant text-center mb-6">
-                {dayName}, {selectedDay} {MONTH_NAMES[viewMonth]} {viewYear}{" "}
-                &bull; {activeSession.time} WIB
-              </p>
+                {/* Date + Time */}
+                <p className="font-sans text-sm text-on-surface-variant text-center mb-6">
+                  {dayName}, {selectedDay} {MONTH_NAMES[viewMonth]} {viewYear}{" "}
+                  &bull; {activeDef.time} WIB
+                </p>
 
-              {/* Capacity bar */}
-              <div className="bg-surface-container-lowest rounded-xl p-4 mb-4 border border-outline-variant/10">
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="font-sans text-sm text-on-surface-variant">
-                    Kapasitas Sesi
-                  </span>
-                  <span className="font-sans text-sm font-bold text-primary">
-                    Tersedia ({activeSession.capacity.booked}/
-                    {activeSession.capacity.total})
-                  </span>
+                {/* Capacity bar */}
+                <div className="bg-surface-container-lowest rounded-xl p-4 mb-4 border border-outline-variant/10">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <span className="font-sans text-sm text-on-surface-variant">
+                      Kapasitas Sesi
+                    </span>
+                    <span className="font-sans text-sm font-bold text-primary">
+                      Tersedia ({activeCap.booked}/
+                      {activeCap.quota})
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-surface-dim/40 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary-container transition-all duration-500"
+                      style={{
+                        width: `${(activeCap.booked / activeCap.quota) * 100}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-surface-dim/40 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-primary-container transition-all duration-500"
-                    style={{
-                      width: `${(activeSession.capacity.booked / activeSession.capacity.total) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
 
-              {/* Recommendation text */}
-              <p className="font-sans text-xs text-on-surface-variant text-center italic leading-relaxed">
-                &ldquo;Waktu ini sangat disarankan untuk kunjungan keluarga atau
-                kelompok kecil.&rdquo;
-              </p>
-            </GlassContainer>
-          </div>
-        </section>
-      )}
+                {/* Recommendation text */}
+                <p className="font-sans text-xs text-on-surface-variant text-center italic leading-relaxed">
+                  &ldquo;Waktu ini sangat disarankan untuk kunjungan keluarga atau
+                  kelompok kecil.&rdquo;
+                </p>
+              </GlassContainer>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ═══════════════════════════════════════
           CTA BUTTON
          ═══════════════════════════════════════ */}
       <section className="px-6 pb-8">
         <div className="max-w-xl mx-auto">
-          <Link
-            href={`/jadwal-kunjungan/detail?capacity_id=${activeSession?.id ?? ""}&date=${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}&session_label=${encodeURIComponent(activeSession?.label ?? "")}&session_time=${encodeURIComponent(activeSession?.time ?? "")}`}
-          >
-            <PrimaryButton
-              className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
-              disabled={!selectedSession}
-            >
-              Ajukan Kunjungan
-            </PrimaryButton>
-          </Link>
+          {(() => {
+             const activeCap = capacities.find((c) => c.id === selectedSession);
+             const activeDef = activeCap ? SLOT_DEF.find((d) => d.id === activeCap.slot) : null;
+             
+             return (
+              <Link
+                href={`/jadwal-kunjungan/detail?capacity_id=${activeCap?.id ?? ""}&date=${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}&session_label=${encodeURIComponent(activeDef?.label ?? "")}&session_time=${encodeURIComponent(activeDef?.time ?? "")}`}
+              >
+                <PrimaryButton
+                  className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
+                  disabled={!selectedSession}
+                >
+                  Ajukan Kunjungan
+                </PrimaryButton>
+              </Link>
+             )
+          })()}
         </div>
       </section>
 
