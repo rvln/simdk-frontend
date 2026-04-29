@@ -39,13 +39,32 @@ function SkeletonRow() {
 // ─── Map raw API Donation → ValidasiData ─────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapDonation(raw: any): ValidasiData {
-  const firstItem = raw.item_donations?.[0] ?? raw.itemDonations?.[0];
+  const itemsArray = raw.item_donations ?? raw.itemDonations ?? [];
+  const firstItem = itemsArray[0];
   const isBarang = raw.type === "BARANG";
+
+  let displayName = isBarang ? "Donasi Barang" : "Donasi Dana";
+  if (isBarang && itemsArray.length > 0) {
+    displayName = itemsArray[0].itemName_snapshot;
+    if (itemsArray.length > 1) {
+      displayName += ` + ${itemsArray.length - 1} Barang Lainnya`;
+    }
+  } else if (!isBarang && firstItem) {
+    displayName = firstItem.itemName_snapshot ?? "Donasi Dana";
+  }
+
+  const mappedItems = itemsArray.map((item: any) => ({
+    id: item.id,
+    itemName_snapshot: item.itemName_snapshot,
+    qty: item.qty,
+    inventory_id: item.inventory_id,
+    unit: item.inventory?.unit,
+  }));
 
   return {
     id:          raw.id,
     resi:        raw.tracking_code ?? raw.id,
-    name:        firstItem?.itemName_snapshot ?? (isBarang ? "Donasi Barang" : "Donasi Dana"),
+    name:        displayName,
     type:        raw.type as DonationType,
     donor:       raw.donorName,
     timeInfo:    new Date(raw.created_at).toLocaleDateString("id-ID", {
@@ -59,6 +78,7 @@ function mapDonation(raw: any): ValidasiData {
                    ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(raw.amount)
                    : undefined,
     imageUrl:    undefined,                       // No image URL in current schema
+    item_donations: mappedItems,
   };
 }
 
@@ -299,7 +319,7 @@ const MOCK_FALLBACK: ValidasiData[] = [
   {
     id: "mock-1",
     resi: "TXN-DON-2026-8842",
-    name: "Sepatu Sekolah Anak",
+    name: "Sepatu Sekolah Anak + 1 Barang Lainnya",
     type: "BARANG",
     donor: "Budi Santoso",
     timeInfo: "28 Apr 2026",
@@ -308,6 +328,10 @@ const MOCK_FALLBACK: ValidasiData[] = [
     condition: "Baru",
     quantity: "2 Pasang",
     imageUrl: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=400&auto=format&fit=crop",
+    item_donations: [
+      { id: "mock-item-1", itemName_snapshot: "Sepatu Sekolah Anak", qty: 2, inventory_id: "inv-mock-1", unit: "Pasang" },
+      { id: "mock-item-2", itemName_snapshot: "Buku Tulis", qty: 10, inventory_id: "inv-mock-2", unit: "Pcs" }
+    ]
   },
   {
     id: "mock-2",

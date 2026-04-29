@@ -6,6 +6,14 @@ import { FaCheckCircle } from "react-icons/fa";
 
 export type DonationType = "BARANG" | "DANA";
 
+export interface ItemDonationData {
+  id: string;
+  itemName_snapshot: string;
+  qty: number;
+  inventory_id: string;
+  unit?: string;
+}
+
 export interface ValidasiData {
   id: string;
   resi: string;
@@ -19,6 +27,7 @@ export interface ValidasiData {
   quantity?: string;
   amount?: string;
   imageUrl?: string;
+  item_donations?: ItemDonationData[];
 }
 
 interface ValidasiContentProps {
@@ -132,7 +141,7 @@ export function ValidasiContent({ data, token, onSuccess, onClose }: ValidasiCon
           <p className="text-base font-bold text-gray-900 mb-4">{data.donor}</p>
 
           <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
-            Nama {isBarang ? "Barang" : "Donasi"}
+            Ringkasan Donasi
           </p>
           <p className="text-base font-bold text-gray-900">{data.name}</p>
           {data.category && (
@@ -143,14 +152,29 @@ export function ValidasiContent({ data, token, onSuccess, onClose }: ValidasiCon
         {/* Conditional block */}
         {isBarang ? (
           <>
-            <div className="bg-slate-50 p-4 rounded-2xl shadow-sm">
-              <div className="flex justify-between items-center mb-3">
+            <div className="bg-slate-50 p-4 rounded-2xl shadow-sm flex flex-col gap-3">
+              <div className="flex justify-between items-center mb-1">
                 <span className="text-sm text-gray-500">Kondisi</span>
                 <span className="text-sm font-bold text-green-600">{data.condition}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Jumlah</span>
-                <span className="text-sm font-bold text-gray-900">{data.quantity}</span>
+              
+              <div className="text-sm text-gray-500 mb-1">Daftar Barang:</div>
+              <div className="flex flex-col gap-2">
+                {data.item_donations && data.item_donations.length > 0 ? (
+                  data.item_donations.map((item) => (
+                    <div key={item.id} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                      <span className="text-sm font-semibold text-gray-800">{item.itemName_snapshot}</span>
+                      <span className="text-sm font-bold text-teal-700">
+                        {item.qty} {item.unit ?? ""}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                    <span className="text-sm font-semibold text-gray-800">{data.name}</span>
+                    <span className="text-sm font-bold text-teal-700">{data.quantity}</span>
+                  </div>
+                )}
               </div>
             </div>
 

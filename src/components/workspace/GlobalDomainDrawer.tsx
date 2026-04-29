@@ -17,7 +17,7 @@ export type DrawerDomain =
   | { domain: "APPROVAL"; data: ApprovalData; onApprove: () => void; onReject: () => void }
   | { domain: "VALIDASI"; data: ValidasiData; token: string | null; onSuccess: () => void }
   | { domain: "KEBUTUHAN"; data?: KebutuhanData | null; onSubmit: (data: KebutuhanFormInputs) => Promise<void> }
-  | { domain: "DISTRIBUSI"; data: DistribusiInventoryItem; onSubmit: (data: DistribusiFormInputs) => void };
+  | { domain: "DISTRIBUSI"; token: string | null; onSuccess: () => void };
 
 /** Base props shared by every drawer instance */
 interface GlobalDomainDrawerBaseProps {
@@ -90,8 +90,8 @@ function DrawerContentFactory(
     case "DISTRIBUSI":
       return (
         <DistribusiContent
-          selectedItem={props.data}
-          onSubmit={props.onSubmit}
+          token={props.token}
+          onSuccess={props.onSuccess}
           onClose={props.onClose}
         />
       );
