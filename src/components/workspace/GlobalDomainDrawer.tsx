@@ -3,10 +3,20 @@
 import React from "react";
 import { FiX } from "react-icons/fi";
 
-import { ApprovalContent, ApprovalData } from "./drawer-contents/ApprovalContent";
-import { ValidasiContent, ValidasiData } from "./drawer-contents/ValidasiContent";
-import { KebutuhanContent, KebutuhanData, KebutuhanFormInputs } from "./drawer-contents/KebutuhanContent";
-import { DistribusiContent, DistribusiInventoryItem, DistribusiFormInputs } from "./drawer-contents/DistribusiContent";
+import {
+  ApprovalContent,
+  ApprovalData,
+} from "./drawer-contents/ApprovalContent";
+import {
+  ValidasiContent,
+  ValidasiData,
+} from "./drawer-contents/ValidasiContent";
+import {
+  KebutuhanContent,
+  KebutuhanData,
+  KebutuhanFormInputs,
+} from "./drawer-contents/KebutuhanContent";
+import { DistribusiContent } from "./drawer-contents/DistribusiContent";
 
 /* ──────────────────────────────────────────────────────────────────────────────
    Domain-discriminated data union.
@@ -14,9 +24,23 @@ import { DistribusiContent, DistribusiInventoryItem, DistribusiFormInputs } from
    correctly-typed data without casting at the call site.
    ────────────────────────────────────────────────────────────────────────────── */
 export type DrawerDomain =
-  | { domain: "APPROVAL"; data: ApprovalData; onApprove: () => void; onReject: () => void }
-  | { domain: "VALIDASI"; data: ValidasiData; token: string | null; onSuccess: () => void }
-  | { domain: "KEBUTUHAN"; data?: KebutuhanData | null; onSubmit: (data: KebutuhanFormInputs) => Promise<void> }
+  | {
+      domain: "APPROVAL";
+      data: ApprovalData;
+      token: string | null;
+      onSuccess: () => void;
+    }
+  | {
+      domain: "VALIDASI";
+      data: ValidasiData;
+      token: string | null;
+      onSuccess: () => void;
+    }
+  | {
+      domain: "KEBUTUHAN";
+      data?: KebutuhanData | null;
+      onSubmit: (data: KebutuhanFormInputs) => Promise<void>;
+    }
   | { domain: "DISTRIBUSI"; token: string | null; onSuccess: () => void };
 
 /** Base props shared by every drawer instance */
@@ -25,7 +49,8 @@ interface GlobalDomainDrawerBaseProps {
   onClose: () => void;
 }
 
-export type GlobalDomainDrawerProps = GlobalDomainDrawerBaseProps & DrawerDomain;
+export type GlobalDomainDrawerProps = GlobalDomainDrawerBaseProps &
+  DrawerDomain;
 
 /* ──────────────────────────────────────────────────────────────────────────────
    Header titles per domain
@@ -59,15 +84,16 @@ function resolveSubtitle(props: DrawerDomain): string | null {
    Factory — renders the correct content component based on the `domain` prop.
    ────────────────────────────────────────────────────────────────────────────── */
 function DrawerContentFactory(
-  props: DrawerDomain & { onClose: () => void }
+  props: DrawerDomain & { onClose: () => void },
 ): React.ReactNode {
   switch (props.domain) {
     case "APPROVAL":
       return (
         <ApprovalContent
           data={props.data}
-          onApprove={props.onApprove}
-          onReject={props.onReject}
+          token={props.token}
+          onSuccess={props.onSuccess}
+          onClose={props.onClose}
         />
       );
     case "VALIDASI":
