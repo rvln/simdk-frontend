@@ -26,6 +26,7 @@ export interface ApprovalData {
   details: string;
   bringsDonation: boolean;
   capacityAvailable: boolean;
+  status: string;
 }
 
 interface ApprovalContentProps {
@@ -294,70 +295,121 @@ export function ApprovalContent({
       </div>
 
       <div className="p-6 flex items-center gap-4 bg-white border-t border-gray-50/50 mt-auto">
-        {!isApproving && !isRescheduling && (
-          <button
-            onClick={handleReject}
-            disabled={isSubmitting}
-            className={`flex-1 py-3 font-bold rounded-xl transition-all disabled:opacity-50 ${isRejecting ? "bg-red-600 text-white shadow-md" : "text-red-600 hover:bg-red-50"}`}
-          >
-            {isSubmitting && isRejecting ? (
-              <>
-                <FiLoader className="inline animate-spin mr-2" />
-                Memproses
-              </>
-            ) : isRejecting ? (
-              "Konfirmasi Tolak"
-            ) : (
-              "Tolak Pengajuan"
-            )}
-          </button>
-        )}
+        {["APPROVED", "NEEDS_RESCHEDULE", "REJECTED"].includes(data.status) ? (
+          (() => {
+            // Kamus Keadaan (State Dictionary)
+            const stateConfig: Record<
+              string,
+              { bg: string; icon: string; text: string; message: string }
+            > = {
+              APPROVED: {
+                bg: "bg-emerald-50 border-emerald-200",
+                icon: "text-emerald-500",
+                text: "text-emerald-700",
+                message: "Kunjungan telah disetujui.",
+              },
+              NEEDS_RESCHEDULE: {
+                bg: "bg-amber-50 border-amber-200",
+                icon: "text-amber-500",
+                text: "text-amber-700",
+                message: "Menunggu respons Reschedule dari pengunjung.",
+              },
+              REJECTED: {
+                bg: "bg-red-50 border-red-200",
+                icon: "text-red-500",
+                text: "text-red-700",
+                message: "Pengajuan kunjungan telah ditolak.",
+              },
+            };
 
-        {!isRejecting && !isRescheduling && data.capacityAvailable && (
-          <button
-            onClick={handleApprove}
-            disabled={isSubmitting}
-            className="flex-1 py-3 bg-teal-700 text-white font-bold hover:bg-teal-800 rounded-xl shadow-[0_4px_20px_rgba(15,118,110,0.2)] hover:shadow-[0_6px_24px_rgba(15,118,110,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 flex justify-center items-center"
-          >
-            {isSubmitting && isApproving ? (
-              <>
-                <FiLoader className="inline animate-spin mr-2" />
-                Memproses
-              </>
-            ) : isApproving ? (
-              "Konfirmasi Setujui"
-            ) : (
-              "Terima Pengajuan"
-            )}
-          </button>
-        )}
+            const config = stateConfig[data.status] || {
+              bg: "bg-slate-50 border-slate-200",
+              icon: "text-slate-500",
+              text: "text-slate-700",
+              message: `Kunjungan ini telah diproses (${data.status})`,
+            };
 
-        {!isRejecting && !isApproving && !data.capacityAvailable && (
-          <button
-            onClick={handleReschedule}
-            disabled={isSubmitting}
-            className="flex-1 py-3 bg-amber-500 text-white font-bold hover:bg-amber-600 rounded-xl shadow-[0_4px_20px_rgba(245,158,11,0.2)] hover:shadow-[0_6px_24px_rgba(245,158,11,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 flex justify-center items-center"
-          >
-            {isSubmitting && isRescheduling ? (
-              <>
-                <FiLoader className="inline animate-spin mr-2" />
-                Memproses
-              </>
-            ) : isRescheduling ? (
-              "Kirim Permintaan"
-            ) : (
-              "Minta Reschedule"
+            return (
+              <div
+                className={`w-full py-4 px-6 border rounded-xl flex items-center justify-center gap-3 ${config.bg}`}
+              >
+                <FiAlertCircle className={`text-xl ${config.icon}`} />
+                <span className={`font-bold ${config.text}`}>
+                  {config.message}
+                </span>
+              </div>
+            );
+          })()
+        ) : (
+          <>
+            {/* TOMBOL AKSI: Dieksekusi jika status adalah PENDING */}
+            {!isApproving && !isRescheduling && (
+              <button
+                onClick={handleReject}
+                disabled={isSubmitting}
+                className={`flex-1 py-3 font-bold rounded-xl transition-all disabled:opacity-50 ${isRejecting ? "bg-red-600 text-white shadow-md" : "text-red-600 hover:bg-red-50"}`}
+              >
+                {isSubmitting && isRejecting ? (
+                  <>
+                    <FiLoader className="inline animate-spin mr-2" />
+                    Memproses
+                  </>
+                ) : isRejecting ? (
+                  "Konfirmasi Tolak"
+                ) : (
+                  "Tolak Pengajuan"
+                )}
+              </button>
             )}
-          </button>
-        )}
 
-        {(isApproving || isRejecting || isRescheduling) && !isSubmitting && (
-          <button
-            onClick={resetStates}
-            className="px-4 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl transition-colors"
-          >
-            Batal
-          </button>
+            {!isRejecting && !isRescheduling && data.capacityAvailable && (
+              <button
+                onClick={handleApprove}
+                disabled={isSubmitting}
+                className="flex-1 py-3 bg-teal-700 text-white font-bold hover:bg-teal-800 rounded-xl shadow-[0_4px_20px_rgba(15,118,110,0.2)] hover:shadow-[0_6px_24px_rgba(15,118,110,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 flex justify-center items-center"
+              >
+                {isSubmitting && isApproving ? (
+                  <>
+                    <FiLoader className="inline animate-spin mr-2" />
+                    Memproses
+                  </>
+                ) : isApproving ? (
+                  "Konfirmasi Setujui"
+                ) : (
+                  "Terima Pengajuan"
+                )}
+              </button>
+            )}
+
+            {!isRejecting && !isApproving && !data.capacityAvailable && (
+              <button
+                onClick={handleReschedule}
+                disabled={isSubmitting}
+                className="flex-1 py-3 bg-amber-500 text-white font-bold hover:bg-amber-600 rounded-xl shadow-[0_4px_20px_rgba(245,158,11,0.2)] hover:shadow-[0_6px_24px_rgba(245,158,11,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 flex justify-center items-center"
+              >
+                {isSubmitting && isRescheduling ? (
+                  <>
+                    <FiLoader className="inline animate-spin mr-2" />
+                    Memproses
+                  </>
+                ) : isRescheduling ? (
+                  "Kirim Permintaan"
+                ) : (
+                  "Minta Reschedule"
+                )}
+              </button>
+            )}
+
+            {(isApproving || isRejecting || isRescheduling) &&
+              !isSubmitting && (
+                <button
+                  onClick={resetStates}
+                  className="px-4 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  Batal
+                </button>
+              )}
+          </>
         )}
       </div>
     </>
