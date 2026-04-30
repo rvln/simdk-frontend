@@ -79,6 +79,7 @@ function mapDonation(raw: any): ValidasiData {
                    : undefined,
     imageUrl:    undefined,                       // No image URL in current schema
     item_donations: mappedItems,
+    status:      raw.status,
   };
 }
 
@@ -95,12 +96,29 @@ export default function ValidasiDonasiPage() {
   const [selectedDonation, setSelectedDonation] = useState<ValidasiData | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [filterStatus, setFilterStatus] = useState("PENDING_DELIVERY");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
     setFetchError(null);
     try {
-      const res = await fetch(ENDPOINT, {
+      const queryParams = new URLSearchParams();
+      if (filterStatus) queryParams.append("status", filterStatus);
+      if (debouncedSearch) queryParams.append("search", debouncedSearch);
+      if (filterDate) queryParams.append("date", filterDate);
+      
+      const res = await fetch(`${ENDPOINT}?${queryParams.toString()}`, {
         headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       });
       if (!res.ok) throw new Error(`Server responded with ${res.status}`);
@@ -113,7 +131,7 @@ export default function ValidasiDonasiPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [token, filterStatus, debouncedSearch, filterDate]);
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
 
@@ -183,17 +201,37 @@ export default function ValidasiDonasiPage() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Cari Nomor Resi (TXN-DON)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari Nomor Resi atau Nama Donatur..."
                   className="w-full pl-11 pr-4 py-3 bg-white rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 shadow-sm border-none"
                 />
               </div>
-              <button className="flex items-center gap-2 px-6 py-3 bg-white rounded-xl text-gray-600 shadow-sm text-sm font-medium hover:bg-gray-50 transition-colors border-none">
-                <FiFilter /> Filter Kategori
-              </button>
-              <div className="flex items-center gap-2 px-6 py-3 bg-teal-100/50 rounded-xl text-teal-700 text-sm font-medium cursor-pointer hover:bg-teal-100 transition-colors border-none">
-                {activeTab === "BARANG" ? "Status: Menunggu Kedatangan" : "Status: Semua"}
-                <FiX className="ml-1 hover:text-teal-900" />
+              <div className="relative">
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="px-6 py-3 bg-white rounded-xl text-gray-600 shadow-sm text-sm font-medium hover:bg-gray-50 transition-colors border-none outline-none focus:ring-2 focus:ring-teal-500/20"
+                />
               </div>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-6 py-3 pr-8 bg-teal-100/50 rounded-xl text-teal-700 text-sm font-medium border-none outline-none focus:ring-2 focus:ring-teal-500/20 appearance-none cursor-pointer"
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f766e'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")",
+                  backgroundPosition: "right 0.75rem center",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "1em 1em",
+                }}
+              >
+                <option value="PENDING_DELIVERY">Menunggu Kedatangan</option>
+                <option value="SUCCESS">Telah Divalidasi</option>
+                <option value="REJECTED">Ditolak</option>
+                <option value="ALL">Semua Status</option>
+              </select>
             </div>
           </div>
 
@@ -331,7 +369,8 @@ const MOCK_FALLBACK: ValidasiData[] = [
     item_donations: [
       { id: "mock-item-1", itemName_snapshot: "Sepatu Sekolah Anak", qty: 2, inventory_id: "inv-mock-1", unit: "Pasang" },
       { id: "mock-item-2", itemName_snapshot: "Buku Tulis", qty: 10, inventory_id: "inv-mock-2", unit: "Pcs" }
-    ]
+    ],
+    status: "PENDING_DELIVERY",
   },
   {
     id: "mock-2",
@@ -342,5 +381,6 @@ const MOCK_FALLBACK: ValidasiData[] = [
     timeInfo: "28 Apr 2026",
     statusBadge: "TERKONFIRMASI SISTEM",
     amount: "Rp 5.000.000",
+    status: "SUCCESS",
   },
 ];

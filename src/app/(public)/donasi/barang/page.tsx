@@ -19,12 +19,16 @@ import {
   MdCheckCircle,
 } from "react-icons/md";
 
-/* ───── MOCK DATA ───── */
-const MOCK_NEEDS = [
-  { id: 1, name: "Beras Premium", target: "100 Kg", current: "55 Kg", sisa: "45 Kg", category: "Sembako & Pangan Dasar" },
-  { id: 2, name: "Buku Tulis Sidu", target: "200 Lusin", current: "50 Lusin", sisa: "150 Lusin", category: "Peralatan Pendidikan" },
-  { id: 3, name: "Susu Formula Bayi (6-12 bln)", target: "50 Box", current: "30 Box", sisa: "20 Box", category: "Perlengkapan Bayi" },
-];
+type CatalogItem = {
+  id: string;
+  itemName: string;
+  category: string;
+  stock: number;
+  target_qty: number;
+  unit: string;
+  remaining_need: number;
+};
+
 
 const kategoriOptions = [
   "Sembako & Pangan Dasar",
@@ -89,10 +93,27 @@ export default function DonasiBarangCheckoutPage() {
 
   // Catalog Form States
   const catalogFileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedNeed, setSelectedNeed] = useState<typeof MOCK_NEEDS[0] | null>(null);
+  const [catalogNeeds, setCatalogNeeds] = useState<CatalogItem[]>([]);
+  const [isLoadingCatalog, setIsLoadingCatalog] = useState(false);
+  const [selectedNeed, setSelectedNeed] = useState<CatalogItem | null>(null);
   const [catalogQty, setCatalogQty] = useState("");
   const [catalogPhotoName, setCatalogPhotoName] = useState<string | null>(null);
   const [catalogPhotoFile, setCatalogPhotoFile] = useState<File | null>(null);
+
+  React.useEffect(() => {
+    if (activeTab === "KATALOG" && catalogNeeds.length === 0) {
+      setIsLoadingCatalog(true);
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/public/katalog-kebutuhan`)
+        .then(res => res.json())
+        .then(json => {
+          if (json.status === 'success') {
+            setCatalogNeeds(json.data);
+          }
+        })
+        .finally(() => setIsLoadingCatalog(false));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   /* ───── HANDLERS ───── */
   const handleIdentityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,7 +179,7 @@ export default function DonasiBarangCheckoutPage() {
     const newItem: CartItem = {
       id: Date.now().toString(),
       source: "KATALOG",
-      item_name: selectedNeed.name,
+      item_name: selectedNeed.itemName,
       item_category: selectedNeed.category,
       item_qty: catalogQty,
       item_condition: "Baru / Segel",
@@ -195,7 +216,7 @@ export default function DonasiBarangCheckoutPage() {
       setManualPhotoFile(item.photoFile || null);
     } else {
       setActiveTab("KATALOG");
-      const need = MOCK_NEEDS.find(n => n.name === item.item_name) || null;
+      const need = catalogNeeds.find(n => n.itemName === item.item_name) || null;
       setSelectedNeed(need);
       setCatalogQty(item.item_qty);
       setCatalogPhotoName(item.photoName);
@@ -413,20 +434,31 @@ export default function DonasiBarangCheckoutPage() {
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
                 {!selectedNeed ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {MOCK_NEEDS.map(need => (
-                      <div 
-                        key={need.id} 
-                        onClick={() => setSelectedNeed(need)}
-                        className="bg-gray-50 hover:bg-teal-50 p-5 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-teal-200"
-                      >
-                        <h3 className="font-bold text-gray-900 mb-1">{need.name}</h3>
-                        <p className="text-xs text-gray-500 mb-3">{need.category}</p>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-500">Sisa Dibutuhkan:</span>
-                          <span className="font-bold text-red-500">{need.sisa}</span>
-                        </div>
+                    {isLoadingCatalog ? (
+                      <div className="col-span-full py-10 flex items-center justify-center text-gray-500">
+                        <div className="w-6 h-6 border-2 border-teal-700 border-t-transparent rounded-full animate-spin mr-3" />
+                        Memuat Katalog...
                       </div>
-                    ))}
+                    ) : catalogNeeds.length === 0 ? (
+                      <div className="col-span-full py-10 flex items-center justify-center text-gray-500">
+                        Tidak ada kebutuhan barang saat ini.
+                      </div>
+                    ) : (
+                      catalogNeeds.map(need => (
+                        <div 
+                          key={need.id} 
+                          onClick={() => setSelectedNeed(need)}
+                          className="bg-gray-50 hover:bg-teal-50 p-5 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-teal-200"
+                        >
+                          <h3 className="font-bold text-gray-900 mb-1">{need.itemName}</h3>
+                          <p className="text-xs text-gray-500 mb-3">{need.category}</p>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Sisa Dibutuhkan:</span>
+                            <span className="font-bold text-red-500">{need.remaining_need} {need.unit}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -438,8 +470,8 @@ export default function DonasiBarangCheckoutPage() {
                         <MdClose className="text-xl" />
                       </button>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-teal-600 mb-1 block">Barang Dipilih</span>
-                      <h3 className="font-bold text-gray-900 text-lg">{selectedNeed.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1">Kebutuhan Tersisa: <span className="font-bold text-red-500">{selectedNeed.sisa}</span></p>
+                      <h3 className="font-bold text-gray-900 text-lg">{selectedNeed.itemName}</h3>
+                      <p className="text-sm text-gray-500 mt-1">Kebutuhan Tersisa: <span className="font-bold text-red-500">{selectedNeed.remaining_need} {selectedNeed.unit}</span></p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
