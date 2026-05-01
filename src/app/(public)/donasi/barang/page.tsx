@@ -27,6 +27,8 @@ type CatalogItem = {
   target_qty: number;
   unit: string;
   remaining_need: number;
+  is_disabled: boolean;
+  next_available_date: string;
 };
 
 
@@ -63,6 +65,7 @@ export default function DonasiBarangCheckoutPage() {
   const [activeTab, setActiveTab] = useState<"MANUAL" | "KATALOG">("MANUAL");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageCompression = async (file: File): Promise<File> => {
     try {
@@ -227,7 +230,7 @@ export default function DonasiBarangCheckoutPage() {
     setIsCheckoutOpen(false);
   };
 
-  const submitFinalDonation = () => {
+  const submitFinalDonation = async () => {
     if (!identity.donor_name || !identity.donor_phone) {
       alert("Mohon lengkapi Identitas Donatur (Nama & WhatsApp) sebelum checkout.");
       setIsCheckoutOpen(false);
@@ -238,9 +241,41 @@ export default function DonasiBarangCheckoutPage() {
       return;
     }
     
-    // Routing to tracking page (success logic)
-    setIsCheckoutOpen(false);
-    router.push("/donasi/lacak-donasi");
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        donorName: identity.donor_name,
+        donorPhone: identity.donor_phone,
+        items: cartItems.map(item => ({
+          id: item.source === "KATALOG" ? item.id : "MANUAL",
+          name: item.item_name,
+          qty: parseInt(item.item_qty)
+        }))
+      };
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/public/donasi-barang`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Gagal memproses donasi.");
+      }
+
+      setCartItems([]);
+      setIsCheckoutOpen(false);
+      router.push(`/donasi/lacak-donasi/${data.tracking_code}`);
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -447,15 +482,27 @@ export default function DonasiBarangCheckoutPage() {
                       catalogNeeds.map(need => (
                         <div 
                           key={need.id} 
-                          onClick={() => setSelectedNeed(need)}
-                          className="bg-gray-50 hover:bg-teal-50 p-5 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-teal-200"
+                          onClick={() => {
+                            if (!need.is_disabled) setSelectedNeed(need);
+                          }}
+                          className={`p-5 rounded-xl transition-colors border ${
+                            need.is_disabled 
+                              ? "bg-gray-100 opacity-60 grayscale cursor-not-allowed border-transparent" 
+                              : "bg-gray-50 hover:bg-teal-50 cursor-pointer border-transparent hover:border-teal-200"
+                          }`}
                         >
                           <h3 className="font-bold text-gray-900 mb-1">{need.itemName}</h3>
                           <p className="text-xs text-gray-500 mb-3">{need.category}</p>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-500">Sisa Dibutuhkan:</span>
-                            <span className="font-bold text-red-500">{need.remaining_need} {need.unit}</span>
-                          </div>
+                          {need.is_disabled ? (
+                            <div className="text-xs font-medium text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
+                              Target bulan ini terpenuhi. Dapat disumbangkan kembali mulai {need.next_available_date}.
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500">Sisa Dibutuhkan:</span>
+                              <span className="font-bold text-red-500">{need.remaining_need} {need.unit}</span>
+                            </div>
+                          )}
                         </div>
                       ))
                     )}
@@ -634,10 +681,17 @@ export default function DonasiBarangCheckoutPage() {
             <div className="p-6 md:p-8 border-t border-gray-100 bg-white">
               <PrimaryButton 
                 onClick={submitFinalDonation}
-                disabled={cartItems.length === 0}
-                className="w-full py-4 text-lg font-bold shadow-xl shadow-teal-900/20 disabled:opacity-50 disabled:shadow-none"
+                disabled={cartItems.length === 0 || isSubmitting}
+                className="w-full py-4 text-lg font-bold shadow-xl shadow-teal-900/20 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
               >
-                Ajukan Donasi Sekarang
+                {isSubmitting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  "Ajukan Donasi Sekarang"
+                )}
               </PrimaryButton>
             </div>
           </div>

@@ -23,11 +23,7 @@ const ENDPOINT = `${API_BASE}/kebutuhan`;
 // ─── Derived UI helpers ───────────────────────────────────────────────────────
 
 // ─── Status derivation (derived on frontend since DB has no status column) ───
-function deriveStatus(stock: number, target_qty: number): "Mendesak" | "Berjalan" | "Terpenuhi" {
-  if (stock >= target_qty) return "Terpenuhi";
-  if (stock / target_qty >= 0.5) return "Berjalan";
-  return "Mendesak";
-}
+// Removed deriveStatus as backend now returns status_kebutuhan
 function getCategoryColor(category: string) {
   switch (category.toLowerCase()) {
     case "fasilitas": return "bg-green-800 text-white";
@@ -37,11 +33,20 @@ function getCategoryColor(category: string) {
   }
 }
 
-function getStatusBadge(status: "Mendesak" | "Berjalan" | "Terpenuhi") {
+function getStatusBadge(status: string) {
   switch (status) {
-    case "Mendesak":  return "bg-red-100 text-red-700";
-    case "Terpenuhi": return "bg-green-100 text-green-700";
-    default:          return "bg-blue-100 text-blue-700";
+    case "TERPENUHI": return "bg-green-100 text-green-700";
+    case "SEDANG BERLANGSUNG": return "bg-blue-100 text-blue-700";
+    default:          return "bg-gray-100 text-gray-700";
+  }
+}
+
+function getPriorityBadge(priority: string) {
+  switch (priority) {
+    case "MENDESAK":  return "bg-red-100 text-red-700";
+    case "PENTING":   return "bg-blue-100 text-blue-700";
+    case "OPSIONAL":  return "bg-slate-100 text-slate-700";
+    default:          return "bg-gray-100 text-gray-700";
   }
 }
 
@@ -75,9 +80,23 @@ export default function KelolaKebutuhanPage() {
   const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
   // ── Data state ───────────────────────────────────────────────────────────────
-  const [items, setItems] = useState<KebutuhanData[]>([]);
+  const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // ── Filter state ─────────────────────────────────────────────────────────────
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   // ── Drawer state ─────────────────────────────────────────────────────────────
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -88,7 +107,13 @@ export default function KelolaKebutuhanPage() {
     setIsLoading(true);
     setFetchError(null);
     try {
-      const res = await fetch(ENDPOINT, {
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      if (category) params.append("category", category);
+      if (statusFilter) params.append("status_kebutuhan", statusFilter);
+      if (priorityFilter) params.append("priority", priorityFilter);
+
+      const res = await fetch(`${ENDPOINT}?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -106,7 +131,7 @@ export default function KelolaKebutuhanPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [token, debouncedSearch, category, statusFilter, priorityFilter]);
 
   useEffect(() => {
     fetchItems();
@@ -179,19 +204,50 @@ export default function KelolaKebutuhanPage() {
 
           {/* Action Bar */}
           <div className="flex gap-4 mb-8">
-            <div className="relative flex-1 max-w-lg">
+            <div className="relative flex-1 max-w-sm">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <FiSearch className="text-gray-400 text-lg" />
               </div>
               <input
                 type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 placeholder="Cari barang..."
                 className="w-full pl-11 pr-4 py-3 bg-white rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0B648C]/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-shadow border-none"
               />
             </div>
-            <button className="flex items-center gap-2 px-6 py-3 bg-white rounded-xl text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-sm font-medium hover:bg-gray-50 transition-colors">
-              <FiFilter /> Filter Kategori
-            </button>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="px-4 py-3 bg-white rounded-xl text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-sm font-medium border-none focus:outline-none"
+            >
+              <option value="">Semua Kategori</option>
+              <option value="MAKANAN">Makanan</option>
+              <option value="PAKAIAN">Pakaian</option>
+              <option value="PENDIDIKAN">Pendidikan</option>
+              <option value="KESEHATAN">Kesehatan</option>
+              <option value="KEBERSIHAN">Kebersihan</option>
+              <option value="LAINNYA">Lainnya</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-3 bg-white rounded-xl text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-sm font-medium border-none focus:outline-none"
+            >
+              <option value="">Semua Status</option>
+              <option value="SEDANG BERLANGSUNG">Sedang Berlangsung</option>
+              <option value="TERPENUHI">Terpenuhi</option>
+            </select>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="px-4 py-3 bg-white rounded-xl text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-sm font-medium border-none focus:outline-none"
+            >
+              <option value="">Semua Prioritas</option>
+              <option value="MENDESAK">Mendesak</option>
+              <option value="PENTING">Penting</option>
+              <option value="OPSIONAL">Opsional</option>
+            </select>
             <button
               onClick={openAddForm}
               className="flex items-center gap-2 px-6 py-3 bg-[#0B648C] text-white rounded-xl text-sm font-bold shadow-[0_4px_14px_rgba(11,100,140,0.3)] hover:bg-[#095273] transition-all hover:-translate-y-0.5 ml-auto"
@@ -234,10 +290,10 @@ export default function KelolaKebutuhanPage() {
               </div>
             ) : (
               items.map((item) => {
-                const status = item.status ?? deriveStatus(item.stock, item.target_qty);
-                const isFulfilled = status === "Terpenuhi";
+                const isFulfilled = item.status_kebutuhan === "TERPENUHI";
+                const terkumpul = item.terkumpul_bulan_ini ?? 0;
                 const progressPercentage = Math.min(
-                  Math.round((item.stock / item.target_qty) * 100),
+                  Math.round((terkumpul / item.target_qty) * 100),
                   100
                 );
 
@@ -274,9 +330,14 @@ export default function KelolaKebutuhanPage() {
                           {item.category.toUpperCase()}
                         </span>
                         <span
-                          className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getStatusBadge(status)}`}
+                          className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getPriorityBadge(item.priority)}`}
                         >
-                          {status}
+                          {item.priority}
+                        </span>
+                        <span
+                          className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getStatusBadge(item.status_kebutuhan)}`}
+                        >
+                          {item.status_kebutuhan}
                         </span>
                       </div>
                       <h3 className="text-lg font-bold text-gray-900 mb-1 truncate">
@@ -298,7 +359,7 @@ export default function KelolaKebutuhanPage() {
                           <span className="text-sm font-medium text-slate-700">
                             Terkumpul:{" "}
                             <span className="font-bold text-[#0B648C]">
-                              {item.stock}
+                              {terkumpul}
                             </span>
                           </span>
                         )}
@@ -359,9 +420,11 @@ const MOCK_FALLBACK: KebutuhanData[] = [
     itemName: "Sepatu Sekolah Anak",
     category: "PAKAIAN",
     description: "Kebutuhan untuk 24 anak panti usia SD - SMP (Ukuran bervariasi).",
-    stock: 18,
+    terkumpul_bulan_ini: 18,
     target_qty: 24,
     unit: "Pasang",
+    priority: "PENTING",
+    status_kebutuhan: "SEDANG BERLANGSUNG",
     imageUrl:
       "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=200&auto=format&fit=crop",
   },
@@ -370,9 +433,11 @@ const MOCK_FALLBACK: KebutuhanData[] = [
     itemName: "Matras Tidur Baru",
     category: "FASILITAS",
     description: "Penggantian matras busa yang sudah tipis untuk asrama putra.",
-    stock: 2,
+    terkumpul_bulan_ini: 2,
     target_qty: 10,
     unit: "Pcs",
+    priority: "MENDESAK",
+    status_kebutuhan: "SEDANG BERLANGSUNG",
     imageUrl:
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?q=80&w=200&auto=format&fit=crop",
   },
@@ -381,9 +446,11 @@ const MOCK_FALLBACK: KebutuhanData[] = [
     itemName: "Paket Alat Tulis Lengkap",
     category: "PENDIDIKAN",
     description: "Buku tulis, pensil, penghapus, dan penggaris untuk semester baru.",
-    stock: 50,
+    terkumpul_bulan_ini: 50,
     target_qty: 50,
     unit: "Paket",
+    priority: "OPSIONAL",
+    status_kebutuhan: "TERPENUHI",
     imageUrl:
       "https://images.unsplash.com/photo-1503694978374-8a2fa686963a?q=80&w=200&auto=format&fit=crop",
   },

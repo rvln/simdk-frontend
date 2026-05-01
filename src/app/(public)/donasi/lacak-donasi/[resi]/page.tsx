@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { GlassContainer } from "@/components/ui/GlassContainer";
@@ -16,12 +16,39 @@ import {
   MdExpandMore,
   MdExpandLess,
 } from "react-icons/md";
+import { FiInfo } from "react-icons/fi";
 
-export default function LacakDonasiPage() {
+export default function LacakDonasiPage({ params }: { params: Promise<{ resi: string }> }) {
+  const resolvedParams = use(params);
+  const resi = resolvedParams.resi;
+
   const [copied, setCopied] = useState(false);
-  const [expandedItemId, setExpandedItemId] = useState<string | null>("item-1");
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const resi = "TXN-DON-2024-XXXX";
+
+  const [donationData, setDonationData] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDonation = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/public/donasi-barang/${resi}`);
+        if (!response.ok) {
+          throw new Error("Resi tidak ditemukan");
+        }
+        const result = await response.json();
+        setDonationData(result.data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDonation();
+  }, [resi]);
+
+  const status: string = donationData?.status || 'PENDING_DELIVERY';
 
   const slideshowImages = [
     "/example_img/unsplash1.png",
@@ -38,48 +65,6 @@ export default function LacakDonasiPage() {
     return () => clearInterval(interval);
   }, [slideshowImages.length]);
 
-  const MOCK_TRACKING_ITEMS = [
-    {
-      id: "item-1",
-      name: "Paket Sembako Berkah",
-      category: "Sembako & Pangan",
-      condition: "Baru / Segel",
-      quantity: "5 Paket",
-      description: "Beras premium 5kg, minyak goreng 2L, gula pasir 1kg, dan sarden kaleng. Semua dalam kondisi tersegel baik."
-    },
-    {
-      id: "item-2",
-      name: "Buku Tulis Sinar Dunia",
-      category: "Pendidikan",
-      condition: "Baru",
-      quantity: "10 Lusin",
-      description: "Buku tulis 38 lembar untuk keperluan sekolah anak-anak panti."
-    },
-    {
-      id: "item-3",
-      name: "Pakaian Layak Pakai",
-      category: "Sandang",
-      condition: "Bekas Layak Pakai",
-      quantity: "2 Dus",
-      description: "Pakaian untuk anak usia 5-12 tahun, sudah dicuci dan disetrika rapi."
-    },
-    {
-      id: "item-4",
-      name: "Mainan Edukatif",
-      category: "Hiburan & Edukasi",
-      condition: "Baru",
-      quantity: "3 Set",
-      description: "Puzzle balok kayu dan lego set untuk melatih kreativitas."
-    },
-    {
-      id: "item-5",
-      name: "Susu Bubuk Dancow",
-      category: "Nutrisi",
-      condition: "Baru / Segel",
-      quantity: "10 Kotak",
-      description: "Susu bubuk ukuran 800g rasa cokelat dan vanila."
-    }
-  ];
 
   const handleCopyResi = () => {
     navigator.clipboard.writeText(resi);
@@ -88,14 +73,39 @@ export default function LacakDonasiPage() {
   };
 
   const steps = [
-    { label: "Menunggu Pengiriman", status: "active", icon: <MdLocalShipping /> },
+    { 
+      label: "Menunggu Pengiriman", 
+      status: (status === "PENDING_DELIVERY" || status === "SUCCESS") ? "active" : "pending", 
+      icon: <MdLocalShipping /> 
+    },
     {
       label: "Tervalidasi & Diterima",
-      status: "pending",
+      status: status === "SUCCESS" ? "active" : "pending",
       icon: <MdCheckCircle />,
     },
-    { label: "Didistribusikan", status: "pending", icon: <MdInventory2 /> },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <span className="text-on-surface-variant font-bold tracking-widest uppercase text-sm">Memuat Data...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 text-center">
+        <MdInfoOutline className="text-6xl text-red-500 mb-4" />
+        <h1 className="text-2xl font-black text-on-surface mb-2">Pencarian Gagal</h1>
+        <p className="text-on-surface-variant max-w-md">{error}</p>
+        <Link href="/" className="mt-8 text-emerald-600 font-bold hover:underline">
+          Kembali ke Beranda
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface">
@@ -114,11 +124,12 @@ export default function LacakDonasiPage() {
           </h1>
         </div>
 
-        {/* ── Stepper: Exactly 3 Steps Horizontal ── */}
+        {/* ── Stepper: Exactly 2 Steps Horizontal ── */}
         <div className="mb-20">
           <div className="relative flex items-center justify-between max-w-5xl mx-auto">
             {/* Background Line */}
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-surface-container-high z-0" />
+            <div className={`absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-emerald-500 z-0 transition-all duration-1000 ${status === "SUCCESS" ? "w-full" : "w-0"}`} />
 
             {steps.map((step, idx) => {
               const isActive = step.status === "active";
@@ -127,19 +138,19 @@ export default function LacakDonasiPage() {
               return (
                 <div
                   key={idx}
-                  className="relative z-10 flex flex-col items-center flex-1"
+                  className="relative z-10 flex flex-col items-center"
                 >
                   <div
                     className={`
                     w-14 h-14 rounded-full flex items-center justify-center ring-[10px] ring-surface transition-all duration-500
-                    ${isActive ? "bg-tertiary text-white shadow-lg shadow-tertiary/30 scale-110" : ""}
+                    ${isActive ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-110" : ""}
                     ${isPending ? "bg-surface-container-highest text-on-surface-variant" : ""}
                   `}
                   >
                     <span className="text-xl">{step.icon}</span>
                   </div>
                   <span
-                    className={`mt-5 font-public-sans text-[11px] font-black uppercase tracking-[0.2em] text-center ${isActive ? "text-tertiary" : "text-on-surface-variant"}`}
+                    className={`mt-5 font-public-sans text-[11px] font-black uppercase tracking-[0.2em] text-center ${isActive ? "text-emerald-600" : "text-on-surface-variant"}`}
                   >
                     {step.label}
                   </span>
@@ -148,6 +159,21 @@ export default function LacakDonasiPage() {
             })}
           </div>
         </div>
+
+        {/* ── Transparency & Handover Banner ── */}
+        {status === "SUCCESS" && (
+          <div className="max-w-5xl mx-auto mb-16 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-start gap-4">
+              <FiInfo className="text-emerald-500 mt-1 shrink-0 text-xl" />
+              <div>
+                <h3 className="text-emerald-900 font-bold mb-2">Amanah Telah Disalurkan</h3>
+                <p className="text-sm text-emerald-800 leading-relaxed">
+                  Barang donasi Anda telah divalidasi dan secara resmi tercatat dalam inventaris Panti Asuhan. Seluruh barang kini sepenuhnya dikelola oleh pihak panti untuk memenuhi kebutuhan harian anak-anak. Terima kasih atas kepedulian Anda.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Layout Grid (2 Columns) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-stretch">
@@ -218,7 +244,7 @@ export default function LacakDonasiPage() {
             <GlassContainer className="p-6 md:p-8 border-none shadow-ambient bg-surface-container-lowest flex-1 relative overflow-hidden flex flex-col">
               <div className="relative z-10 flex-1 flex flex-col">
                 <div className="max-h-[400px] overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-surface-container-high [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-on-surface-variant/30 transition-all space-y-2">
-                  {MOCK_TRACKING_ITEMS.map((item) => {
+                  {donationData?.item_donations?.map((item: any) => {
                     const isExpanded = expandedItemId === item.id;
                     return (
                       <div key={item.id} className="border-b border-gray-100 last:border-none pb-4 mb-4 last:mb-0 last:pb-0">
@@ -229,12 +255,12 @@ export default function LacakDonasiPage() {
                         >
                           <div className="flex flex-col pr-4">
                             <span className="font-bold text-on-surface group-hover:text-primary transition-colors text-sm md:text-base">
-                              {item.name}
+                              {item.item_name || item.itemName_snapshot}
                             </span>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
                             <span className="text-xs md:text-sm font-bold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-full">
-                              {item.quantity}
+                              {item.qty} {item.unit || "Pcs"}
                             </span>
                             {isExpanded ? (
                               <MdExpandLess className="text-xl text-primary" />
@@ -254,26 +280,12 @@ export default function LacakDonasiPage() {
                             <div className="grid grid-cols-2 gap-4 md:gap-6 mb-5">
                               <div className="space-y-1">
                                 <span className="block text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">
-                                  Kategori
+                                  Status Barang
                                 </span>
                                 <p className="font-bold text-on-surface text-xs md:text-sm">
-                                  {item.category}
+                                  {status === "SUCCESS" ? "Diterima" : "Menunggu Check-in"}
                                 </p>
                               </div>
-                              <div className="space-y-1">
-                                <span className="block text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">
-                                  Kondisi
-                                </span>
-                                <p className="font-bold text-on-surface text-xs md:text-sm">{item.condition}</p>
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="block text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">
-                                Deskripsi
-                              </span>
-                              <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed italic">
-                                "{item.description}"
-                              </p>
                             </div>
                           </div>
                         </div>

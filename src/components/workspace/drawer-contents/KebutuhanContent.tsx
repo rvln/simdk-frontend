@@ -9,16 +9,18 @@ export interface KebutuhanData {
   itemName: string;
   category: string;
   description: string;
-  stock: number;
   target_qty: number;
   unit: string;
-  status?: "Mendesak" | "Berjalan" | "Terpenuhi";
+  priority: string;
+  terkumpul_bulan_ini?: number;
+  status_kebutuhan?: string;
   imageUrl?: string;
 }
 
 export type KebutuhanFormInputs = {
   itemName: string;
   category: string;
+  priority: string;
   target_qty: number;
   unit: string;
   description: string;
@@ -71,12 +73,13 @@ export function KebutuhanContent({
       reset({
         itemName:    editingItem.itemName,
         category:    editingItem.category,
+        priority:    editingItem.priority ?? "OPSIONAL",
         target_qty:  editingItem.target_qty,
         unit:        editingItem.unit,
         description: editingItem.description,
       });
     } else {
-      reset({ itemName: "", category: "", target_qty: 0, unit: "", description: "" });
+      reset({ itemName: "", category: "", priority: "OPSIONAL", target_qty: 0, unit: "", description: "" });
     }
   }, [editingItem, reset]);
 
@@ -161,6 +164,25 @@ export function KebutuhanContent({
           </select>
           {errors.category && (
             <p className="text-red-500 text-xs mt-1">{errors.category.message}</p>
+          )}
+        </div>
+
+        {/* Priority */}
+        <div>
+          <label className="block text-xs font-bold text-gray-600 tracking-wider uppercase mb-2">
+            Prioritas Campaign
+          </label>
+          <select
+            {...register("priority", { required: "Prioritas wajib dipilih" })}
+            className={`${inputBase} appearance-none font-bold`}
+            disabled={isSubmitting}
+          >
+            <option value="MENDESAK" className="text-red-600">🔴 Mendesak (Urgent)</option>
+            <option value="PENTING" className="text-blue-600">🔵 Penting (High Priority)</option>
+            <option value="OPSIONAL" className="text-slate-600">⚪ Opsional (Routine)</option>
+          </select>
+          {errors.priority && (
+            <p className="text-red-500 text-xs mt-1">{errors.priority.message}</p>
           )}
         </div>
 
