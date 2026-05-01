@@ -12,7 +12,7 @@ export interface KebutuhanData {
   target_qty: number;
   unit: string;
   priority: string;
-  terkumpul_bulan_ini?: number;
+  stock?: number;
   status_kebutuhan?: string;
   imageUrl?: string;
 }

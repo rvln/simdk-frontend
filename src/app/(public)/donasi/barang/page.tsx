@@ -180,7 +180,7 @@ export default function DonasiBarangCheckoutPage() {
     }
     
     const newItem: CartItem = {
-      id: Date.now().toString(),
+      id: selectedNeed.id,
       source: "KATALOG",
       item_name: selectedNeed.itemName,
       item_category: selectedNeed.category,
@@ -258,6 +258,7 @@ export default function DonasiBarangCheckoutPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json"
         },
         body: JSON.stringify(payload)
       });
@@ -495,7 +496,7 @@ export default function DonasiBarangCheckoutPage() {
                           <p className="text-xs text-gray-500 mb-3">{need.category}</p>
                           {need.is_disabled ? (
                             <div className="text-xs font-medium text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
-                              Target bulan ini terpenuhi. Dapat disumbangkan kembali mulai {need.next_available_date}.
+                              Kapasitas Gudang Penuh. Dapat disumbangkan kembali saat stok berkurang.
                             </div>
                           ) : (
                             <div className="flex items-center justify-between text-sm">

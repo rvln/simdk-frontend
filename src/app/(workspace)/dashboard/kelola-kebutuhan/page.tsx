@@ -291,7 +291,7 @@ export default function KelolaKebutuhanPage() {
             ) : (
               items.map((item) => {
                 const isFulfilled = item.status_kebutuhan === "TERPENUHI";
-                const terkumpul = item.terkumpul_bulan_ini ?? 0;
+                const terkumpul = item.stock ?? 0;
                 const progressPercentage = Math.min(
                   Math.round((terkumpul / item.target_qty) * 100),
                   100
@@ -357,7 +357,7 @@ export default function KelolaKebutuhanPage() {
                           </span>
                         ) : (
                           <span className="text-sm font-medium text-slate-700">
-                            Terkumpul:{" "}
+                            Kapasitas Terisi:{" "}
                             <span className="font-bold text-[#0B648C]">
                               {terkumpul}
                             </span>
@@ -420,7 +420,7 @@ const MOCK_FALLBACK: KebutuhanData[] = [
     itemName: "Sepatu Sekolah Anak",
     category: "PAKAIAN",
     description: "Kebutuhan untuk 24 anak panti usia SD - SMP (Ukuran bervariasi).",
-    terkumpul_bulan_ini: 18,
+    stock: 18,
     target_qty: 24,
     unit: "Pasang",
     priority: "PENTING",
@@ -433,7 +433,7 @@ const MOCK_FALLBACK: KebutuhanData[] = [
     itemName: "Matras Tidur Baru",
     category: "FASILITAS",
     description: "Penggantian matras busa yang sudah tipis untuk asrama putra.",
-    terkumpul_bulan_ini: 2,
+    stock: 2,
     target_qty: 10,
     unit: "Pcs",
     priority: "MENDESAK",
@@ -446,7 +446,7 @@ const MOCK_FALLBACK: KebutuhanData[] = [
     itemName: "Paket Alat Tulis Lengkap",
     category: "PENDIDIKAN",
     description: "Buku tulis, pensil, penghapus, dan penggaris untuk semester baru.",
-    terkumpul_bulan_ini: 50,
+    stock: 50,
     target_qty: 50,
     unit: "Paket",
     priority: "OPSIONAL",
