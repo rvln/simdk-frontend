@@ -1,35 +1,51 @@
-'use client';
+"use client";
 
-import React, { Suspense } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
-import { GlassContainer } from '@/components/ui/GlassContainer';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import React, { Suspense } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import { GlassContainer } from "@/components/ui/GlassContainer";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import {
   FiArrowRight,
   FiClock,
   FiEye,
   FiShield,
   FiCheckCircle,
-} from 'react-icons/fi';
-import { FaHeart } from 'react-icons/fa';
+} from "react-icons/fi";
+import { FaHeart } from "react-icons/fa";
 
 /* ──────────────────────────────────────────
    Helpers
    ────────────────────────────────────────── */
 const MONTH_NAMES = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
 ];
 const DAY_NAMES = [
-  'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu',
+  "Minggu",
+  "Senin",
+  "Selasa",
+  "Rabu",
+  "Kamis",
+  "Jumat",
+  "Sabtu",
 ];
 
 /** Converts "2026-05-12" → { dayName: "Selasa", formatted: "12 Mei 2026" } */
 function parseDate(dateStr: string) {
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return { dayName: '', formatted: dateStr };
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return { dayName: "", formatted: dateStr };
   const y = parseInt(parts[0], 10);
   const m = parseInt(parts[1], 10) - 1;
   const d = parseInt(parts[2], 10);
@@ -46,11 +62,17 @@ function parseDate(dateStr: string) {
 function KonfirmasiContent() {
   const searchParams = useSearchParams();
 
-  const rawDate = searchParams.get('date') || '';
-  const sessionLabel = decodeURIComponent(searchParams.get('session_label') || '');
-  const sessionTime = decodeURIComponent(searchParams.get('session_time') || '');
-  const category = decodeURIComponent(searchParams.get('category') || 'Kunjungan Biasa');
-  const hasDonation = searchParams.get('has_donation') === '1';
+  const rawDate = searchParams.get("date") || "";
+  const sessionLabel = decodeURIComponent(
+    searchParams.get("session_label") || "",
+  );
+  const sessionTime = decodeURIComponent(
+    searchParams.get("session_time") || "",
+  );
+  const category = decodeURIComponent(
+    searchParams.get("category") || "Kunjungan Biasa",
+  );
+  const hasDonation = searchParams.get("has_donation") === "1";
 
   const { dayName, formatted: formattedDate } = parseDate(rawDate);
 
@@ -79,9 +101,12 @@ function KonfirmasiContent() {
 
           {/* Description */}
           <p className="text-on-surface-variant font-sans text-sm md:text-base leading-relaxed max-w-lg mx-auto">
-            Terima kasih atas niat baik Anda. Pengajuan Anda saat ini berstatus{' '}
-            <strong className="text-primary font-bold">Menunggu Persetujuan</strong>.
-            {' '}Pengurus kami akan meninjau jadwal ini dan mengirimkan konfirmasi serta Tiket Kunjungan melalui email dalam waktu 1×24 jam.
+            Terima kasih atas niat baik Anda. Pengajuan Anda saat ini berstatus{" "}
+            <strong className="text-primary font-bold">
+              Menunggu Persetujuan
+            </strong>
+            . Pengurus kami akan meninjau jadwal ini dan mengirimkan konfirmasi
+            serta Tiket Kunjungan melalui email dalam waktu 1×24 jam.
           </p>
         </div>
       </section>
@@ -98,10 +123,10 @@ function KonfirmasiContent() {
                 Tanggal Kunjungan
               </span>
               <p className="font-sans font-black text-lg text-on-surface leading-tight">
-                {dayName || '—'},
+                {dayName || "—"},
               </p>
               <p className="font-sans text-sm text-on-surface-variant mt-0.5">
-                {formattedDate || 'Belum tersedia'}
+                {formattedDate || "Belum tersedia"}
               </p>
             </GlassContainer>
 
@@ -113,11 +138,11 @@ function KonfirmasiContent() {
               <div className="flex items-center gap-2 mb-1">
                 <FiClock className="text-on-surface text-base" />
                 <span className="font-sans font-black text-lg text-on-surface">
-                  {sessionTime || '—'}
+                  {sessionTime || "—"}
                 </span>
               </div>
               <p className="font-sans text-sm text-on-surface-variant mt-0.5">
-                {sessionLabel ? `Sesi ${sessionLabel}` : '—'}
+                {sessionLabel ? `Sesi ${sessionLabel}` : "—"}
               </p>
             </GlassContainer>
 
@@ -168,13 +193,13 @@ function KonfirmasiContent() {
         <section className="px-6 pb-8">
           <div className="max-w-2xl mx-auto text-center">
             <p className="font-sans text-sm text-on-surface-variant leading-relaxed mb-5">
-              Karena Anda berencana membawa donasi fisik, mohon lengkapi detailnya agar kami dapat
-              menyiapkan tanda terima yang transparan.
+              Karena Anda berencana membawa donasi fisik, mohon lengkapi
+              detailnya agar kami dapat menyiapkan tanda terima yang transparan.
             </p>
-            <Link href="/jadwal-kunjungan/konfirmasi/donasi-fisik">
+            <Link href="/">
               <PrimaryButton className="w-full md:w-auto inline-flex items-center justify-center gap-2 py-4 px-10 text-base font-bold tracking-wide rounded-xl">
                 <FiShield className="text-lg" />
-                Lengkapi Data Barang Bawaan (Pra-Submission)
+                Kembali ke Beranda
               </PrimaryButton>
             </Link>
           </div>
@@ -232,11 +257,15 @@ function KonfirmasiContent() {
 
 export default function KonfirmasiKunjunganPage() {
   return (
-    <Suspense fallback={
-      <div className="bg-surface min-h-screen flex items-center justify-center">
-        <p className="text-on-surface-variant font-sans text-sm animate-pulse">Memuat halaman...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="bg-surface min-h-screen flex items-center justify-center">
+          <p className="text-on-surface-variant font-sans text-sm animate-pulse">
+            Memuat halaman...
+          </p>
+        </div>
+      }
+    >
       <KonfirmasiContent />
     </Suspense>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { format } from "date-fns";
 import { GlassContainer } from "@/components/ui/GlassContainer";
 import { 
   MdOutlineCalendarToday, 
@@ -294,7 +295,7 @@ export default function DashboardPage() {
                             <div className="flex-1 pt-1.5 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
                               <h4 className={`font-bold text-base font-sans ${index > 1 ? 'text-on-surface-variant' : 'text-on-surface'}`}>{audit.title}</h4>
                               <p className={`text-sm mt-1 flex items-center gap-2 ${index > 1 ? 'text-on-surface-variant/60' : 'text-on-surface-variant'}`}>
-                                <span className={`font-semibold ${textColors[colorIdx]}`}>{audit.target_recipient ? `Target: ${audit.target_recipient}` : `Oleh: ${audit.actor}`}</span> &bull; {audit.time_formatted}
+                                <span className={`font-semibold ${textColors[colorIdx]}`}>{audit.target_recipient ? `Target: ${audit.target_recipient}` : `Oleh: ${audit.actor}`}</span> &bull; {format(new Date(audit.time_formatted), "dd MMM yyyy, HH:mm")}
                               </p>
                               <p className={`font-public-sans text-[10px] font-bold uppercase tracking-widest mt-3 w-fit px-2 py-1 rounded ${textColors[colorIdx]} ${bgColors[colorIdx]}`}>
                                 {audit.status_badge}

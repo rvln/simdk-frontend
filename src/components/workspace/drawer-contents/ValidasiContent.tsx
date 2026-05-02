@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { FiImage, FiLoader, FiAlertCircle, FiLink } from "react-icons/fi";
 import { FaCheckCircle } from "react-icons/fa";
 import { MdTimer } from "react-icons/md";
+import { format } from "date-fns";
+import { id as idLocale } from "date-fns/locale";
 
 export type DonationType = "BARANG" | "DANA";
 
@@ -123,9 +125,10 @@ export function ValidasiContent({
   };
 
   const isBarang = data.type === "BARANG";
-  const isExpired = data.status === "PENDING_DELIVERY"
-    && !!data.expires_at
-    && new Date(data.expires_at) < new Date();
+  const isExpired =
+    data.status === "PENDING_DELIVERY" &&
+    !!data.expires_at &&
+    new Date(data.expires_at) < new Date();
 
   return (
     <>
@@ -151,21 +154,13 @@ export function ValidasiContent({
                 Barang ini merupakan bawaan dari jadwal kunjungan. Kedatangan
                 fisik barang mengikuti jadwal sesi kunjungan
                 {data.expires_at && (
-                  <> pada{" "}
+                  <>
+                    {" "}
+                    pada{" "}
                     <strong>
-                      {new Date(data.expires_at).toLocaleDateString("id-ID", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
+                      {format(new Date(data.expires_at), "eeee, dd MMMM yyyy", {
+                        locale: idLocale,
                       })}
-                      {" pukul "}
-                      {new Date(data.expires_at).toLocaleTimeString("id-ID", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: "Asia/Makassar",
-                      })}
-                      {" WITA"}
                     </strong>
                   </>
                 )}
@@ -287,7 +282,10 @@ export function ValidasiContent({
       <div className="p-6 flex flex-col gap-3 bg-white border-t border-gray-50/50 mt-auto">
         {data.status !== "PENDING_DELIVERY" ? (
           (() => {
-            const stateConfig: Record<string, { bg: string; icon: string; text: string; message: string }> = {
+            const stateConfig: Record<
+              string,
+              { bg: string; icon: string; text: string; message: string }
+            > = {
               SUCCESS: {
                 bg: "bg-emerald-50 border-emerald-200",
                 icon: "text-emerald-500",
@@ -326,7 +324,9 @@ export function ValidasiContent({
               message: `Status: ${data.status}`,
             };
             return (
-              <div className={`w-full py-4 px-6 border rounded-xl flex items-center justify-center gap-3 ${config.bg}`}>
+              <div
+                className={`w-full py-4 px-6 border rounded-xl flex items-center justify-center gap-3 ${config.bg}`}
+              >
                 <FiAlertCircle className={`text-xl ${config.icon}`} />
                 <span className={`font-bold ${config.text}`}>
                   {config.message}
@@ -339,11 +339,13 @@ export function ValidasiContent({
           <div className="w-full py-5 px-6 bg-red-50 border border-red-200 rounded-xl flex items-start gap-4">
             <MdTimer className="text-red-400 text-2xl flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-red-700 text-sm mb-1">Slot Donasi Kedaluwarsa</p>
+              <p className="font-bold text-red-700 text-sm mb-1">
+                Slot Donasi Kedaluwarsa
+              </p>
               <p className="text-xs text-red-600 leading-relaxed">
-                Barang tersebut telah melewati batas waktu serah terima dan slot donasi
-                telah dibatalkan oleh sistem. Donatur perlu mengajukan resi donasi baru
-                jika masih ingin menyumbangkan barang.
+                Barang tersebut telah melewati batas waktu serah terima dan slot
+                donasi telah dibatalkan oleh sistem. Donatur perlu mengajukan
+                resi donasi baru jika masih ingin menyumbangkan barang.
               </p>
             </div>
           </div>
