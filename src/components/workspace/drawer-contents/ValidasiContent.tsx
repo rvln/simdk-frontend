@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { FiImage, FiLoader, FiAlertCircle } from "react-icons/fi";
 import { FaCheckCircle } from "react-icons/fa";
+import { MdTimer } from "react-icons/md";
 
 export type DonationType = "BARANG" | "DANA";
 
@@ -29,6 +30,7 @@ export interface ValidasiData {
   imageUrl?: string;
   item_donations?: ItemDonationData[];
   status: string;
+  expires_at?: string;
 }
 
 interface ValidasiContentProps {
@@ -120,6 +122,9 @@ export function ValidasiContent({
   };
 
   const isBarang = data.type === "BARANG";
+  const isExpired = data.status === "PENDING_DELIVERY"
+    && !!data.expires_at
+    && new Date(data.expires_at) < new Date();
 
   return (
     <>
@@ -292,6 +297,19 @@ export function ValidasiContent({
               </div>
             );
           })()
+        ) : isExpired ? (
+          /* ── Expired TTL: Hide all action buttons, show warning ── */
+          <div className="w-full py-5 px-6 bg-red-50 border border-red-200 rounded-xl flex items-start gap-4">
+            <MdTimer className="text-red-400 text-2xl flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-red-700 text-sm mb-1">Slot Donasi Kedaluwarsa</p>
+              <p className="text-xs text-red-600 leading-relaxed">
+                Barang tersebut telah melewati batas waktu serah terima dan slot donasi
+                telah dibatalkan oleh sistem. Donatur perlu mengajukan resi donasi baru
+                jika masih ingin menyumbangkan barang.
+              </p>
+            </div>
+          </div>
         ) : (
           isBarang && (
             <>

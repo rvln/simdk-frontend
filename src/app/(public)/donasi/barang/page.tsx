@@ -28,6 +28,7 @@ type CatalogItem = {
   unit: string;
   remaining_need: number;
   is_disabled: boolean;
+  virtual_stock: number;
   next_available_date: string;
 };
 
@@ -266,7 +267,12 @@ export default function DonasiBarangCheckoutPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Gagal memproses donasi.");
+        if (res.status === 422 && data.errors?.items) {
+          alert(`Kapasitas Terbatas: ${data.errors.items[0]}`);
+        } else {
+          throw new Error(data.message || "Gagal memproses donasi.");
+        }
+        return;
       }
 
       setCartItems([]);
@@ -499,9 +505,19 @@ export default function DonasiBarangCheckoutPage() {
                               Kapasitas Gudang Penuh. Dapat disumbangkan kembali saat stok berkurang.
                             </div>
                           ) : (
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-500">Sisa Dibutuhkan:</span>
-                              <span className="font-bold text-red-500">{need.remaining_need} {need.unit}</span>
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">Sisa Dibutuhkan:</span>
+                                <span className="font-bold text-red-500">{need.remaining_need} {need.unit}</span>
+                              </div>
+                              {need.virtual_stock > 0 && (
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-400">Kapasitas Terisi:</span>
+                                  <span className="font-semibold text-gray-600">
+                                    {need.stock} <span className="text-amber-600">(+{need.virtual_stock} Menunggu)</span>
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

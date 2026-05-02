@@ -292,8 +292,10 @@ export default function KelolaKebutuhanPage() {
               items.map((item) => {
                 const isFulfilled = item.status_kebutuhan === "TERPENUHI";
                 const terkumpul = item.stock ?? 0;
+                const virtualStock = item.virtual_stock ?? 0;
+                const effectiveTotal = terkumpul + virtualStock;
                 const progressPercentage = Math.min(
-                  Math.round((terkumpul / item.target_qty) * 100),
+                  Math.round((effectiveTotal / item.target_qty) * 100),
                   100
                 );
 
@@ -361,6 +363,11 @@ export default function KelolaKebutuhanPage() {
                             <span className="font-bold text-[#0B648C]">
                               {terkumpul}
                             </span>
+                            {virtualStock > 0 && (
+                              <span className="text-amber-600 font-semibold text-xs ml-1">
+                                (+{virtualStock} Menunggu)
+                              </span>
+                            )}
                           </span>
                         )}
                         <span className="text-xs text-gray-500 font-medium">
@@ -368,12 +375,21 @@ export default function KelolaKebutuhanPage() {
                         </span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-1000 ${
-                            isFulfilled ? "bg-green-700" : "bg-[#0B648C]"
-                          }`}
-                          style={{ width: `${progressPercentage}%` }}
-                        />
+                        {/* Confirmed stock (solid) */}
+                        <div className="h-full rounded-full relative" style={{ width: `${Math.min(Math.round((effectiveTotal / item.target_qty) * 100), 100)}%` }}>
+                          <div
+                            className={`h-full rounded-full transition-all duration-1000 ${
+                              isFulfilled ? "bg-green-700" : "bg-[#0B648C]"
+                            }`}
+                            style={{ width: `${effectiveTotal > 0 ? Math.round((terkumpul / effectiveTotal) * 100) : 100}%` }}
+                          />
+                          {virtualStock > 0 && !isFulfilled && (
+                            <div
+                              className="absolute top-0 right-0 h-full bg-amber-400/50 rounded-r-full"
+                              style={{ width: `${effectiveTotal > 0 ? Math.round((virtualStock / effectiveTotal) * 100) : 0}%` }}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
 

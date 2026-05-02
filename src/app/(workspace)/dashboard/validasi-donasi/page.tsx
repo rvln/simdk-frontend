@@ -80,6 +80,7 @@ function mapDonation(raw: any): ValidasiData {
     imageUrl:    undefined,                       // No image URL in current schema
     item_donations: mappedItems,
     status:      raw.status,
+    expires_at:  raw.expires_at ?? undefined,
   };
 }
 
@@ -155,7 +156,21 @@ export default function ValidasiDonasiPage() {
     handleClose();
   };
 
-  const currentData = items.filter((i) => i.type === activeTab);
+  const currentData = items.filter((donation) => {
+    if (donation.type !== activeTab) return false;
+    
+    // 1. Calculate the dynamic expiry state
+    const isExpired = donation.status === 'PENDING_DELIVERY' && !!donation.expires_at && new Date(donation.expires_at) < new Date();
+    
+    // 2. Evaluate against the selected Dropdown Filter
+    if (filterStatus === 'ALL') return true;
+    if (filterStatus === 'EXPIRED') return isExpired; // Catch expired items
+    if (filterStatus === 'PENDING_DELIVERY') return donation.status === 'PENDING_DELIVERY' && !isExpired; // Catch ONLY active pending items
+    if (filterStatus === 'SUCCESS') return donation.status === 'SUCCESS';
+    if (filterStatus === 'REJECTED') return donation.status === 'REJECTED';
+    
+    return true;
+  });
 
   return (
     <div className="flex h-full w-full relative overflow-hidden">
@@ -230,6 +245,7 @@ export default function ValidasiDonasiPage() {
                 <option value="PENDING_DELIVERY">Menunggu Kedatangan</option>
                 <option value="SUCCESS">Telah Divalidasi</option>
                 <option value="REJECTED">Ditolak</option>
+                <option value="EXPIRED">Kedaluwarsa</option>
                 <option value="ALL">Semua Status</option>
               </select>
             </div>
@@ -266,6 +282,9 @@ export default function ValidasiDonasiPage() {
               currentData.map((item) => {
                 const isSelected = selectedDonation?.id === item.id;
                 const isBarang = item.type === "BARANG";
+                const isExpired = item.status === "PENDING_DELIVERY"
+                  && !!item.expires_at
+                  && new Date(item.expires_at) < new Date();
 
                 return (
                   <div
@@ -281,6 +300,8 @@ export default function ValidasiDonasiPage() {
                       className={`w-14 h-14 rounded-xl flex items-center justify-center mr-5 transition-colors ${
                         isSelected
                           ? "bg-blue-100 text-blue-600"
+                          : isExpired
+                          ? "bg-red-50 text-red-400"
                           : isBarang
                           ? "bg-teal-50 text-teal-600"
                           : "bg-green-50 text-green-600"
@@ -316,10 +337,16 @@ export default function ValidasiDonasiPage() {
                     <div className="flex flex-col items-end justify-center gap-2">
                       <span
                         className={`px-3 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${
-                          isBarang ? "bg-gray-200/60 text-gray-600" : "bg-green-100 text-green-700"
+                          item.status === 'SUCCESS' ? "bg-green-100 text-green-700" :
+                          item.status === 'REJECTED' ? "bg-red-100 text-red-700" :
+                          isExpired ? "bg-amber-100 text-amber-700" :
+                          "bg-gray-200/60 text-gray-600"
                         }`}
                       >
-                        {item.statusBadge}
+                        {item.status === 'SUCCESS' ? "TERVALIDASI" :
+                         item.status === 'REJECTED' ? "DITOLAK" :
+                         isExpired ? "KEDALUWARSA" :
+                         "MENUNGGU KEDATANGAN"}
                       </span>
                       <FiChevronRight
                         className={`text-xl transition-transform duration-300 ${

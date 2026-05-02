@@ -15,6 +15,7 @@ import {
   MdInfoOutline,
   MdExpandMore,
   MdExpandLess,
+  MdTimer,
 } from "react-icons/md";
 import { FiInfo } from "react-icons/fi";
 
@@ -29,6 +30,8 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
   const [donationData, setDonationData] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<string | null>(null);
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     const fetchDonation = async () => {
@@ -64,6 +67,36 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
     }, 5000);
     return () => clearInterval(interval);
   }, [slideshowImages.length]);
+
+  // ── Expiry Countdown Timer ──
+  useEffect(() => {
+    if (!donationData?.expires_at || status !== 'PENDING_DELIVERY') {
+      setCountdown(null);
+      setIsExpired(false);
+      return;
+    }
+
+    const tick = () => {
+      const expiresAt = new Date(donationData.expires_at).getTime();
+      const now = Date.now();
+      const diff = expiresAt - now;
+
+      if (diff <= 0) {
+        setIsExpired(true);
+        setCountdown(null);
+        return;
+      }
+
+      setIsExpired(false);
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      setCountdown(`${hours} jam ${minutes} menit`);
+    };
+
+    tick();
+    const interval = setInterval(tick, 60000);
+    return () => clearInterval(interval);
+  }, [donationData?.expires_at, status]);
 
 
   const handleCopyResi = () => {
@@ -159,6 +192,48 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
             })}
           </div>
         </div>
+
+        {/* ── Expiry Warning Banner (PENDING_DELIVERY only) ── */}
+        {status === "PENDING_DELIVERY" && donationData?.expires_at && (
+          <div className="max-w-5xl mx-auto mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
+            {isExpired ? (
+              <div className="p-6 rounded-2xl bg-red-50 flex items-start gap-4">
+                <MdTimer className="text-red-500 mt-1 shrink-0 text-xl" />
+                <div>
+                  <h3 className="text-red-900 font-bold mb-2">Resi Telah Kedaluwarsa</h3>
+                  <p className="text-sm text-red-800 leading-relaxed">
+                    Batas waktu 30 jam untuk penyerahan barang telah berakhir. Reservasi kapasitas gudang telah dibatalkan secara otomatis. Silakan ajukan donasi baru jika Anda masih ingin menyumbangkan barang.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 rounded-2xl bg-amber-50 flex items-start gap-4">
+                <MdTimer className="text-amber-500 mt-1 shrink-0 text-xl" />
+                <div>
+                  <h3 className="text-amber-900 font-bold mb-2">Batas Waktu Penyerahan</h3>
+                  <p className="text-sm text-amber-800 leading-relaxed">
+                    Resi donasi ini akan kedaluwarsa pada{" "}
+                    <span className="font-bold">
+                      {new Date(donationData.expires_at).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>.
+                    Silakan serahkan barang ke panti sebelum batas waktu.
+                  </p>
+                  {countdown && (
+                    <p className="mt-2 text-xs font-bold text-amber-700 tracking-wider uppercase">
+                      Sisa waktu: {countdown}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Transparency & Handover Banner ── */}
         {status === "SUCCESS" && (
