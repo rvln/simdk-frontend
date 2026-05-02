@@ -71,6 +71,7 @@ function mapVisit(raw: any) {
     bringsDonation: false,
     capacityAvailable: isAvailable,
     status: raw.status,
+    is_expired: !!raw.is_expired,
   };
 }
 
@@ -105,7 +106,11 @@ export default function ApprovalKunjunganPage() {
     setFetchError(null);
     try {
       const queryParams = new URLSearchParams();
-      if (filterStatus) queryParams.append("status", filterStatus);
+      if (filterStatus && filterStatus !== "EXPIRED" && filterStatus !== "PENDING") {
+        queryParams.append("status", filterStatus);
+      } else {
+        queryParams.append("status", "ALL");
+      }
       if (filterDate) queryParams.append("date", filterDate);
       if (debouncedSearch) queryParams.append("search", debouncedSearch);
 
@@ -203,6 +208,7 @@ export default function ApprovalKunjunganPage() {
                 <option value="APPROVED">Disetujui</option>
                 <option value="NEEDS_RESCHEDULE">Perlu Ubah Jadwal</option>
                 <option value="REJECTED">Ditolak</option>
+                <option value="EXPIRED">Kedaluwarsa</option>
                 <option value="ALL">Semua</option>
               </select>
             </div>
@@ -245,6 +251,13 @@ export default function ApprovalKunjunganPage() {
             ) : (
               visits.map((item) => {
                 const isSelected = selectedVisit?.id === item.id;
+                const isExpired = !!item.is_expired;
+                
+                // Array Filtering
+                if (filterStatus === 'EXPIRED' && !isExpired) return null;
+                if (filterStatus === 'PENDING' && (item.status !== 'PENDING' || isExpired)) return null;
+                if (filterStatus !== 'ALL' && filterStatus !== 'EXPIRED' && filterStatus !== 'PENDING' && item.status !== filterStatus) return null;
+
                 return (
                   <div
                     key={item.id}

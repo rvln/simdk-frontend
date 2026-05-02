@@ -27,6 +27,7 @@ export interface ApprovalData {
   bringsDonation: boolean;
   capacityAvailable: boolean;
   status: string;
+  is_expired?: boolean;
 }
 
 interface ApprovalContentProps {
@@ -340,6 +341,14 @@ export function ApprovalContent({
               </div>
             );
           })()
+        ) : data.status === "PENDING" && data.is_expired ? (
+          <div className="w-full py-4 px-6 border rounded-xl flex items-center justify-center gap-3 bg-red-50 border-red-200">
+            <FiAlertCircle className="text-xl text-red-500" />
+            <span className="font-bold text-red-700 text-sm text-left">
+              Pengajuan ini telah melewati batas waktu jadwal kunjungan dan
+              dibatalkan secara otomatis oleh sistem.
+            </span>
+          </div>
         ) : (
           <>
             {/* TOMBOL AKSI: Dieksekusi jika status adalah PENDING */}
