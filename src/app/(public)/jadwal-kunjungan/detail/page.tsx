@@ -170,7 +170,14 @@ function DetailPengunjungContent() {
         return;
       }
 
-      router.push('/jadwal-kunjungan/konfirmasi');
+      const confirmParams = new URLSearchParams({
+        date: scheduledDate,
+        session_label: sessionLabel,
+        session_time: sessionTime,
+        category: selectedCategory === 'kegiatan' ? 'Melakukan Kegiatan' : 'Kunjungan Biasa',
+        has_donation: bringDonation ? '1' : '0',
+      });
+      router.push(`/jadwal-kunjungan/konfirmasi?${confirmParams.toString()}`);
     } catch {
       setErrorMessage('Tidak dapat terhubung ke server. Periksa koneksi Anda.');
     } finally {

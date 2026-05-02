@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiImage, FiLoader, FiAlertCircle } from "react-icons/fi";
+import { FiImage, FiLoader, FiAlertCircle, FiLink } from "react-icons/fi";
 import { FaCheckCircle } from "react-icons/fa";
 import { MdTimer } from "react-icons/md";
 
@@ -31,6 +31,7 @@ export interface ValidasiData {
   item_donations?: ItemDonationData[];
   status: string;
   expires_at?: string;
+  visit_id?: string;
 }
 
 interface ValidasiContentProps {
@@ -135,6 +136,42 @@ export function ValidasiContent({
           <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
             <FiAlertCircle className="text-lg flex-shrink-0 mt-0.5" />
             <span>{apiError}</span>
+          </div>
+        )}
+
+        {/* Visit-Bound Context Notice */}
+        {data.visit_id && (
+          <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 text-sm">
+            <FiLink className="text-lg flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-blue-800 text-xs mb-0.5">
+                📌 Donasi Terikat Kunjungan
+              </p>
+              <p className="text-xs text-blue-600 leading-relaxed">
+                Barang ini merupakan bawaan dari jadwal kunjungan. Kedatangan
+                fisik barang mengikuti jadwal sesi kunjungan
+                {data.expires_at && (
+                  <> pada{" "}
+                    <strong>
+                      {new Date(data.expires_at).toLocaleDateString("id-ID", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                      {" pukul "}
+                      {new Date(data.expires_at).toLocaleTimeString("id-ID", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone: "Asia/Makassar",
+                      })}
+                      {" WITA"}
+                    </strong>
+                  </>
+                )}
+                .
+              </p>
+            </div>
           </div>
         )}
 

@@ -16,6 +16,8 @@ import {
   MdExpandMore,
   MdExpandLess,
   MdTimer,
+  MdPeopleAlt,
+  MdCalendarMonth,
 } from "react-icons/md";
 import { FiInfo } from "react-icons/fi";
 
@@ -53,6 +55,10 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
 
   const status: string = donationData?.status || 'PENDING_DELIVERY';
 
+  // Relational Lifecycle Binding: donations created via a visit should NOT
+  // show courier/logistics UI — the visitor brings the items in person.
+  const isVisitBound: boolean = !!donationData?.visit_id;
+
   const slideshowImages = [
     "/example_img/unsplash1.png",
     "/example_img/unsplash2.png",
@@ -68,9 +74,11 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
     return () => clearInterval(interval);
   }, [slideshowImages.length]);
 
-  // ── Expiry Countdown Timer ──
+  // ── Expiry Countdown Timer — only for standalone public donations ──
   useEffect(() => {
-    if (!donationData?.expires_at || status !== 'PENDING_DELIVERY') {
+    // Visit-bound donations have session-bounded TTLs, not courier deadlines.
+    // The expiry countdown is irrelevant and misleading for in-person handovers.
+    if (isVisitBound || !donationData?.expires_at || status !== 'PENDING_DELIVERY') {
       setCountdown(null);
       setIsExpired(false);
       return;
@@ -96,7 +104,7 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
     tick();
     const interval = setInterval(tick, 60000);
     return () => clearInterval(interval);
-  }, [donationData?.expires_at, status]);
+  }, [isVisitBound, donationData?.expires_at, status]);
 
 
   const handleCopyResi = () => {
@@ -152,49 +160,76 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
             <MdArrowBack className="group-hover:-translate-x-1 transition-transform" />
             <span>Kembali ke Beranda</span>
           </Link>
-          <h1 className="text-3xl md:text-5xl font-black text-on-surface tracking-tighter italic">
-            Status Resi: {resi}
-          </h1>
-        </div>
-
-        {/* ── Stepper: Exactly 2 Steps Horizontal ── */}
-        <div className="mb-20">
-          <div className="relative flex items-center justify-between max-w-5xl mx-auto">
-            {/* Background Line */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-surface-container-high z-0" />
-            <div className={`absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-emerald-500 z-0 transition-all duration-1000 ${status === "SUCCESS" ? "w-full" : "w-0"}`} />
-
-            {steps.map((step, idx) => {
-              const isActive = step.status === "active";
-              const isPending = step.status === "pending";
-
-              return (
-                <div
-                  key={idx}
-                  className="relative z-10 flex flex-col items-center"
-                >
-                  <div
-                    className={`
-                    w-14 h-14 rounded-full flex items-center justify-center ring-[10px] ring-surface transition-all duration-500
-                    ${isActive ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-110" : ""}
-                    ${isPending ? "bg-surface-container-highest text-on-surface-variant" : ""}
-                  `}
-                  >
-                    <span className="text-xl">{step.icon}</span>
-                  </div>
-                  <span
-                    className={`mt-5 font-public-sans text-[11px] font-black uppercase tracking-[0.2em] text-center ${isActive ? "text-emerald-600" : "text-on-surface-variant"}`}
-                  >
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="flex flex-wrap items-center gap-3 mb-2">
+            <h1 className="text-3xl md:text-5xl font-black text-on-surface tracking-tighter italic">
+              Status Resi: {resi}
+            </h1>
+            {isVisitBound && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded-full shrink-0">
+                <MdPeopleAlt className="text-sm" />
+                Barang Bawaan Kunjungan
+              </span>
+            )}
           </div>
         </div>
 
-        {/* ── Expiry Warning Banner (PENDING_DELIVERY only) ── */}
-        {status === "PENDING_DELIVERY" && donationData?.expires_at && (
+        {/* ── Delivery Timeline Stepper — hidden for visit-bound donations ── */}
+        {!isVisitBound && (
+          <div className="mb-20">
+            <div className="relative flex items-center justify-between max-w-5xl mx-auto">
+              {/* Background Line */}
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-surface-container-high z-0" />
+              <div className={`absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-emerald-500 z-0 transition-all duration-1000 ${status === "SUCCESS" ? "w-full" : "w-0"}`} />
+
+              {steps.map((step, idx) => {
+                const isActive = step.status === "active";
+                const isPending = step.status === "pending";
+
+                return (
+                  <div
+                    key={idx}
+                    className="relative z-10 flex flex-col items-center"
+                  >
+                    <div
+                      className={`
+                      w-14 h-14 rounded-full flex items-center justify-center ring-[10px] ring-surface transition-all duration-500
+                      ${isActive ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-110" : ""}
+                      ${isPending ? "bg-surface-container-highest text-on-surface-variant" : ""}
+                    `}
+                    >
+                      <span className="text-xl">{step.icon}</span>
+                    </div>
+                    <span
+                      className={`mt-5 font-public-sans text-[11px] font-black uppercase tracking-[0.2em] text-center ${isActive ? "text-emerald-600" : "text-on-surface-variant"}`}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Visit-Bound Context Banner — replaces timeline for in-person donations ── */}
+        {isVisitBound && (
+          <div className="max-w-5xl mx-auto mb-16 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="p-6 rounded-2xl bg-blue-50 flex items-start gap-4">
+              <MdCalendarMonth className="text-blue-500 mt-1 shrink-0 text-2xl" />
+              <div>
+                <h3 className="text-blue-900 font-bold mb-2">Informasi: Barang Bawaan Kunjungan</h3>
+                <p className="text-sm text-blue-800 leading-relaxed">
+                  Daftar barang ini adalah rincian bawaan untuk jadwal kunjungan Anda.
+                  Penerimaan barang akan divalidasi langsung oleh pengurus saat Anda tiba di panti.
+                  Silakan pantau status persetujuan kunjungan Anda melalui tautan yang dikirimkan ke email.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Expiry Warning Banner — standalone public donations only ── */}
+        {!isVisitBound && status === "PENDING_DELIVERY" && donationData?.expires_at && (
           <div className="max-w-5xl mx-auto mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
             {isExpired ? (
               <div className="p-6 rounded-2xl bg-red-50 flex items-start gap-4">
@@ -373,19 +408,35 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-50 pointer-events-none" />
             </GlassContainer>
 
-            {/* Info Box: Catatan Pengiriman */}
-            <div className="mt-8 p-6 rounded-2xl bg-surface-container-low flex items-start gap-4">
-              <MdInfoOutline className="text-primary mt-1 shrink-0 text-lg" />
-              <div>
-                <span className="block text-[10px] font-bold uppercase tracking-widest text-primary mb-1">
-                  Catatan Pengiriman
-                </span>
-                <p className="text-xs text-on-surface-variant leading-relaxed">
-                  Paket saat ini sedang menunggu kurir logistik untuk dijemput.
-                  Harap pastikan nomor resi terlihat jelas pada kemasan luar.
-                </p>
+            {/* Info Box: context-aware — courier note for public, visit note for visit-bound */}
+            {isVisitBound ? (
+              <div className="mt-8 p-6 rounded-2xl bg-blue-50 flex items-start gap-4">
+                <MdPeopleAlt className="text-blue-500 mt-1 shrink-0 text-lg" />
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1">
+                    Catatan Kunjungan
+                  </span>
+                  <p className="text-xs text-blue-700 leading-relaxed">
+                    Barang ini akan diterima dan divalidasi secara langsung oleh pengurus
+                    saat Anda tiba di panti sesuai jadwal kunjungan yang disetujui.
+                    Tidak diperlukan pengiriman via kurir.
+                  </p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="mt-8 p-6 rounded-2xl bg-surface-container-low flex items-start gap-4">
+                <MdInfoOutline className="text-primary mt-1 shrink-0 text-lg" />
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-primary mb-1">
+                    Catatan Pengiriman
+                  </span>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    Paket saat ini sedang menunggu kurir logistik untuk dijemput.
+                    Harap pastikan nomor resi terlihat jelas pada kemasan luar.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Bottom Actions */}
             <div className="mt-auto pt-12 flex flex-col md:flex-row items-center justify-end gap-6">

@@ -127,12 +127,21 @@ export default function AturJadwalPage() {
   // Default false to show the verification gate for audit purposes
   const [isVerified, setIsVerified] = useState(false);
 
-  const [viewYear, setViewYear] = useState(2024);
-  const [viewMonth, setViewMonth] = useState(9); // October
-  const [selectedDay, setSelectedDay] = useState<number>(9);
+  const now = new Date();
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth());
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSession, setSelectedSession] = useState<string>("");
 
   const [capacities, setCapacities] = useState<Capacity[]>([]);
+
+  // H+1 lead time: strip time so today is fully disabled
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // State leakage fix: reset session when date context changes
+  useEffect(() => {
+    setSelectedSession("");
+  }, [selectedDay, viewMonth, viewYear]);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/capacities`, {
@@ -161,11 +170,15 @@ export default function AturJadwalPage() {
     } else setViewMonth((m) => m + 1);
   };
 
-  const selectedDateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
-  const slotsForDate = capacities.filter((c) => c.date.startsWith(selectedDateStr));
+  const selectedDateStr = selectedDay
+    ? `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`
+    : "";
+  const slotsForDate = selectedDay
+    ? capacities.filter((c) => c.date.startsWith(selectedDateStr))
+    : [];
 
-  const selectedDate = new Date(viewYear, viewMonth, selectedDay);
-  const dayName = DAY_FULL[selectedDate.getDay()];
+  const selectedDate = selectedDay ? new Date(viewYear, viewMonth, selectedDay) : null;
+  const dayName = selectedDate ? DAY_FULL[selectedDate.getDay()] : "";
 
   const currentStep = 1;
 
@@ -351,23 +364,26 @@ export default function AturJadwalPage() {
             <div className="grid grid-cols-7">
               {rows.map((row, rowIdx) => (
                 <React.Fragment key={rowIdx}>
-                  {row.map((cell, colIdx) => {
+              {row.map((cell, colIdx) => {
                     const isOtherMonth = cell.month !== "current";
+                    const isPast = cell.fullDate <= todayMidnight;
+                    const isDisabledCell = isOtherMonth || isPast;
                     const isSelected =
-                      !isOtherMonth && cell.date === selectedDay;
+                      !isDisabledCell && cell.date === selectedDay;
 
                     return (
                       <button
                         key={`${rowIdx}-${colIdx}`}
                         onClick={() => {
-                          if (!isOtherMonth) setSelectedDay(cell.date);
+                          if (!isDisabledCell) setSelectedDay(cell.date);
                         }}
+                        disabled={isDisabledCell}
                         className={`
                           relative flex items-center justify-center py-3 md:py-4 rounded-xl
                           transition-all duration-200 text-sm font-sans font-medium
                           ${
-                            isOtherMonth
-                              ? "text-on-surface-variant/30 cursor-default"
+                            isDisabledCell
+                              ? "text-on-surface-variant/30 cursor-not-allowed"
                               : isSelected
                                 ? "bg-primary text-white font-bold shadow-ambient"
                                 : "text-on-surface hover:bg-surface-container-low cursor-pointer"

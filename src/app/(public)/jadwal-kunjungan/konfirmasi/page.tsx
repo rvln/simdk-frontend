@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { GlassContainer } from '@/components/ui/GlassContainer';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import {
@@ -14,20 +15,44 @@ import {
 } from 'react-icons/fi';
 import { FaHeart } from 'react-icons/fa';
 
-/* ══════════════════════════════════════════
-   COMPONENT
-   ══════════════════════════════════════════ */
-export default function KonfirmasiKunjunganPage() {
-  /* In production these values come from the form context / API response.
-     We use static mock values matching the design reference. */
-  const visitData = {
-    dayName: 'Selasa',
-    date: '15 Oktober 2024',
-    time: '09:00 - 11:30',
-    sessionLabel: 'Sesi Pagi – Interaksi Sosial',
-    category: 'Melakukan Kegiatan Sosial',
-    hasDonation: false,
+/* ──────────────────────────────────────────
+   Helpers
+   ────────────────────────────────────────── */
+const MONTH_NAMES = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+];
+const DAY_NAMES = [
+  'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu',
+];
+
+/** Converts "2026-05-12" → { dayName: "Selasa", formatted: "12 Mei 2026" } */
+function parseDate(dateStr: string) {
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return { dayName: '', formatted: dateStr };
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10) - 1;
+  const d = parseInt(parts[2], 10);
+  const dt = new Date(y, m, d);
+  return {
+    dayName: DAY_NAMES[dt.getDay()],
+    formatted: `${d} ${MONTH_NAMES[m]} ${y}`,
   };
+}
+
+/* ══════════════════════════════════════════
+   COMPONENT (reads from URL search params)
+   ══════════════════════════════════════════ */
+function KonfirmasiContent() {
+  const searchParams = useSearchParams();
+
+  const rawDate = searchParams.get('date') || '';
+  const sessionLabel = decodeURIComponent(searchParams.get('session_label') || '');
+  const sessionTime = decodeURIComponent(searchParams.get('session_time') || '');
+  const category = decodeURIComponent(searchParams.get('category') || 'Kunjungan Biasa');
+  const hasDonation = searchParams.get('has_donation') === '1';
+
+  const { dayName, formatted: formattedDate } = parseDate(rawDate);
 
   return (
     <div className="bg-surface min-h-screen">
@@ -73,10 +98,10 @@ export default function KonfirmasiKunjunganPage() {
                 Tanggal Kunjungan
               </span>
               <p className="font-sans font-black text-lg text-on-surface leading-tight">
-                {visitData.dayName},
+                {dayName || '—'},
               </p>
               <p className="font-sans text-sm text-on-surface-variant mt-0.5">
-                {visitData.date}
+                {formattedDate || 'Belum tersedia'}
               </p>
             </GlassContainer>
 
@@ -88,11 +113,11 @@ export default function KonfirmasiKunjunganPage() {
               <div className="flex items-center gap-2 mb-1">
                 <FiClock className="text-on-surface text-base" />
                 <span className="font-sans font-black text-lg text-on-surface">
-                  {visitData.time}
+                  {sessionTime || '—'}
                 </span>
               </div>
               <p className="font-sans text-sm text-on-surface-variant mt-0.5">
-                {visitData.sessionLabel}
+                {sessionLabel ? `Sesi ${sessionLabel}` : '—'}
               </p>
             </GlassContainer>
 
@@ -105,7 +130,7 @@ export default function KonfirmasiKunjunganPage() {
                 Verified Impact
               </span>
               <p className="font-sans font-bold text-sm text-on-surface leading-snug">
-                {visitData.category}
+                {category}
               </p>
             </GlassContainer>
           </div>
@@ -139,7 +164,7 @@ export default function KonfirmasiKunjunganPage() {
       {/* ═══════════════════════════════════════
           DONATION FOLLOW-UP (conditional)
          ═══════════════════════════════════════ */}
-      {visitData.hasDonation && (
+      {hasDonation && (
         <section className="px-6 pb-8">
           <div className="max-w-2xl mx-auto text-center">
             <p className="font-sans text-sm text-on-surface-variant leading-relaxed mb-5">
@@ -161,7 +186,7 @@ export default function KonfirmasiKunjunganPage() {
          ═══════════════════════════════════════ */}
       <section className="px-6 pb-10">
         <div className="max-w-2xl mx-auto flex flex-col md:flex-row items-center justify-center gap-4">
-          {!visitData.hasDonation && (
+          {!hasDonation && (
             <Link href="/">
               <PrimaryButton className="inline-flex items-center justify-center gap-2 py-4 px-10 text-base font-bold tracking-wide rounded-xl">
                 Kembali ke Beranda
@@ -202,5 +227,17 @@ export default function KonfirmasiKunjunganPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function KonfirmasiKunjunganPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-surface min-h-screen flex items-center justify-center">
+        <p className="text-on-surface-variant font-sans text-sm animate-pulse">Memuat halaman...</p>
+      </div>
+    }>
+      <KonfirmasiContent />
+    </Suspense>
   );
 }

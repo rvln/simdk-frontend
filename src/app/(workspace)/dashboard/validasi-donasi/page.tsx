@@ -62,39 +62,51 @@ function mapDonation(raw: any): ValidasiData {
   }));
 
   return {
-    id:          raw.id,
-    resi:        raw.tracking_code ?? raw.id,
-    name:        displayName,
-    type:        raw.type as DonationType,
-    donor:       raw.donorName,
-    timeInfo:    new Date(raw.created_at).toLocaleDateString("id-ID", {
-                   day: "numeric", month: "short", year: "numeric"
-                 }),
+    id: raw.id,
+    resi: raw.tracking_code ?? raw.id,
+    name: displayName,
+    type: raw.type as DonationType,
+    donor: raw.donorName,
+    timeInfo: new Date(raw.created_at).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }),
     statusBadge: "MENUNGGU KEDATANGAN",
-    category:    firstItem?.inventory?.category ?? undefined,
-    condition:   "Baru",                          // Not stored in DB — physical check
-    quantity:    firstItem ? `${firstItem.qty} ${firstItem.inventory?.unit ?? ""}`.trim() : undefined,
-    amount:      raw.amount
-                   ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(raw.amount)
-                   : undefined,
-    imageUrl:    undefined,                       // No image URL in current schema
+    category: firstItem?.inventory?.category ?? undefined,
+    condition: "Baru", // Not stored in DB — physical check
+    quantity: firstItem
+      ? `${firstItem.qty} ${firstItem.inventory?.unit ?? ""}`.trim()
+      : undefined,
+    amount: raw.amount
+      ? new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          maximumFractionDigits: 0,
+        }).format(raw.amount)
+      : undefined,
+    imageUrl: undefined, // No image URL in current schema
     item_donations: mappedItems,
-    status:      raw.status,
-    expires_at:  raw.expires_at ?? undefined,
+    status: raw.status,
+    expires_at: raw.expires_at ?? undefined,
+    visit_id: raw.visit_id ?? undefined,
   };
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ValidasiDonasiPage() {
   const { user } = useAuth();
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
   const [items, setItems] = useState<ValidasiData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<DonationType>("BARANG");
-  const [selectedDonation, setSelectedDonation] = useState<ValidasiData | null>(null);
+  const [selectedDonation, setSelectedDonation] = useState<ValidasiData | null>(
+    null,
+  );
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,13 +130,18 @@ export default function ValidasiDonasiPage() {
       if (filterStatus) queryParams.append("status", filterStatus);
       if (debouncedSearch) queryParams.append("search", debouncedSearch);
       if (filterDate) queryParams.append("date", filterDate);
-      
+
       const res = await fetch(`${ENDPOINT}?${queryParams.toString()}`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
       });
       if (!res.ok) throw new Error(`Server responded with ${res.status}`);
       const json = await res.json();
-      const raw: ValidasiData[] = (Array.isArray(json) ? json : json.data ?? []).map(mapDonation);
+      const raw: ValidasiData[] = (
+        Array.isArray(json) ? json : (json.data ?? [])
+      ).map(mapDonation);
       setItems(raw);
     } catch (err: unknown) {
       setFetchError(err instanceof Error ? err.message : "Gagal memuat data.");
@@ -134,7 +151,9 @@ export default function ValidasiDonasiPage() {
     }
   }, [token, filterStatus, debouncedSearch, filterDate]);
 
-  useEffect(() => { fetchItems(); }, [fetchItems]);
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSelect = (item: ValidasiData) => {
@@ -158,17 +177,21 @@ export default function ValidasiDonasiPage() {
 
   const currentData = items.filter((donation) => {
     if (donation.type !== activeTab) return false;
-    
+
     // 1. Calculate the dynamic expiry state
-    const isExpired = donation.status === 'PENDING_DELIVERY' && !!donation.expires_at && new Date(donation.expires_at) < new Date();
-    
+    const isExpired =
+      donation.status === "PENDING_DELIVERY" &&
+      !!donation.expires_at &&
+      new Date(donation.expires_at) < new Date();
+
     // 2. Evaluate against the selected Dropdown Filter
-    if (filterStatus === 'ALL') return true;
-    if (filterStatus === 'EXPIRED') return isExpired; // Catch expired items
-    if (filterStatus === 'PENDING_DELIVERY') return donation.status === 'PENDING_DELIVERY' && !isExpired; // Catch ONLY active pending items
-    if (filterStatus === 'SUCCESS') return donation.status === 'SUCCESS';
-    if (filterStatus === 'REJECTED') return donation.status === 'REJECTED';
-    
+    if (filterStatus === "ALL") return true;
+    if (filterStatus === "EXPIRED") return isExpired; // Catch expired items
+    if (filterStatus === "PENDING_DELIVERY")
+      return donation.status === "PENDING_DELIVERY" && !isExpired; // Catch ONLY active pending items
+    if (filterStatus === "SUCCESS") return donation.status === "SUCCESS";
+    if (filterStatus === "REJECTED") return donation.status === "REJECTED";
+
     return true;
   });
 
@@ -186,7 +209,8 @@ export default function ValidasiDonasiPage() {
               Validasi &amp; Check-in Barang
             </h1>
             <p className="text-gray-500 text-lg">
-              Cocokkan kedatangan fisik barang atau pantau riwayat donasi finansial.
+              Cocokkan kedatangan fisik barang atau pantau riwayat donasi
+              finansial.
             </p>
           </div>
 
@@ -202,7 +226,9 @@ export default function ValidasiDonasiPage() {
                     : "bg-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
-                {tab === "BARANG" ? "Validasi Donasi Barang" : "Riwayat Transaksi Dana"}
+                {tab === "BARANG"
+                  ? "Validasi Donasi Barang"
+                  : "Riwayat Transaksi Dana"}
               </button>
             ))}
           </div>
@@ -255,7 +281,9 @@ export default function ValidasiDonasiPage() {
           {fetchError && (
             <div className="mb-6 flex items-center gap-3 px-5 py-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-sm">
               <FiAlertTriangle className="text-lg flex-shrink-0" />
-              <span className="flex-1">{fetchError} — Menampilkan data sementara.</span>
+              <span className="flex-1">
+                {fetchError} — Menampilkan data sementara.
+              </span>
               <button
                 onClick={fetchItems}
                 className="flex items-center gap-1.5 text-amber-700 font-bold hover:text-amber-900"
@@ -282,9 +310,10 @@ export default function ValidasiDonasiPage() {
               currentData.map((item) => {
                 const isSelected = selectedDonation?.id === item.id;
                 const isBarang = item.type === "BARANG";
-                const isExpired = item.status === "PENDING_DELIVERY"
-                  && !!item.expires_at
-                  && new Date(item.expires_at) < new Date();
+                const isExpired =
+                  item.status === "PENDING_DELIVERY" &&
+                  !!item.expires_at &&
+                  new Date(item.expires_at) < new Date();
 
                 return (
                   <div
@@ -301,13 +330,17 @@ export default function ValidasiDonasiPage() {
                         isSelected
                           ? "bg-blue-100 text-blue-600"
                           : isExpired
-                          ? "bg-red-50 text-red-400"
-                          : isBarang
-                          ? "bg-teal-50 text-teal-600"
-                          : "bg-green-50 text-green-600"
+                            ? "bg-red-50 text-red-400"
+                            : isBarang
+                              ? "bg-teal-50 text-teal-600"
+                              : "bg-green-50 text-green-600"
                       }`}
                     >
-                      {isBarang ? <FiBox className="text-2xl" /> : <FaMoneyBillWave className="text-2xl" />}
+                      {isBarang ? (
+                        <FiBox className="text-2xl" />
+                      ) : (
+                        <FaMoneyBillWave className="text-2xl" />
+                      )}
                     </div>
 
                     <div className="flex-1">
@@ -324,7 +357,9 @@ export default function ValidasiDonasiPage() {
                       </h3>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
-                          <span className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] text-gray-600">👤</span>
+                          <span className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] text-gray-600">
+                            👤
+                          </span>
                           {item.donor}
                         </span>
                         <span className="flex items-center gap-1">
@@ -337,16 +372,22 @@ export default function ValidasiDonasiPage() {
                     <div className="flex flex-col items-end justify-center gap-2">
                       <span
                         className={`px-3 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${
-                          item.status === 'SUCCESS' ? "bg-green-100 text-green-700" :
-                          item.status === 'REJECTED' ? "bg-red-100 text-red-700" :
-                          isExpired ? "bg-amber-100 text-amber-700" :
-                          "bg-gray-200/60 text-gray-600"
+                          item.status === "SUCCESS"
+                            ? "bg-green-100 text-green-700"
+                            : item.status === "REJECTED"
+                              ? "bg-red-100 text-red-700"
+                              : isExpired
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-gray-200/60 text-gray-600"
                         }`}
                       >
-                        {item.status === 'SUCCESS' ? "TERVALIDASI" :
-                         item.status === 'REJECTED' ? "DITOLAK" :
-                         isExpired ? "KEDALUWARSA" :
-                         "MENUNGGU KEDATANGAN"}
+                        {item.status === "SUCCESS"
+                          ? "TERVALIDASI"
+                          : item.status === "REJECTED"
+                            ? "DITOLAK"
+                            : isExpired
+                              ? "KEDALUWARSA"
+                              : "MENUNGGU KEDATANGAN"}
                       </span>
                       <FiChevronRight
                         className={`text-xl transition-transform duration-300 ${
@@ -392,10 +433,23 @@ const MOCK_FALLBACK: ValidasiData[] = [
     category: "PAKAIAN",
     condition: "Baru",
     quantity: "2 Pasang",
-    imageUrl: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=400&auto=format&fit=crop",
+    imageUrl:
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=400&auto=format&fit=crop",
     item_donations: [
-      { id: "mock-item-1", itemName_snapshot: "Sepatu Sekolah Anak", qty: 2, inventory_id: "inv-mock-1", unit: "Pasang" },
-      { id: "mock-item-2", itemName_snapshot: "Buku Tulis", qty: 10, inventory_id: "inv-mock-2", unit: "Pcs" }
+      {
+        id: "mock-item-1",
+        itemName_snapshot: "Sepatu Sekolah Anak",
+        qty: 2,
+        inventory_id: "inv-mock-1",
+        unit: "Pasang",
+      },
+      {
+        id: "mock-item-2",
+        itemName_snapshot: "Buku Tulis",
+        qty: 10,
+        inventory_id: "inv-mock-2",
+        unit: "Pcs",
+      },
     ],
     status: "PENDING_DELIVERY",
   },
