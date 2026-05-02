@@ -284,9 +284,38 @@ export default function ApprovalKunjunganPage() {
                       </p>
                     </div>
                     <div className="flex flex-col items-end justify-center gap-2">
-                      <span className="px-3 py-1 bg-gray-200/60 text-gray-600 text-[10px] font-bold tracking-wider rounded-full uppercase">
-                        {item.badge}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 bg-gray-200/60 text-gray-600 text-[10px] font-bold tracking-wider rounded-full uppercase">
+                          {item.badge}
+                        </span>
+                        <span
+                          className={`px-3 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${
+                            isExpired
+                              ? "bg-gray-100 text-gray-700"
+                              : item.status === "PENDING"
+                              ? "bg-blue-100 text-blue-700"
+                              : item.status === "APPROVED"
+                              ? "bg-green-100 text-green-700"
+                              : item.status === "REJECTED"
+                              ? "bg-red-100 text-red-700"
+                              : item.status === "RESCHEDULED" || item.status === "NEEDS_RESCHEDULE"
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-slate-100 text-slate-700"
+                          }`}
+                        >
+                          {isExpired
+                            ? "KEDALUWARSA"
+                            : item.status === "PENDING"
+                            ? "MENUNGGU"
+                            : item.status === "APPROVED"
+                            ? "DISETUJUI"
+                            : item.status === "REJECTED"
+                            ? "DITOLAK"
+                            : item.status === "RESCHEDULED" || item.status === "NEEDS_RESCHEDULE"
+                            ? "UBAH JADWAL"
+                            : item.status}
+                        </span>
+                      </div>
                       <FiChevronRight
                         className={`text-xl transition-transform duration-300 ${isSelected ? "text-teal-600 translate-x-1" : "text-gray-300 group-hover:text-teal-400 group-hover:translate-x-1"}`}
                       />
