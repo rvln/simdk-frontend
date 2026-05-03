@@ -13,7 +13,10 @@ import {
 } from "react-icons/fi";
 import { FaBoxOpen } from "react-icons/fa";
 import { GlobalDomainDrawer } from "@/components/workspace/GlobalDomainDrawer";
-import { KebutuhanData, KebutuhanFormInputs } from "@/components/workspace/drawer-contents/KebutuhanContent";
+import {
+  KebutuhanData,
+  KebutuhanFormInputs,
+} from "@/components/workspace/drawer-contents/KebutuhanContent";
 import { useAuth } from "@/hooks/useAuth";
 
 // ─── API endpoint constant — swap this single string when the backend is ready ───
@@ -26,27 +29,37 @@ const ENDPOINT = `${API_BASE}/kebutuhan`;
 // Removed deriveStatus as backend now returns status_kebutuhan
 function getCategoryColor(category: string) {
   switch (category.toLowerCase()) {
-    case "fasilitas": return "bg-green-800 text-white";
+    case "fasilitas":
+      return "bg-green-800 text-white";
     case "pakaian":
-    case "edukasi":   return "bg-teal-100 text-teal-800";
-    default:          return "bg-gray-100 text-gray-700";
+    case "edukasi":
+      return "bg-teal-100 text-teal-800";
+    default:
+      return "bg-gray-100 text-gray-700";
   }
 }
 
 function getStatusBadge(status: string) {
   switch (status) {
-    case "TERPENUHI": return "bg-green-100 text-green-700";
-    case "SEDANG BERLANGSUNG": return "bg-blue-100 text-blue-700";
-    default:          return "bg-gray-100 text-gray-700";
+    case "TERPENUHI":
+      return "bg-green-100 text-green-700";
+    case "SEDANG BERLANGSUNG":
+      return "bg-blue-100 text-blue-700";
+    default:
+      return "bg-gray-100 text-gray-700";
   }
 }
 
 function getPriorityBadge(priority: string) {
   switch (priority) {
-    case "MENDESAK":  return "bg-red-100 text-red-700";
-    case "PENTING":   return "bg-blue-100 text-blue-700";
-    case "OPSIONAL":  return "bg-slate-100 text-slate-700";
-    default:          return "bg-gray-100 text-gray-700";
+    case "MENDESAK":
+      return "bg-red-100 text-red-700";
+    case "PENTING":
+      return "bg-blue-100 text-blue-700";
+    case "OPSIONAL":
+      return "bg-slate-100 text-slate-700";
+    default:
+      return "bg-gray-100 text-gray-700";
   }
 }
 
@@ -77,12 +90,16 @@ function SkeletonCard() {
 
 export default function KelolaKebutuhanPage() {
   const { user } = useAuth();
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
   // ── Data state ───────────────────────────────────────────────────────────────
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // ── Tab state ──────────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<"KATALOG" | "ASET">("KATALOG");
 
   // ── Filter state ─────────────────────────────────────────────────────────────
   const [search, setSearch] = useState("");
@@ -122,7 +139,7 @@ export default function KelolaKebutuhanPage() {
       if (!res.ok) throw new Error(`Server responded with ${res.status}`);
       const json = await res.json();
       // Supports both { data: [...] } envelope and bare array
-      setItems(Array.isArray(json) ? json : json.data ?? []);
+      setItems(Array.isArray(json) ? json : (json.data ?? []));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Gagal memuat data.";
       setFetchError(message);
@@ -155,32 +172,41 @@ export default function KelolaKebutuhanPage() {
   };
 
   // ── Mutation handler (called by GlobalDomainDrawer → KebutuhanContent) ───────
-  const handleMutationSuccess = useCallback(async (data: KebutuhanFormInputs) => {
-    const isEdit = !!editingItem;
-    const url = isEdit ? `${ENDPOINT}/${editingItem!.id}` : ENDPOINT;
-    const method = isEdit ? "PUT" : "POST";
+  const handleMutationSuccess = useCallback(
+    async (data: KebutuhanFormInputs) => {
+      const isEdit = !!editingItem;
+      const url = isEdit ? `${ENDPOINT}/${editingItem!.id}` : ENDPOINT;
+      const method = isEdit ? "PUT" : "POST";
 
-    const res = await fetch(url, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+      const res = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}));
-      throw new Error(errBody?.message ?? `HTTP ${res.status}`);
-    }
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.message ?? `HTTP ${res.status}`);
+      }
 
-    // Re-fetch the list to keep server state as source of truth
-    await fetchItems();
-    closePanel();
-  }, [editingItem, token, fetchItems]);
+      // Re-fetch the list to keep server state as source of truth
+      await fetchItems();
+      closePanel();
+    },
+    [editingItem, token, fetchItems],
+  );
 
   // ─────────────────────────────────────────────────────────────────────────────
+
+  // Client-side segregation logic based on the explicit priority rule
+  const filteredItems = items.filter((item) => {
+    if (activeTab === "KATALOG") return item.priority !== null;
+    return item.priority === null;
+  });
 
   return (
     <div className="flex h-full w-full relative overflow-hidden">
@@ -197,9 +223,33 @@ export default function KelolaKebutuhanPage() {
               Kelola Kebutuhan &amp; Inventaris
             </h1>
             <p className="text-gray-500 text-lg">
-              Monitor and manage the essential supplies needed for children's well-being.
-              Transparently track donations and distribution cycles.
+              Monitor and manage the essential supplies needed for children's
+              well-being. Transparently track donations and distribution cycles.
             </p>
+          </div>
+
+          {/* ── Tabs ── */}
+          <div className="flex border-b border-gray-200 mb-6">
+            <button
+              onClick={() => setActiveTab("KATALOG")}
+              className={`pb-4 px-6 text-sm font-bold border-b-2 transition-colors ${
+                activeTab === "KATALOG"
+                  ? "border-[#0B648C] text-[#0B648C]"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Katalog Kebutuhan
+            </button>
+            <button
+              onClick={() => setActiveTab("ASET")}
+              className={`pb-4 px-6 text-sm font-bold border-b-2 transition-colors ${
+                activeTab === "ASET"
+                  ? "border-[#0B648C] text-[#0B648C]"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Aset Tambahan (Donasi Bebas)
+            </button>
           </div>
 
           {/* Action Bar */}
@@ -248,12 +298,18 @@ export default function KelolaKebutuhanPage() {
               <option value="PENTING">Penting</option>
               <option value="OPSIONAL">Opsional</option>
             </select>
-            <button
-              onClick={openAddForm}
-              className="flex items-center gap-2 px-6 py-3 bg-[#0B648C] text-white rounded-xl text-sm font-bold shadow-[0_4px_14px_rgba(11,100,140,0.3)] hover:bg-[#095273] transition-all hover:-translate-y-0.5 ml-auto"
-            >
-              <FiPlus className="text-lg" /> Tambah Kebutuhan
-            </button>
+            {activeTab === "KATALOG" ? (
+              <button
+                onClick={openAddForm}
+                className="flex items-center gap-2 px-6 py-3 bg-[#0B648C] text-white rounded-xl text-sm font-bold shadow-[0_4px_14px_rgba(11,100,140,0.3)] hover:bg-[#095273] transition-all hover:-translate-y-0.5 ml-auto whitespace-nowrap"
+              >
+                <FiPlus className="text-lg" /> Tambah Katalog
+              </button>
+            ) : (
+              <div className="ml-auto flex items-center justify-center px-4 py-3">
+                {/* Spacer to push filters to the left when button is hidden */}
+              </div>
+            )}
           </div>
 
           {/* ── Fetch Error Banner ── */}
@@ -277,33 +333,37 @@ export default function KelolaKebutuhanPage() {
             {isLoading ? (
               // Loading skeletons — 3 cards
               Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
-            ) : items.length === 0 ? (
+            ) : filteredItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                 <FaBoxOpen className="text-5xl mb-4" />
-                <p className="text-base font-medium">Belum ada data kebutuhan.</p>
-                <button
-                  onClick={openAddForm}
-                  className="mt-4 text-sm text-[#0B648C] font-bold hover:underline"
-                >
-                  + Tambahkan yang pertama
-                </button>
+                <p className="text-base font-medium">
+                  Belum ada data di kategori ini.
+                </p>
+                {activeTab === "KATALOG" && (
+                  <button
+                    onClick={openAddForm}
+                    className="mt-4 text-sm text-[#0B648C] font-bold hover:underline"
+                  >
+                    + Tambahkan yang pertama
+                  </button>
+                )}
               </div>
             ) : (
-              items.map((item) => {
+              filteredItems.map((item) => {
                 const isFulfilled = item.status_kebutuhan === "TERPENUHI";
                 const terkumpul = item.stock ?? 0;
                 const virtualStock = item.virtual_stock ?? 0;
                 const effectiveTotal = terkumpul + virtualStock;
                 const progressPercentage = Math.min(
                   Math.round((effectiveTotal / item.target_qty) * 100),
-                  100
+                  100,
                 );
 
                 return (
                   <div
                     key={item.id}
                     className={`bg-white p-6 rounded-2xl flex gap-6 items-center transition-all duration-300 shadow-sm ${
-                      isFulfilled
+                      activeTab !== "ASET" && isFulfilled
                         ? "opacity-60 grayscale-[30%] hover:grayscale-0 hover:opacity-100"
                         : "hover:shadow-md hover:-translate-y-0.5"
                     }`}
@@ -325,23 +385,28 @@ export default function KelolaKebutuhanPage() {
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span
-                          className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getCategoryColor(item.category)}`}
-                        >
-                          {item.category.toUpperCase()}
-                        </span>
-                        <span
-                          className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getPriorityBadge(item.priority)}`}
-                        >
-                          {item.priority}
-                        </span>
-                        <span
-                          className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getStatusBadge(item.status_kebutuhan)}`}
-                        >
-                          {item.status_kebutuhan}
-                        </span>
-                      </div>
+                      {/* ── Badge hanya ditampilkan di tab KATALOG ── */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span
+                            className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getCategoryColor(item.category)}`}
+                          >
+                            {item.category.toUpperCase()}
+                          </span>
+                          {item.priority && (
+                            <span
+                              className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getPriorityBadge(item.priority)}`}
+                            >
+                              {item.priority}
+                            </span>
+                          )}
+                          {item.status_kebutuhan && (
+                            <span
+                              className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getStatusBadge(item.status_kebutuhan)}`}
+                            >
+                              {item.status_kebutuhan}
+                            </span>
+                          )}
+                        </div>
                       <h3 className="text-lg font-bold text-gray-900 mb-1 truncate">
                         {item.itemName}
                       </h3>
@@ -352,8 +417,17 @@ export default function KelolaKebutuhanPage() {
 
                     {/* Progress */}
                     <div className="w-64 flex-shrink-0 flex flex-col justify-center">
+                      {/* Baris atas progress */}
                       <div className="flex justify-between items-end mb-2">
-                        {isFulfilled ? (
+                        {/* ── Tampilan polos untuk tab ASET ── */}
+                        {activeTab === "ASET" ? (
+                          <span className="text-sm font-medium text-slate-700">
+                            Kapasitas Terisi:{" "}
+                            <span className="font-bold text-[#0B648C]">
+                              {terkumpul}
+                            </span>
+                          </span>
+                        ) : isFulfilled ? (
                           <span className="text-sm font-bold text-green-700 flex items-center gap-1">
                             <FiCheckCircle /> Selesai
                           </span>
@@ -370,30 +444,49 @@ export default function KelolaKebutuhanPage() {
                             )}
                           </span>
                         )}
-                        <span className="text-xs text-gray-500 font-medium">
-                          Target: {item.target_qty}
-                        </span>
+
+                        {/* Target hanya di tab KATALOG */}
+                        {activeTab !== "ASET" && (
+                          <span className="text-xs text-gray-500 font-medium">
+                            Target: {item.target_qty}
+                          </span>
+                        )}
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                        {/* Confirmed stock (solid) */}
-                        <div className="h-full rounded-full relative" style={{ width: `${Math.min(Math.round((effectiveTotal / item.target_qty) * 100), 100)}%` }}>
+
+                      {/* Progress bar */}
+                      {activeTab === "ASET" ? (
+                        /* Track abu‑abu polos tanpa isian */
+                        <div className="w-full bg-slate-200 rounded-full h-2" />
+                      ) : (
+                        <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all duration-1000 ${
-                              isFulfilled ? "bg-green-700" : "bg-[#0B648C]"
-                            }`}
-                            style={{ width: `${effectiveTotal > 0 ? Math.round((terkumpul / effectiveTotal) * 100) : 100}%` }}
-                          />
-                          {virtualStock > 0 && !isFulfilled && (
+                            className="h-full rounded-full relative"
+                            style={{
+                              width: `${Math.min(Math.round((effectiveTotal / item.target_qty) * 100), 100)}%`,
+                            }}
+                          >
                             <div
-                              className="absolute top-0 right-0 h-full bg-amber-400/50 rounded-r-full"
-                              style={{ width: `${effectiveTotal > 0 ? Math.round((virtualStock / effectiveTotal) * 100) : 0}%` }}
+                              className={`h-full rounded-full transition-all duration-1000 ${
+                                isFulfilled ? "bg-green-700" : "bg-[#0B648C]"
+                              }`}
+                              style={{
+                                width: `${effectiveTotal > 0 ? Math.round((terkumpul / effectiveTotal) * 100) : 100}%`,
+                              }}
                             />
-                          )}
+                            {virtualStock > 0 && !isFulfilled && (
+                              <div
+                                className="absolute top-0 right-0 h-full bg-amber-400/50 rounded-r-full"
+                                style={{
+                                  width: `${effectiveTotal > 0 ? Math.round((virtualStock / effectiveTotal) * 100) : 0}%`,
+                                }}
+                              />
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
-                    {/* Actions */}
+                    {/* Actions – tetap muncul di kedua tab */}
                     <div className="flex items-center gap-2 border-l border-gray-100 pl-6 ml-2">
                       <button
                         onClick={() => openEditForm(item)}
@@ -435,7 +528,8 @@ const MOCK_FALLBACK: KebutuhanData[] = [
     id: "1",
     itemName: "Sepatu Sekolah Anak",
     category: "PAKAIAN",
-    description: "Kebutuhan untuk 24 anak panti usia SD - SMP (Ukuran bervariasi).",
+    description:
+      "Kebutuhan untuk 24 anak panti usia SD - SMP (Ukuran bervariasi).",
     stock: 18,
     target_qty: 24,
     unit: "Pasang",
@@ -461,7 +555,8 @@ const MOCK_FALLBACK: KebutuhanData[] = [
     id: "3",
     itemName: "Paket Alat Tulis Lengkap",
     category: "PENDIDIKAN",
-    description: "Buku tulis, pensil, penghapus, dan penggaris untuk semester baru.",
+    description:
+      "Buku tulis, pensil, penghapus, dan penggaris untuk semester baru.",
     stock: 50,
     target_qty: 50,
     unit: "Paket",

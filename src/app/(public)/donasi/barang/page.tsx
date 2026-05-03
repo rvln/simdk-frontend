@@ -32,7 +32,6 @@ type CatalogItem = {
   next_available_date: string;
 };
 
-
 const kategoriOptions = [
   "Sembako & Pangan Dasar",
   "Peralatan Pendidikan",
@@ -61,9 +60,13 @@ export default function DonasiBarangCheckoutPage() {
   const router = useRouter();
 
   // Global States
-  const [identity, setIdentity] = useState({ donor_name: "", donor_phone: "", donor_email: "" });
+  const [identity, setIdentity] = useState({
+    donor_name: "",
+    donor_phone: "",
+    donor_email: "",
+  });
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [activeTab, setActiveTab] = useState<"MANUAL" | "KATALOG">("MANUAL");
+  const [activeTab, setActiveTab] = useState<"MANUAL" | "KATALOG">("KATALOG");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,16 +110,18 @@ export default function DonasiBarangCheckoutPage() {
   React.useEffect(() => {
     if (activeTab === "KATALOG" && catalogNeeds.length === 0) {
       setIsLoadingCatalog(true);
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/public/katalog-kebutuhan`)
-        .then(res => res.json())
-        .then(json => {
-          if (json.status === 'success') {
+      fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/public/katalog-kebutuhan`,
+      )
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.status === "success") {
             setCatalogNeeds(json.data);
           }
         })
         .finally(() => setIsLoadingCatalog(false));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   /* ───── HANDLERS ───── */
@@ -124,25 +129,33 @@ export default function DonasiBarangCheckoutPage() {
     setIdentity({ ...identity, [e.target.id]: e.target.value });
   };
 
-  const handleManualFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleManualFormChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     setManualForm({ ...manualForm, [e.target.id]: e.target.value });
   };
 
   const handleAddManual = async () => {
-    if (!manualForm.item_name || !manualForm.item_category || !manualForm.item_qty) {
+    if (
+      !manualForm.item_name ||
+      !manualForm.item_category ||
+      !manualForm.item_qty
+    ) {
       alert("Nama Barang, Kategori, dan Jumlah wajib diisi.");
       return;
     }
-    
+
     setIsCompressing(true);
     let finalPhotoFile = manualPhotoFile;
     let finalPhotoName = manualPhotoName;
-    
+
     if (manualPhotoFile) {
       finalPhotoFile = await handleImageCompression(manualPhotoFile);
       finalPhotoName = finalPhotoFile.name;
     }
-    
+
     const newItem: CartItem = {
       id: Date.now().toString(),
       source: "MANUAL",
@@ -151,7 +164,7 @@ export default function DonasiBarangCheckoutPage() {
       photoFile: finalPhotoFile,
     };
     setCartItems([...cartItems, newItem]);
-    
+
     // Reset Manual Form
     setManualForm({
       item_name: "",
@@ -170,16 +183,16 @@ export default function DonasiBarangCheckoutPage() {
       alert("Silakan pilih barang dari katalog dan masukkan jumlahnya.");
       return;
     }
-    
+
     setIsCompressing(true);
     let finalPhotoFile = catalogPhotoFile;
     let finalPhotoName = catalogPhotoName;
-    
+
     if (catalogPhotoFile) {
       finalPhotoFile = await handleImageCompression(catalogPhotoFile);
       finalPhotoName = finalPhotoFile.name;
     }
-    
+
     const newItem: CartItem = {
       id: selectedNeed.id,
       source: "KATALOG",
@@ -192,7 +205,7 @@ export default function DonasiBarangCheckoutPage() {
       photoFile: finalPhotoFile,
     };
     setCartItems([...cartItems, newItem]);
-    
+
     // Reset Catalog Form
     setSelectedNeed(null);
     setCatalogQty("");
@@ -202,7 +215,7 @@ export default function DonasiBarangCheckoutPage() {
   };
 
   const handleRemoveItem = (id: string) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+    setCartItems(cartItems.filter((item) => item.id !== id));
   };
 
   const handleEditItem = (item: CartItem) => {
@@ -220,7 +233,8 @@ export default function DonasiBarangCheckoutPage() {
       setManualPhotoFile(item.photoFile || null);
     } else {
       setActiveTab("KATALOG");
-      const need = catalogNeeds.find(n => n.itemName === item.item_name) || null;
+      const need =
+        catalogNeeds.find((n) => n.itemName === item.item_name) || null;
       setSelectedNeed(need);
       setCatalogQty(item.item_qty);
       setCatalogPhotoName(item.photoName);
@@ -233,7 +247,9 @@ export default function DonasiBarangCheckoutPage() {
 
   const submitFinalDonation = async () => {
     if (!identity.donor_name || !identity.donor_phone) {
-      alert("Mohon lengkapi Identitas Donatur (Nama & WhatsApp) sebelum checkout.");
+      alert(
+        "Mohon lengkapi Identitas Donatur (Nama & WhatsApp) sebelum checkout.",
+      );
       setIsCheckoutOpen(false);
       return;
     }
@@ -241,28 +257,31 @@ export default function DonasiBarangCheckoutPage() {
       alert("Keranjang donasi masih kosong.");
       return;
     }
-    
+
     setIsSubmitting(true);
 
     try {
       const payload = {
         donorName: identity.donor_name,
         donorPhone: identity.donor_phone,
-        items: cartItems.map(item => ({
+        items: cartItems.map((item) => ({
           id: item.source === "KATALOG" ? item.id : "MANUAL",
           name: item.item_name,
-          qty: parseInt(item.item_qty)
-        }))
+          qty: parseInt(item.item_qty),
+        })),
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/public/donasi-barang`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/public/donasi-barang`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload)
-      });
+      );
 
       const data = await res.json();
 
@@ -289,7 +308,6 @@ export default function DonasiBarangCheckoutPage() {
     <div className="bg-[#F9FAFB] min-h-screen pb-32">
       <section className="px-6 md:px-12 lg:px-20 py-16 lg:py-24">
         <div className="max-w-3xl mx-auto space-y-8">
-          
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-3xl md:text-4xl font-black tracking-tighter leading-[1.1] text-gray-900 mb-3 italic">
@@ -312,7 +330,7 @@ export default function DonasiBarangCheckoutPage() {
                 Identitas Donatur
               </h2>
             </div>
-            
+
             <div className="space-y-5">
               <InputField
                 id="donor_name"
@@ -346,22 +364,32 @@ export default function DonasiBarangCheckoutPage() {
               SEKSI 2: SISTEM 2 TAB INPUT BARANG
           ═══════════════════════════════════════ */}
           <div className="bg-white/80 backdrop-blur-xl shadow-sm rounded-2xl p-6 md:p-8 border-none">
-            
             {/* Tabs Navigation */}
             <div className="flex gap-2 p-1.5 bg-gray-100 rounded-xl mb-8">
-              <button
-                onClick={() => setActiveTab("MANUAL")}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-all ${activeTab === "MANUAL" ? "bg-white text-teal-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-              >
-                <MdOutlineAssignment className="text-lg" />
-                Formulir Bebas
-              </button>
+              {/* ── KATALOG dipindah ke kiri ── */}
               <button
                 onClick={() => setActiveTab("KATALOG")}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-all ${activeTab === "KATALOG" ? "bg-white text-teal-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-all ${
+                  activeTab === "KATALOG"
+                    ? "bg-white text-teal-700 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
               >
                 <MdOutlineInventory2 className="text-lg" />
                 Katalog Kebutuhan
+              </button>
+
+              {/* ── MANUAL dipindah ke kanan ── */}
+              <button
+                onClick={() => setActiveTab("MANUAL")}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-all ${
+                  activeTab === "MANUAL"
+                    ? "bg-white text-teal-700 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <MdOutlineAssignment className="text-lg" />
+                Formulir Bebas
               </button>
             </div>
 
@@ -375,18 +403,26 @@ export default function DonasiBarangCheckoutPage() {
                   value={manualForm.item_name}
                   onChange={handleManualFormChange}
                 />
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-1">
-                    <label className="text-sm font-public-sans font-semibold text-gray-500">Kategori *</label>
+                    <label className="text-sm font-public-sans font-semibold text-gray-500">
+                      Kategori *
+                    </label>
                     <select
                       id="item_category"
                       value={manualForm.item_category}
                       onChange={handleManualFormChange}
                       className="w-full px-4 py-3 bg-gray-50 rounded-md transition-colors focus:outline-none focus:ring-0 border-none appearance-none text-sm font-sans text-gray-900 cursor-pointer"
                     >
-                      <option value="" disabled>Pilih Kategori</option>
-                      {kategoriOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      <option value="" disabled>
+                        Pilih Kategori
+                      </option>
+                      {kategoriOptions.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <InputField
@@ -400,24 +436,34 @@ export default function DonasiBarangCheckoutPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-1">
-                    <label className="text-sm font-public-sans font-semibold text-gray-500">Kondisi</label>
+                    <label className="text-sm font-public-sans font-semibold text-gray-500">
+                      Kondisi
+                    </label>
                     <select
                       id="item_condition"
                       value={manualForm.item_condition}
                       onChange={handleManualFormChange}
                       className="w-full px-4 py-3 bg-gray-50 rounded-md transition-colors focus:outline-none focus:ring-0 border-none appearance-none text-sm font-sans text-gray-900 cursor-pointer"
                     >
-                      {kondisiOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      {kondisiOptions.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-sm font-public-sans font-semibold text-gray-500">Upload Foto Barang (Opsional)</label>
+                    <label className="text-sm font-public-sans font-semibold text-gray-500">
+                      Upload Foto Barang (Opsional)
+                    </label>
                     <button
                       type="button"
                       onClick={() => manualFileInputRef.current?.click()}
                       className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors text-sm font-sans text-gray-500 flex items-center justify-between"
                     >
-                      <span className="truncate">{manualPhotoName || "Pilih file foto..."}</span>
+                      <span className="truncate">
+                        {manualPhotoName || "Pilih file foto..."}
+                      </span>
                       <MdCloudUpload className="text-lg flex-shrink-0" />
                     </button>
                     <input
@@ -440,7 +486,9 @@ export default function DonasiBarangCheckoutPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-public-sans font-semibold text-gray-500">Deskripsi Tambahan</label>
+                  <label className="text-sm font-public-sans font-semibold text-gray-500">
+                    Deskripsi Tambahan
+                  </label>
                   <textarea
                     id="item_description"
                     rows={3}
@@ -486,35 +534,49 @@ export default function DonasiBarangCheckoutPage() {
                         Tidak ada kebutuhan barang saat ini.
                       </div>
                     ) : (
-                      catalogNeeds.map(need => (
-                        <div 
-                          key={need.id} 
+                      catalogNeeds.map((need) => (
+                        <div
+                          key={need.id}
                           onClick={() => {
                             if (!need.is_disabled) setSelectedNeed(need);
                           }}
                           className={`p-5 rounded-xl transition-colors border ${
-                            need.is_disabled 
-                              ? "bg-gray-100 opacity-60 grayscale cursor-not-allowed border-transparent" 
+                            need.is_disabled
+                              ? "bg-gray-100 opacity-60 grayscale cursor-not-allowed border-transparent"
                               : "bg-gray-50 hover:bg-teal-50 cursor-pointer border-transparent hover:border-teal-200"
                           }`}
                         >
-                          <h3 className="font-bold text-gray-900 mb-1">{need.itemName}</h3>
-                          <p className="text-xs text-gray-500 mb-3">{need.category}</p>
+                          <h3 className="font-bold text-gray-900 mb-1">
+                            {need.itemName}
+                          </h3>
+                          <p className="text-xs text-gray-500 mb-3">
+                            {need.category}
+                          </p>
                           {need.is_disabled ? (
                             <div className="text-xs font-medium text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
-                              Kapasitas Gudang Penuh. Dapat disumbangkan kembali saat stok berkurang.
+                              Kapasitas Gudang Penuh. Dapat disumbangkan kembali
+                              saat stok berkurang.
                             </div>
                           ) : (
                             <div className="space-y-1">
                               <div className="flex items-center justify-between text-sm">
-                                <span className="text-gray-500">Sisa Dibutuhkan:</span>
-                                <span className="font-bold text-red-500">{need.remaining_need} {need.unit}</span>
+                                <span className="text-gray-500">
+                                  Sisa Dibutuhkan:
+                                </span>
+                                <span className="font-bold text-red-500">
+                                  {need.remaining_need} {need.unit}
+                                </span>
                               </div>
                               {need.virtual_stock > 0 && (
                                 <div className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-400">Kapasitas Terisi:</span>
+                                  <span className="text-gray-400">
+                                    Kapasitas Terisi:
+                                  </span>
                                   <span className="font-semibold text-gray-600">
-                                    {need.stock} <span className="text-amber-600">(+{need.virtual_stock} Menunggu)</span>
+                                    {need.stock}{" "}
+                                    <span className="text-amber-600">
+                                      (+{need.virtual_stock} Menunggu)
+                                    </span>
                                   </span>
                                 </div>
                               )}
@@ -527,15 +589,24 @@ export default function DonasiBarangCheckoutPage() {
                 ) : (
                   <div className="space-y-6">
                     <div className="bg-teal-50 p-5 rounded-xl relative">
-                      <button 
+                      <button
                         onClick={() => setSelectedNeed(null)}
                         className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
                       >
                         <MdClose className="text-xl" />
                       </button>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-teal-600 mb-1 block">Barang Dipilih</span>
-                      <h3 className="font-bold text-gray-900 text-lg">{selectedNeed.itemName}</h3>
-                      <p className="text-sm text-gray-500 mt-1">Kebutuhan Tersisa: <span className="font-bold text-red-500">{selectedNeed.remaining_need} {selectedNeed.unit}</span></p>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-teal-600 mb-1 block">
+                        Barang Dipilih
+                      </span>
+                      <h3 className="font-bold text-gray-900 text-lg">
+                        {selectedNeed.itemName}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Kebutuhan Tersisa:{" "}
+                        <span className="font-bold text-red-500">
+                          {selectedNeed.remaining_need} {selectedNeed.unit}
+                        </span>
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -546,13 +617,17 @@ export default function DonasiBarangCheckoutPage() {
                         onChange={(e) => setCatalogQty(e.target.value)}
                       />
                       <div className="flex flex-col gap-1">
-                        <label className="text-sm font-public-sans font-semibold text-gray-500">Upload Foto Barang (Opsional)</label>
+                        <label className="text-sm font-public-sans font-semibold text-gray-500">
+                          Upload Foto Barang (Opsional)
+                        </label>
                         <button
                           type="button"
                           onClick={() => catalogFileInputRef.current?.click()}
                           className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors text-sm font-sans text-gray-500 flex items-center justify-between"
                         >
-                          <span className="truncate">{catalogPhotoName || "Pilih file foto..."}</span>
+                          <span className="truncate">
+                            {catalogPhotoName || "Pilih file foto..."}
+                          </span>
                           <MdCloudUpload className="text-lg flex-shrink-0" />
                         </button>
                         <input
@@ -595,9 +670,7 @@ export default function DonasiBarangCheckoutPage() {
                 )}
               </div>
             )}
-
           </div>
-
         </div>
       </section>
 
@@ -611,7 +684,7 @@ export default function DonasiBarangCheckoutPage() {
         >
           <MdOutlineShoppingCart className="text-2xl" />
           <span className="font-bold hidden md:block">Checkout Donasi</span>
-          
+
           {/* Badge */}
           {cartItems.length > 0 && (
             <span className="absolute -top-3 -right-3 bg-red-500 text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center border-2 border-[#F9FAFB] shadow-sm animate-in zoom-in">
@@ -626,8 +699,11 @@ export default function DonasiBarangCheckoutPage() {
       ═══════════════════════════════════════ */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={() => setIsCheckoutOpen(false)}></div>
-          
+          <div
+            className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+            onClick={() => setIsCheckoutOpen(false)}
+          ></div>
+
           <div className="bg-white/95 backdrop-blur-xl w-full max-w-2xl rounded-3xl shadow-2xl z-10 overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 md:p-8 flex items-center justify-between border-b border-gray-100">
               <div className="flex items-center gap-3">
@@ -635,11 +711,18 @@ export default function DonasiBarangCheckoutPage() {
                   <MdOutlineShoppingCart className="text-xl" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-gray-900">Keranjang Donasi</h2>
-                  <p className="text-xs text-gray-500">{identity.donor_name || "Donatur Anonim"}</p>
+                  <h2 className="text-xl font-black text-gray-900">
+                    Keranjang Donasi
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    {identity.donor_name || "Donatur Anonim"}
+                  </p>
                 </div>
               </div>
-              <button onClick={() => setIsCheckoutOpen(false)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
+              <button
+                onClick={() => setIsCheckoutOpen(false)}
+                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+              >
                 <MdClose className="text-xl" />
               </button>
             </div>
@@ -650,21 +733,35 @@ export default function DonasiBarangCheckoutPage() {
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
                     <MdOutlineShoppingCart className="text-4xl" />
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-2">Keranjang Masih Kosong</h3>
-                  <p className="text-sm text-gray-500 max-w-xs mx-auto">Silakan tambahkan barang donasi melalui Formulir Bebas atau Katalog Kebutuhan.</p>
+                  <h3 className="font-bold text-gray-900 mb-2">
+                    Keranjang Masih Kosong
+                  </h3>
+                  <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                    Silakan tambahkan barang donasi melalui Formulir Bebas atau
+                    Katalog Kebutuhan.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {cartItems.map((item, index) => (
-                    <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 justify-between group hover:shadow-md transition-shadow">
+                    <div
+                      key={item.id}
+                      className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 justify-between group hover:shadow-md transition-shadow"
+                    >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${item.source === 'KATALOG' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${item.source === "KATALOG" ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"}`}
+                          >
                             {item.source}
                           </span>
-                          <h4 className="font-bold text-gray-900">{item.item_name}</h4>
+                          <h4 className="font-bold text-gray-900">
+                            {item.item_name}
+                          </h4>
                         </div>
-                        <p className="text-sm text-gray-500 mb-2">{item.item_category} &bull; {item.item_condition}</p>
+                        <p className="text-sm text-gray-500 mb-2">
+                          {item.item_category} &bull; {item.item_condition}
+                        </p>
                         <div className="inline-block px-3 py-1 bg-gray-50 rounded-lg text-sm font-bold text-gray-700">
                           Qty: {item.item_qty}
                         </div>
@@ -674,15 +771,15 @@ export default function DonasiBarangCheckoutPage() {
                           </p>
                         )}
                       </div>
-                      
+
                       <div className="flex items-start gap-2 border-t border-gray-100 pt-3 sm:border-none sm:pt-0">
-                        <button 
+                        <button
                           onClick={() => handleEditItem(item)}
                           className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors text-sm font-bold"
                         >
                           <MdEdit /> Edit
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleRemoveItem(item.id)}
                           className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 hover:text-red-700 transition-colors text-sm font-bold"
                         >
@@ -696,7 +793,7 @@ export default function DonasiBarangCheckoutPage() {
             </div>
 
             <div className="p-6 md:p-8 border-t border-gray-100 bg-white">
-              <PrimaryButton 
+              <PrimaryButton
                 onClick={submitFinalDonation}
                 disabled={cartItems.length === 0 || isSubmitting}
                 className="w-full py-4 text-lg font-bold shadow-xl shadow-teal-900/20 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
@@ -714,7 +811,6 @@ export default function DonasiBarangCheckoutPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

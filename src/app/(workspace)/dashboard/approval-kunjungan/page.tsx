@@ -106,7 +106,11 @@ export default function ApprovalKunjunganPage() {
     setFetchError(null);
     try {
       const queryParams = new URLSearchParams();
-      if (filterStatus && filterStatus !== "EXPIRED" && filterStatus !== "PENDING") {
+      if (
+        filterStatus &&
+        filterStatus !== "EXPIRED" &&
+        filterStatus !== "PENDING"
+      ) {
         queryParams.append("status", filterStatus);
       } else {
         queryParams.append("status", "ALL");
@@ -209,6 +213,8 @@ export default function ApprovalKunjunganPage() {
                 <option value="NEEDS_RESCHEDULE">Perlu Ubah Jadwal</option>
                 <option value="REJECTED">Ditolak</option>
                 <option value="EXPIRED">Kedaluwarsa</option>
+                <option value="COMPLETED">Selesai</option>
+                <option value="NO_SHOW">Tidak Hadir</option>
                 <option value="ALL">Semua</option>
               </select>
             </div>
@@ -252,11 +258,21 @@ export default function ApprovalKunjunganPage() {
               visits.map((item) => {
                 const isSelected = selectedVisit?.id === item.id;
                 const isExpired = !!item.is_expired;
-                
+
                 // Array Filtering
-                if (filterStatus === 'EXPIRED' && !isExpired) return null;
-                if (filterStatus === 'PENDING' && (item.status !== 'PENDING' || isExpired)) return null;
-                if (filterStatus !== 'ALL' && filterStatus !== 'EXPIRED' && filterStatus !== 'PENDING' && item.status !== filterStatus) return null;
+                if (filterStatus === "EXPIRED" && !isExpired) return null;
+                if (
+                  filterStatus === "PENDING" &&
+                  (item.status !== "PENDING" || isExpired)
+                )
+                  return null;
+                if (
+                  filterStatus !== "ALL" &&
+                  filterStatus !== "EXPIRED" &&
+                  filterStatus !== "PENDING" &&
+                  item.status !== filterStatus
+                )
+                  return null;
 
                 return (
                   <div
@@ -293,27 +309,29 @@ export default function ApprovalKunjunganPage() {
                             isExpired
                               ? "bg-gray-100 text-gray-700"
                               : item.status === "PENDING"
-                              ? "bg-blue-100 text-blue-700"
-                              : item.status === "APPROVED"
-                              ? "bg-green-100 text-green-700"
-                              : item.status === "REJECTED"
-                              ? "bg-red-100 text-red-700"
-                              : item.status === "RESCHEDULED" || item.status === "NEEDS_RESCHEDULE"
-                              ? "bg-orange-100 text-orange-700"
-                              : "bg-slate-100 text-slate-700"
+                                ? "bg-blue-100 text-blue-700"
+                                : item.status === "APPROVED"
+                                  ? "bg-green-100 text-green-700"
+                                  : item.status === "REJECTED"
+                                    ? "bg-red-100 text-red-700"
+                                    : item.status === "RESCHEDULED" ||
+                                        item.status === "NEEDS_RESCHEDULE"
+                                      ? "bg-orange-100 text-orange-700"
+                                      : "bg-slate-100 text-slate-700"
                           }`}
                         >
                           {isExpired
                             ? "KEDALUWARSA"
                             : item.status === "PENDING"
-                            ? "MENUNGGU"
-                            : item.status === "APPROVED"
-                            ? "DISETUJUI"
-                            : item.status === "REJECTED"
-                            ? "DITOLAK"
-                            : item.status === "RESCHEDULED" || item.status === "NEEDS_RESCHEDULE"
-                            ? "UBAH JADWAL"
-                            : item.status}
+                              ? "MENUNGGU"
+                              : item.status === "APPROVED"
+                                ? "DISETUJUI"
+                                : item.status === "REJECTED"
+                                  ? "DITOLAK"
+                                  : item.status === "RESCHEDULED" ||
+                                      item.status === "NEEDS_RESCHEDULE"
+                                    ? "UBAH JADWAL"
+                                    : item.status}
                         </span>
                       </div>
                       <FiChevronRight

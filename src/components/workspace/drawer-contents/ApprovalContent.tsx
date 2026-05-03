@@ -46,6 +46,8 @@ export function ApprovalContent({
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [isRescheduling, setIsRescheduling] = useState(false);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [isNoShow, setIsNoShow] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [rejectReason, setRejectReason] = useState("");
@@ -56,6 +58,8 @@ export function ApprovalContent({
     setIsApproving(false);
     setIsRejecting(false);
     setIsRescheduling(false);
+    setIsCheckingIn(false);
+    setIsNoShow(false);
     setApiError(null);
   };
 
@@ -160,6 +164,42 @@ export function ApprovalContent({
           body: JSON.stringify({ recommendation_notes: rescheduleNotes }),
         },
       );
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.message ?? `HTTP ${res.status}`);
+      onSuccess();
+      onClose();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setApiError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResolve = async (status: "COMPLETED" | "NO_SHOW") => {
+    if (status === "COMPLETED" && !isCheckingIn) {
+      resetStates();
+      setIsCheckingIn(true);
+      return;
+    }
+    if (status === "NO_SHOW" && !isNoShow) {
+      resetStates();
+      setIsNoShow(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setApiError(null);
+    try {
+      const res = await fetch(`${API_BASE}/visits/${data.id}/resolve`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.message ?? `HTTP ${res.status}`);
       onSuccess();
@@ -293,21 +333,43 @@ export function ApprovalContent({
             />
           </div>
         )}
+
+        {isCheckingIn && (
+          <div className="animate-in fade-in slide-in-from-top-2 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+            <p className="text-sm text-emerald-800">
+              Anda akan mengkonfirmasi kehadiran (Check-In) pengunjung ini. Pastikan pengunjung telah hadir di panti.
+            </p>
+          </div>
+        )}
+
+        {isNoShow && (
+          <div className="animate-in fade-in slide-in-from-top-2 bg-red-50/50 p-4 rounded-2xl border border-red-100">
+            <p className="text-sm text-red-800">
+              Anda akan menandai pengunjung ini sebagai Tidak Hadir (No-Show). Aksi ini tidak dapat dibatalkan.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="p-6 flex items-center gap-4 bg-white border-t border-gray-50/50 mt-auto">
-        {["APPROVED", "NEEDS_RESCHEDULE", "REJECTED"].includes(data.status) ? (
+        {["COMPLETED", "NO_SHOW", "NEEDS_RESCHEDULE", "REJECTED"].includes(data.status) ? (
           (() => {
             // Kamus Keadaan (State Dictionary)
             const stateConfig: Record<
               string,
               { bg: string; icon: string; text: string; message: string }
             > = {
-              APPROVED: {
+              COMPLETED: {
                 bg: "bg-emerald-50 border-emerald-200",
                 icon: "text-emerald-500",
                 text: "text-emerald-700",
-                message: "Kunjungan telah disetujui.",
+                message: "Kunjungan telah selesai (Hadir).",
+              },
+              NO_SHOW: {
+                bg: "bg-gray-50 border-gray-200",
+                icon: "text-gray-500",
+                text: "text-gray-700",
+                message: "Pengunjung tidak hadir (No-Show).",
               },
               NEEDS_RESCHEDULE: {
                 bg: "bg-amber-50 border-amber-200",
@@ -349,6 +411,56 @@ export function ApprovalContent({
               dibatalkan secara otomatis oleh sistem.
             </span>
           </div>
+        ) : data.status === "APPROVED" ? (
+          <>
+            {/* TOMBOL AKSI: Dieksekusi jika status adalah APPROVED */}
+            {!isCheckingIn && (
+              <button
+                onClick={() => handleResolve("NO_SHOW")}
+                disabled={isSubmitting}
+                className={`flex-1 py-3 font-bold rounded-xl transition-all disabled:opacity-50 ${isNoShow ? "bg-red-600 text-white shadow-md" : "text-red-600 hover:bg-red-50"}`}
+              >
+                {isSubmitting && isNoShow ? (
+                  <>
+                    <FiLoader className="inline animate-spin mr-2" />
+                    Memproses
+                  </>
+                ) : isNoShow ? (
+                  "Konfirmasi Tidak Hadir"
+                ) : (
+                  "Tidak Hadir"
+                )}
+              </button>
+            )}
+
+            {!isNoShow && (
+              <button
+                onClick={() => handleResolve("COMPLETED")}
+                disabled={isSubmitting}
+                className="flex-1 py-3 bg-emerald-600 text-white font-bold hover:bg-emerald-700 rounded-xl shadow-[0_4px_20px_rgba(5,150,105,0.2)] hover:shadow-[0_6px_24px_rgba(5,150,105,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 flex justify-center items-center"
+              >
+                {isSubmitting && isCheckingIn ? (
+                  <>
+                    <FiLoader className="inline animate-spin mr-2" />
+                    Memproses
+                  </>
+                ) : isCheckingIn ? (
+                  "Konfirmasi Check-In"
+                ) : (
+                  "Check-In (Hadir)"
+                )}
+              </button>
+            )}
+
+            {(isCheckingIn || isNoShow) && !isSubmitting && (
+              <button
+                onClick={resetStates}
+                className="px-4 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                Batal
+              </button>
+            )}
+          </>
         ) : (
           <>
             {/* TOMBOL AKSI: Dieksekusi jika status adalah PENDING */}
