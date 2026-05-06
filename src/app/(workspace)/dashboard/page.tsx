@@ -3,15 +3,15 @@
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { GlassContainer } from "@/components/ui/GlassContainer";
-import { 
-  MdOutlineCalendarToday, 
-  MdOutlineInventory2, 
-  MdOutlineGroup, 
-  MdOutlineVolunteerActivism, 
-  MdOutlineChevronRight, 
-  MdOutlineTask, 
+import {
+  MdOutlineCalendarToday,
+  MdOutlineInventory2,
+  MdOutlineGroup,
+  MdOutlineVolunteerActivism,
+  MdOutlineChevronRight,
+  MdOutlineTask,
   MdOutlineCheckCircle,
-  MdErrorOutline
+  MdErrorOutline,
 } from "react-icons/md";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -58,7 +58,7 @@ interface OverviewResponse {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  
+
   const [data, setData] = useState<OverviewResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +76,7 @@ export default function DashboardPage() {
         if (!res.ok) throw new Error("Gagal memuat data dashboard.");
         const json = await res.json();
         setData(json);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -96,7 +96,8 @@ export default function DashboardPage() {
               Dashboard Operasional
             </h1>
             <p className="text-on-surface-variant font-public-sans text-lg">
-              Selamat datang kembali{user ? `, ${user.name}` : ""}. Pantau aktivitas panti hari ini secara real-time.
+              Selamat datang kembali{user ? `, ${user.name}` : ""}. Pantau
+              aktivitas panti hari ini secara real-time.
             </p>
           </header>
 
@@ -162,7 +163,7 @@ export default function DashboardPage() {
                       Sisa {data.metrics.weekly_capacity_remaining} Slot Terbuka
                     </h2>
                     <p className="text-on-surface-variant text-sm font-sans font-light">
-                      Dari total {data.metrics.weekly_total_capacity} kuota mingguan.
+                      untuk kuota 7 hari ke depan.
                     </p>
                   </div>
                 </GlassContainer>
@@ -186,14 +187,21 @@ export default function DashboardPage() {
                       {data.todays_agenda.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 text-gray-400 bg-slate-50 rounded-2xl border border-dashed border-gray-200">
                           <MdOutlineCalendarToday className="text-4xl mb-3 text-gray-300" />
-                          <p className="text-sm font-medium text-gray-500">Tidak ada jadwal kunjungan hari ini.</p>
+                          <p className="text-sm font-medium text-gray-500">
+                            Tidak ada jadwal kunjungan hari ini.
+                          </p>
                         </div>
                       ) : (
                         data.todays_agenda.map((agenda) => (
-                          <div key={agenda.id} className="flex items-center gap-6 p-6 bg-surface-container-low rounded-xl group hover:bg-surface-variant transition-colors cursor-pointer border-none shadow-none">
+                          <div
+                            key={agenda.id}
+                            className="flex items-center gap-6 p-6 bg-surface-container-low rounded-xl group hover:bg-surface-variant transition-colors cursor-pointer border-none shadow-none"
+                          >
                             <div className="flex flex-col items-center justify-center bg-surface-container-lowest rounded-lg px-4 py-2 shadow-sm min-w-[80px]">
                               <span className="text-primary font-black text-xl font-sans">
-                                {agenda.time === "TBA" ? "--:--" : agenda.time.slice(0,5)}
+                                {agenda.time === "TBA"
+                                  ? "--:--"
+                                  : agenda.time.slice(0, 5)}
                               </span>
                               <span className="text-[10px] font-public-sans font-bold text-on-surface-variant uppercase">
                                 {agenda.session}
@@ -229,20 +237,33 @@ export default function DashboardPage() {
 
                       <div className="space-y-8 relative">
                         {data.activity_logs.length === 0 ? (
-                           <p className="text-sm text-gray-500 pl-10">Belum ada aktivitas baru.</p>
+                          <p className="text-sm text-gray-500 pl-10">
+                            Belum ada aktivitas baru.
+                          </p>
                         ) : (
                           data.activity_logs.map((log, idx) => {
                             const isDonation = log.domain === "donasi";
                             return (
-                              <div key={`${log.id}-${idx}`} className="flex gap-6 items-start relative">
-                                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white ring-4 ring-surface-container-lowest z-10 flex-shrink-0 ${isDonation ? 'bg-tertiary-container text-tertiary' : 'bg-primary'}`}>
-                                  {isDonation ? <MdOutlineVolunteerActivism className="text-[14px]" /> : <MdOutlineGroup className="text-[14px]" />}
+                              <div
+                                key={`${log.id}-${idx}`}
+                                className="flex gap-6 items-start relative"
+                              >
+                                <div
+                                  className={`w-7 h-7 rounded-full flex items-center justify-center text-white ring-4 ring-surface-container-lowest z-10 flex-shrink-0 ${isDonation ? "bg-tertiary-container text-tertiary" : "bg-primary"}`}
+                                >
+                                  {isDonation ? (
+                                    <MdOutlineVolunteerActivism className="text-[14px]" />
+                                  ) : (
+                                    <MdOutlineGroup className="text-[14px]" />
+                                  )}
                                 </div>
                                 <div className="flex-1 pt-1">
                                   <p className="font-bold text-sm text-on-surface font-sans">
                                     {log.title}
                                   </p>
-                                  <p className={`font-public-sans text-xs font-bold uppercase tracking-widest mt-1 ${isDonation ? 'text-tertiary' : 'text-primary'}`}>
+                                  <p
+                                    className={`font-public-sans text-xs font-bold uppercase tracking-widest mt-1 ${isDonation ? "text-tertiary" : "text-primary"}`}
+                                  >
                                     {log.subtitle}
                                   </p>
                                   <span className="text-[10px] text-on-surface-variant uppercase font-public-sans mt-2 block">
@@ -269,35 +290,81 @@ export default function DashboardPage() {
                       Audit Trail Logistik
                     </h3>
                     <p className="text-sm text-on-surface-variant font-public-sans mb-6">
-                      Lacak histori status dan pergerakan inventaris secara real-time. Memastikan transparansi dari penerimaan hingga distribusi.
+                      Lacak histori status dan pergerakan inventaris secara
+                      real-time. Memastikan transparansi dari penerimaan hingga
+                      distribusi.
                     </p>
                   </div>
-                  
+
                   <div className="md:w-2/3 relative pl-6">
                     {/* Vertical Line */}
                     <div className="absolute left-[35px] top-4 bottom-8 w-[2px] bg-gradient-to-b from-primary via-tertiary to-outline-variant/30"></div>
-                    
+
                     {data.logistics_audit.length === 0 ? (
-                      <p className="text-sm text-gray-500 pl-10 py-5">Belum ada catatan distribusi.</p>
+                      <p className="text-sm text-gray-500 pl-10 py-5">
+                        Belum ada catatan distribusi.
+                      </p>
                     ) : (
                       data.logistics_audit.map((audit, index) => {
-                        const colors = ['bg-primary', 'bg-tertiary', 'bg-surface-variant text-outline'];
-                        const textColors = ['text-primary', 'text-tertiary', 'text-outline'];
-                        const bgColors = ['bg-primary/10', 'bg-tertiary/10', 'bg-surface-variant/50'];
-                        
+                        const colors = [
+                          "bg-primary",
+                          "bg-tertiary",
+                          "bg-surface-variant text-outline",
+                        ];
+                        const textColors = [
+                          "text-primary",
+                          "text-tertiary",
+                          "text-outline",
+                        ];
+                        const bgColors = [
+                          "bg-primary/10",
+                          "bg-tertiary/10",
+                          "bg-surface-variant/50",
+                        ];
+
                         const colorIdx = Math.min(index, 2);
-                        
+
                         return (
-                          <div key={audit.id} className={`flex gap-6 items-start relative ${index !== data.logistics_audit.length - 1 ? 'mb-8' : ''}`}>
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ring-8 ring-surface-container-lowest z-10 flex-shrink-0 shadow-sm ${colors[colorIdx]}`}>
-                              {index === 0 ? <MdOutlineInventory2 className="text-lg" /> : index === 1 ? <MdOutlineTask className="text-lg" /> : <MdOutlineCheckCircle className="text-lg" />}
+                          <div
+                            key={audit.id}
+                            className={`flex gap-6 items-start relative ${index !== data.logistics_audit.length - 1 ? "mb-8" : ""}`}
+                          >
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center text-white ring-8 ring-surface-container-lowest z-10 flex-shrink-0 shadow-sm ${colors[colorIdx]}`}
+                            >
+                              {index === 0 ? (
+                                <MdOutlineInventory2 className="text-lg" />
+                              ) : index === 1 ? (
+                                <MdOutlineTask className="text-lg" />
+                              ) : (
+                                <MdOutlineCheckCircle className="text-lg" />
+                              )}
                             </div>
                             <div className="flex-1 pt-1.5 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-                              <h4 className={`font-bold text-base font-sans ${index > 1 ? 'text-on-surface-variant' : 'text-on-surface'}`}>{audit.title}</h4>
-                              <p className={`text-sm mt-1 flex items-center gap-2 ${index > 1 ? 'text-on-surface-variant/60' : 'text-on-surface-variant'}`}>
-                                <span className={`font-semibold ${textColors[colorIdx]}`}>{audit.target_recipient ? `Target: ${audit.target_recipient}` : `Oleh: ${audit.actor}`}</span> &bull; {format(new Date(audit.time_formatted), "dd MMM yyyy, HH:mm")}
+                              <h4
+                                className={`font-bold text-base font-sans ${index > 1 ? "text-on-surface-variant" : "text-on-surface"}`}
+                              >
+                                {audit.title}
+                              </h4>
+                              <p
+                                className={`text-sm mt-1 flex items-center gap-2 ${index > 1 ? "text-on-surface-variant/60" : "text-on-surface-variant"}`}
+                              >
+                                <span
+                                  className={`font-semibold ${textColors[colorIdx]}`}
+                                >
+                                  {audit.target_recipient
+                                    ? `Target: ${audit.target_recipient}`
+                                    : `Oleh: ${audit.actor}`}
+                                </span>{" "}
+                                &bull;{" "}
+                                {format(
+                                  new Date(audit.time_formatted),
+                                  "dd MMM yyyy, HH:mm",
+                                )}
                               </p>
-                              <p className={`font-public-sans text-[10px] font-bold uppercase tracking-widest mt-3 w-fit px-2 py-1 rounded ${textColors[colorIdx]} ${bgColors[colorIdx]}`}>
+                              <p
+                                className={`font-public-sans text-[10px] font-bold uppercase tracking-widest mt-3 w-fit px-2 py-1 rounded ${textColors[colorIdx]} ${bgColors[colorIdx]}`}
+                              >
                                 {audit.status_badge}
                               </p>
                             </div>
@@ -331,7 +398,10 @@ function DashboardSkeleton() {
     <>
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         {[1, 2, 3].map((i) => (
-          <GlassContainer key={i} className="p-8 flex flex-col gap-4 shadow-ambient h-[180px] animate-pulse">
+          <GlassContainer
+            key={i}
+            className="p-8 flex flex-col gap-4 shadow-ambient h-[180px] animate-pulse"
+          >
             <div className="w-12 h-12 rounded-full bg-slate-200"></div>
             <div className="mt-2 space-y-3">
               <div className="w-32 h-3 bg-slate-200 rounded-full"></div>
