@@ -10,7 +10,7 @@ export function HeaderStaff() {
       {/* Dashboard Title */}
       <div className="flex items-center">
         <h1 className="text-xl font-bold text-teal-700 tracking-tight uppercase">
-          Empanti Workspace
+          Panti Asuhan Workspace
         </h1>
       </div>
 

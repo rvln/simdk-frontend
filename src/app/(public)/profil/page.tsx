@@ -1,8 +1,8 @@
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { GlassContainer } from '@/components/ui/GlassContainer';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { GlassContainer } from "@/components/ui/GlassContainer";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import {
   FiHome,
   FiBookOpen,
@@ -12,65 +12,58 @@ import {
   FiArrowRight,
   FiFileText,
   FiExternalLink,
-} from 'react-icons/fi';
-import {
-  FaQuoteLeft,
-  FaChild,
-  FaHandsHelping,
-} from 'react-icons/fa';
-import {
-  MdOutlineHealthAndSafety,
-  MdOutlineGroups,
-} from 'react-icons/md';
+} from "react-icons/fi";
+import { FaQuoteLeft, FaChild, FaHandsHelping } from "react-icons/fa";
+import { MdOutlineHealthAndSafety, MdOutlineGroups } from "react-icons/md";
 
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Profil Panti | Empanti - Panti Asuhan Dr. J. Lucas',
+  title: "Profil Panti | Panti Asuhan Dr. J. Lucas",
   description:
-    'Kenali sejarah, visi, misi, dan sistem pengasuhan berbasis keluarga di Panti Asuhan Dr. J. Lucas (Empanti) Manado. Dikelola oleh Kongregasi MSC sejak 1974.',
+    "Kenali sejarah, visi, misi, dan sistem pengasuhan berbasis keluarga di Panti Asuhan Dr. J. Lucas Manado. Dikelola oleh Kongregasi MSC sejak 1974.",
 };
 
 /* ───── Mission Pillar data ───── */
 const missionPillars = [
   {
     icon: <FiHome className="text-2xl text-primary" />,
-    text: 'Menyediakan lingkungan pengasuhan yang aman, hangat, dan bermartabat.',
+    text: "Menyediakan lingkungan pengasuhan yang aman, hangat, dan bermartabat.",
   },
   {
     icon: <FiBookOpen className="text-2xl text-primary" />,
-    text: 'Memberikan akses pendidikan berkualitas untuk kemandirian masa depan.',
+    text: "Memberikan akses pendidikan berkualitas untuk kemandirian masa depan.",
   },
   {
     icon: <FiUsers className="text-2xl text-primary" />,
-    text: 'Menerapkan sistem pengasuhan berbasis keluarga (Unit-Unit Keluarga).',
+    text: "Menerapkan sistem pengasuhan berbasis keluarga (Unit-Unit Keluarga).",
   },
   {
     icon: <MdOutlineHealthAndSafety className="text-2xl text-primary" />,
-    text: 'Menjamin kesehatan fisik dan mental anak melalui pendampingan berkelanjutan dan gizi seimbang.',
+    text: "Menjamin kesehatan fisik dan mental anak melalui pendampingan berkelanjutan dan gizi seimbang.",
   },
   {
     icon: <MdOutlineGroups className="text-2xl text-primary" />,
-    text: 'Mengintegrasikan anak-anak dengan kehidupan sosial kemasyarakatan.',
+    text: "Mengintegrasikan anak-anak dengan kehidupan sosial kemasyarakatan.",
   },
 ];
 
 /* ───── Family Unit data ───── */
 const familyUnits = [
   {
-    number: 'IV',
-    name: 'Unit Keluarga IV',
-    desc: 'Fokus pada pendampingan anak usia dini dan pengajaran kognitif dasar.',
+    number: "IV",
+    name: "Unit Keluarga IV",
+    desc: "Fokus pada pendampingan anak usia dini dan pengajaran kognitif dasar.",
   },
   {
-    number: 'V',
-    name: 'Unit Keluarga V',
-    desc: 'Konsentrasi pada pendidikan tingkat menengah dan pengembangan bakat seni.',
+    number: "V",
+    name: "Unit Keluarga V",
+    desc: "Konsentrasi pada pendidikan tingkat menengah dan pengembangan bakat seni.",
   },
   {
-    number: 'VI',
-    name: 'Unit Keluarga VI',
-    desc: 'Mempersiapkan kemandirian bagi remaja akhir menuju jenjang pendidikan tinggi.',
+    number: "VI",
+    name: "Unit Keluarga VI",
+    desc: "Mempersiapkan kemandirian bagi remaja akhir menuju jenjang pendidikan tinggi.",
   },
 ];
 
@@ -92,9 +85,9 @@ export default function ProfilPage() {
               <span className="text-primary">Warisan Kasih.</span>
             </h1>
             <p className="text-on-surface-variant font-public-sans text-base md:text-lg leading-relaxed max-w-lg">
-              Sejak 1974, Panti Asuhan Dr. J. Lucas (Empanti) telah tumbuh dari sebuah
-              visi sederhana menjadi sebuah perlindungan yang kokoh bagi masa depan
-              anak-anak di bawah bimbingan MSC.
+              Sejak 1974, Panti Asuhan Dr. J. Lucas telah tumbuh dari sebuah
+              visi sederhana menjadi sebuah perlindungan yang kokoh bagi masa
+              depan anak-anak di bawah bimbingan MSC.
             </p>
           </div>
 
@@ -145,8 +138,8 @@ export default function ProfilPage() {
               <p>
                 Nama Dr. J. Lucas diabadikan sebagai penghormatan atas semangat
                 kemanusiaan yang beliau contohkan—sebuah komitmen untuk
-                menyediakan tidak hanya tempat tinggal, tetapi juga &lsquo;rumah&rsquo;
-                bagi pertumbuhan jiwa.
+                menyediakan tidak hanya tempat tinggal, tetapi juga
+                &lsquo;rumah&rsquo; bagi pertumbuhan jiwa.
               </p>
             </div>
 
@@ -186,8 +179,8 @@ export default function ProfilPage() {
 
           {/* Vision statement */}
           <blockquote className="text-2xl md:text-3xl lg:text-[2rem] font-black tracking-tight leading-snug text-on-surface max-w-3xl mx-auto mb-16">
-            Membangun generasi mandiri yang berintegritas, penuh kasih, dan menjadi
-            terang bagi sesama melalui pengasuhan berbasis kekeluargaan.
+            Membangun generasi mandiri yang berintegritas, penuh kasih, dan
+            menjadi terang bagi sesama melalui pengasuhan berbasis kekeluargaan.
           </blockquote>
 
           {/* Mission pillars */}
@@ -218,8 +211,8 @@ export default function ProfilPage() {
                 Sistem Pengasuhan Berbasis Keluarga
               </h2>
               <p className="text-on-surface-variant text-sm leading-relaxed max-w-xl font-sans">
-                Di bawah naungan Pastor Frans (MSC), kami meninggalkan model asrama tradisional
-                menuju model unit keluarga yang lebih intim.
+                Di bawah naungan Pastor Frans (MSC), kami meninggalkan model
+                asrama tradisional menuju model unit keluarga yang lebih intim.
               </p>
             </div>
             <Link
@@ -296,8 +289,9 @@ export default function ProfilPage() {
               <div className="relative">
                 <FaQuoteLeft className="absolute -top-1 -left-1 text-primary/15 text-2xl" />
                 <p className="text-on-surface-variant text-sm leading-[1.75] font-sans pl-6 italic">
-                  &ldquo;Tugas kita bukan sekadar memberi makan, melainkan menumbuhkan martabat mereka
-                  sebagai citra Allah yang merdeka.&rdquo;
+                  &ldquo;Tugas kita bukan sekadar memberi makan, melainkan
+                  menumbuhkan martabat mereka sebagai citra Allah yang
+                  merdeka.&rdquo;
                 </p>
               </div>
             </div>
@@ -311,8 +305,7 @@ export default function ProfilPage() {
       <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 py-20 lg:py-24">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-black tracking-tight text-on-surface mb-8">
-            Keterbukaan adalah{' '}
-            <span className="text-primary">Janji Kami.</span>
+            Keterbukaan adalah <span className="text-primary">Janji Kami.</span>
           </h2>
 
           <div className="flex flex-wrap justify-center gap-4">

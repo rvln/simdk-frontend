@@ -3,7 +3,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiChevronDown, FiDollarSign, FiPackage, FiUser, FiGrid } from "react-icons/fi";
+import {
+  FiChevronDown,
+  FiDollarSign,
+  FiPackage,
+  FiUser,
+  FiGrid,
+} from "react-icons/fi";
 import LogoutButton from "@/components/layout/LogoutButton";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -95,7 +101,7 @@ export const Navbar = () => {
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2">
           <span className="font-sans font-black text-2xl text-primary tracking-tighter">
-            Empanti
+            Panti Asuhan Dr Lucas
           </span>
         </Link>
 
@@ -185,7 +191,9 @@ export const Navbar = () => {
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <FiUser className="text-lg" />
                 </div>
-                <span className="hidden md:block">{user.name?.split(" ")[0] || "Profil Saya"}</span>
+                <span className="hidden md:block">
+                  {user.name?.split(" ")[0] || "Profil Saya"}
+                </span>
                 {/* Ikon panah berputar menyesuaikan state */}
                 <FiChevronDown
                   className={`text-sm transition-transform duration-200 hidden md:block ${

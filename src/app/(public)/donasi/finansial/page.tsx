@@ -1,16 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { GlassContainer } from '@/components/ui/GlassContainer';
-import { InputField } from '@/components/ui/InputField';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import {
-  FiShield,
-  FiCheckCircle,
-  FiLock,
-  FiChevronDown,
-} from 'react-icons/fi';
+import React, { useState } from "react";
+import Image from "next/image";
+import { GlassContainer } from "@/components/ui/GlassContainer";
+import { InputField } from "@/components/ui/InputField";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { FiShield, FiCheckCircle, FiLock, FiChevronDown } from "react-icons/fi";
+import Script from "next/script";
 
 /* ───── Amount presets ───── */
 interface AmountPreset {
@@ -19,9 +15,9 @@ interface AmountPreset {
 }
 
 const amountPresets: AmountPreset[] = [
-  { label: 'Sapaan Kebaikan', value: 50000 },
-  { label: 'Langkah Bersama', value: 100000 },
-  { label: 'Cahaya Harapan', value: 250000 },
+  { label: "Sapaan Kebaikan", value: 50000 },
+  { label: "Langkah Bersama", value: 100000 },
+  { label: "Cahaya Harapan", value: 250000 },
 ];
 
 /* ───── Privacy options ───── */
@@ -33,32 +29,32 @@ interface PrivacyOption {
 
 const privacyOptions: PrivacyOption[] = [
   {
-    id: 'show',
-    label: 'Tampilkan Nama',
-    description: 'Nama Anda akan terlihat di daftar donatur',
+    id: "show",
+    label: "Tampilkan Nama",
+    description: "Nama Anda akan terlihat di daftar donatur",
   },
   {
-    id: 'hide',
-    label: 'Sembunyikan Nama',
-    description: 'Donasi akan tercatat sebagai Hamba Allah',
+    id: "hide",
+    label: "Sembunyikan Nama",
+    description: "Donasi akan tercatat sebagai Hamba Allah",
   },
   {
-    id: 'anon',
-    label: 'Identitas Anonim',
-    description: 'Gunakan sebutan hangat sebagai pengganti nama',
+    id: "anon",
+    label: "Identitas Anonim",
+    description: "Gunakan sebutan hangat sebagai pengganti nama",
   },
 ];
 
 const anonAliases = [
-  'Sahabat Kemanusiaan',
-  'Teman Baik Anak',
-  'Pelita Harapan',
-  'Cahaya Kasih',
+  "Sahabat Kemanusiaan",
+  "Teman Baik Anak",
+  "Pelita Harapan",
+  "Cahaya Kasih",
 ];
 
 /* ───── Format currency ───── */
 function formatRp(value: number): string {
-  return new Intl.NumberFormat('id-ID').format(value);
+  return new Intl.NumberFormat("id-ID").format(value);
 }
 
 /* ══════════════════════════════════════════
@@ -66,10 +62,97 @@ function formatRp(value: number): string {
    ══════════════════════════════════════════ */
 export default function DonasiFinansialPage() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(100000);
-  const [customAmount, setCustomAmount] = useState('');
-  const [privacyMode, setPrivacyMode] = useState('show');
+  const [customAmount, setCustomAmount] = useState("");
+  const [privacyMode, setPrivacyMode] = useState("show");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const effectiveAmount = selectedAmount ?? (customAmount ? parseInt(customAmount, 10) : 0);
+  const effectiveAmount =
+    selectedAmount ?? (customAmount ? parseInt(customAmount, 10) : 0);
+
+  const [formData, setFormData] = useState({
+    donorName: "",
+    donorEmail: "",
+    donorPhone: "",
+  });
+
+  // Handler untuk mengubah nilai form
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSubmit = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+
+    // Validasi sederhana
+    if (
+      !formData.donorName ||
+      !formData.donorEmail ||
+      !formData.donorPhone ||
+      effectiveAmount <= 0
+    ) {
+      alert("Mohon lengkapi semua data donasi.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/donasi/finansial`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            donorName: formData.donorName,
+            donorEmail: formData.donorEmail,
+            donorPhone: formData.donorPhone,
+            amount: effectiveAmount,
+            // Jika kamu ingin mengirim info privasi, bisa ditambahkan di sini
+            // privacyMode, anonAlias (jika anon)
+          }),
+        },
+      );
+
+      const result = await res.json();
+
+      if (res.status === 201 && result.status === "success") {
+        const snapToken = result.data.snap_token;
+
+        // Panggil Midtrans Snap
+        (window as any).snap.pay(snapToken, {
+          onSuccess: function (snapResult: any) {
+            setIsLoading(false);
+            alert("Pembayaran berhasil! Terima kasih.");
+            // Redirect ke halaman tracking, atau update UI
+          },
+          onPending: function (snapResult: any) {
+            setIsLoading(false);
+            alert("Menunggu pembayaran Anda...");
+          },
+          onError: function (snapResult: any) {
+            setIsLoading(false);
+            alert("Pembayaran gagal. Silakan coba lagi.");
+          },
+          onClose: function () {
+            setIsLoading(false);
+            // Popup ditutup tanpa menyelesaikan pembayaran
+            console.log("Popup pembayaran ditutup.");
+          },
+        });
+      } else {
+        alert("Gagal menginisiasi donasi: " + result.message);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Terjadi kesalahan jaringan. Silakan coba lagi.");
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="bg-surface">
@@ -82,7 +165,7 @@ export default function DonasiFinansialPage() {
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-ambient">
                 <Image
                   src="/assets/donasi-finansial-hero.jpg"
-                  alt="Anak-anak Empanti"
+                  alt="Anak-anak Panti Asuhan"
                   fill
                   className="object-cover"
                   sizes="420px"
@@ -98,13 +181,13 @@ export default function DonasiFinansialPage() {
                       &ldquo;&rdquo;
                     </span>
                     <p className="text-white text-sm font-sans italic leading-relaxed">
-                      &ldquo;Setiap kontribusi adalah benang yang merajut harmoni dalam
-                      ekosistem transparansi kami.&rdquo;
+                      &ldquo;Setiap kontribusi adalah benang yang merajut
+                      harmoni dalam ekosistem transparansi kami.&rdquo;
                     </p>
                     <div className="flex items-center gap-2 mt-3">
                       <span className="w-5 h-px bg-white/50" />
                       <span className="font-public-sans text-[9px] font-bold uppercase tracking-[0.2em] text-white/70">
-                        Empanti Foundation
+                        Panti Asuhan Dr Lucas
                       </span>
                     </div>
                   </GlassContainer>
@@ -146,17 +229,17 @@ export default function DonasiFinansialPage() {
                       key={preset.value}
                       onClick={() => {
                         setSelectedAmount(preset.value);
-                        setCustomAmount('');
+                        setCustomAmount("");
                       }}
                       className={`flex flex-col items-center gap-1.5 py-5 px-3 rounded-xl text-center transition-all duration-200 ${
                         active
-                          ? 'bg-gradient-to-br from-primary to-primary-container text-white shadow-ambient'
-                          : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container-low border border-outline-variant/10'
+                          ? "bg-gradient-to-br from-primary to-primary-container text-white shadow-ambient"
+                          : "bg-surface-container-lowest text-on-surface hover:bg-surface-container-low border border-outline-variant/10"
                       }`}
                     >
                       <span
                         className={`font-public-sans text-[9px] font-bold uppercase tracking-[0.14em] ${
-                          active ? 'text-white/70' : 'text-on-surface-variant'
+                          active ? "text-white/70" : "text-on-surface-variant"
                         }`}
                       >
                         {preset.label}
@@ -171,14 +254,16 @@ export default function DonasiFinansialPage() {
 
               {/* Custom amount */}
               <div className="flex items-center gap-3 bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/15 focus-within:border-primary/40 transition-colors">
-                <span className="font-sans font-bold text-on-surface-variant text-sm">Rp</span>
+                <span className="font-sans font-bold text-on-surface-variant text-sm">
+                  Rp
+                </span>
                 <input
                   type="text"
                   inputMode="numeric"
                   placeholder="Nominal Lainnya"
                   value={customAmount}
                   onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, '');
+                    const v = e.target.value.replace(/\D/g, "");
                     setCustomAmount(v);
                     if (v) setSelectedAmount(null);
                   }}
@@ -202,25 +287,31 @@ export default function DonasiFinansialPage() {
                 {/* Name + Email row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <InputField
-                    id="donor_name"
+                    id="donorName"
                     label="Nama Lengkap"
                     placeholder="Contoh: Ahmad Sulaiman"
                     type="text"
+                    value={formData.donorName}
+                    onChange={handleInputChange}
                   />
                   <InputField
-                    id="donor_email"
+                    id="donorEmail"
                     label="Email"
                     placeholder="nama@email.com"
                     type="email"
+                    value={formData.donorEmail}
+                    onChange={handleInputChange}
                   />
                 </div>
 
                 {/* WhatsApp */}
                 <InputField
-                  id="donor_phone"
+                  id="donorPhone"
                   label="Nomor WhatsApp"
                   placeholder="+62 812-xxxx-xxxx"
                   type="tel"
+                  value={formData.donorPhone}
+                  onChange={handleInputChange}
                 />
 
                 {/* Privacy radios */}
@@ -239,16 +330,16 @@ export default function DonasiFinansialPage() {
                           onClick={() => setPrivacyMode(opt.id)}
                           className={`w-full flex items-start gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
                             active
-                              ? 'bg-primary/5 ring-2 ring-primary/30'
-                              : 'bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/10'
+                              ? "bg-primary/5 ring-2 ring-primary/30"
+                              : "bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/10"
                           }`}
                         >
                           {/* Custom radio circle */}
                           <span
                             className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                               active
-                                ? 'border-primary'
-                                : 'border-outline-variant/40'
+                                ? "border-primary"
+                                : "border-outline-variant/40"
                             }`}
                           >
                             {active && (
@@ -270,7 +361,7 @@ export default function DonasiFinansialPage() {
                   </div>
 
                   {/* Anon alias dropdown — only when "anon" is selected */}
-                  {privacyMode === 'anon' && (
+                  {privacyMode === "anon" && (
                     <div className="mt-3 relative">
                       <div className="bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/15 flex items-center justify-between">
                         <select className="w-full bg-transparent focus:outline-none text-sm font-sans text-on-surface appearance-none cursor-pointer">
@@ -289,8 +380,12 @@ export default function DonasiFinansialPage() {
             </div>
 
             {/* ── Submit ── */}
-            <PrimaryButton className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide">
-              Lanjutkan Pembayaran
+            <PrimaryButton
+              className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide"
+              onClick={handleSubmit}
+              disabled={isLoading}
+            >
+              {isLoading ? "Memproses..." : "Lanjutkan Pembayaran"}
             </PrimaryButton>
 
             {/* Trust badges */}
@@ -317,6 +412,12 @@ export default function DonasiFinansialPage() {
           </div>
         </div>
       </section>
+
+      <Script
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        strategy="lazyOnload"
+      />
     </div>
   );
 }

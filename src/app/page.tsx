@@ -3,21 +3,36 @@ import { Footer } from "@/components/layout/Footer";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { InputField } from "@/components/ui/InputField";
 import Link from "next/link";
-import { 
-  MdOutlineChildCare, 
-  MdMenuBook, 
-  MdHome, 
-  MdCalendarMonth, 
-  MdVerifiedUser, 
+import {
+  MdOutlineChildCare,
+  MdMenuBook,
+  MdHome,
+  MdCalendarMonth,
+  MdVerifiedUser,
   MdArrowForward,
-  MdFavoriteBorder
+  MdFavoriteBorder,
 } from "react-icons/md";
 
 // Mock Data Jejak Kebaikan
 const MOCK_TESTIMONI = [
-  { id: 1, name: "Bapak Budi", message: "Semoga bantuan kecil ini bisa memberikan senyuman untuk anak-anak panti. Terus semangat belajar!" },
-  { id: 2, name: "Hamba Allah", message: "Titipan doa dan sedikit rezeki untuk keberlangsungan fasilitas pendidikan adik-adik." },
-  { id: 3, name: "Ibu Siti", message: "Sangat mudah berdonasi lewat sistem ini, transparan dan jelas laporannya. Sehat selalu semuanya." },
+  {
+    id: 1,
+    name: "Bapak Budi",
+    message:
+      "Semoga bantuan kecil ini bisa memberikan senyuman untuk anak-anak panti. Terus semangat belajar!",
+  },
+  {
+    id: 2,
+    name: "Hamba Allah",
+    message:
+      "Titipan doa dan sedikit rezeki untuk keberlangsungan fasilitas pendidikan adik-adik.",
+  },
+  {
+    id: 3,
+    name: "Ibu Siti",
+    message:
+      "Sangat mudah berdonasi lewat sistem ini, transparan dan jelas laporannya. Sehat selalu semuanya.",
+  },
 ];
 
 export default function LandingPage() {
@@ -39,10 +54,13 @@ export default function LandingPage() {
               untuk Langkah Kecil Mereka.
             </h1>
             <p className="text-xl text-gray-500 max-w-lg leading-relaxed font-light font-sans">
-              Membangun ekosistem terbuka dengan pelaporan transparan demi memastikan setiap anak terlindungi dan dihargai.
+              Membangun ekosistem terbuka dengan pelaporan transparan demi
+              memastikan setiap anak terlindungi dan dihargai.
             </p>
             <div className="flex items-center gap-6 pt-4 font-sans">
-              <PrimaryButton className="shadow-md">Donasi Sekarang</PrimaryButton>
+              <PrimaryButton className="shadow-md">
+                Donasi Sekarang
+              </PrimaryButton>
               <Link
                 href="/misi"
                 className="flex items-center gap-2 font-semibold text-teal-700 hover:text-teal-800 transition-colors"
@@ -67,7 +85,8 @@ export default function LandingPage() {
         <section className="max-w-screen-2xl mx-auto px-8 md:px-12 space-y-12">
           <div className="space-y-4 text-center md:text-left">
             <h2 className="text-4xl font-black font-sans tracking-tighter text-gray-900">
-              Transparansi Kebutuhan <span className="text-teal-700">Empanti.</span>
+              Transparansi Kebutuhan{" "}
+              <span className="text-teal-700">Panti Asuhan.</span>
             </h2>
             <p className="text-2xl text-gray-500 font-light italic font-sans">
               Bawa Harapan dalam Keseharian Mereka.
@@ -85,7 +104,8 @@ export default function LandingPage() {
                     Nutrisi &amp; Kesejahteraan
                   </h3>
                   <p className="text-gray-500 leading-relaxed font-sans">
-                    Memberikan makanan bergizi dan perawatan khusus yang membangun fondasi bagi masa depan yang sehat dan ceria.
+                    Memberikan makanan bergizi dan perawatan khusus yang
+                    membangun fondasi bagi masa depan yang sehat dan ceria.
                   </p>
                 </div>
               </div>
@@ -101,7 +121,9 @@ export default function LandingPage() {
                     Perjalanan Pendidikan
                   </h3>
                   <p className="text-gray-500 leading-relaxed font-sans">
-                    Menyediakan peralatan, teknologi, dan bimbingan yang dibutuhkan setiap anak untuk membuka potensi unik dan bermimpi.
+                    Menyediakan peralatan, teknologi, dan bimbingan yang
+                    dibutuhkan setiap anak untuk membuka potensi unik dan
+                    bermimpi.
                   </p>
                 </div>
               </div>
@@ -117,7 +139,8 @@ export default function LandingPage() {
                     Kenyamanan Harian
                   </h3>
                   <p className="text-gray-500 leading-relaxed font-sans">
-                    Mengubah ruang menjadi rumah yang hangat dan aman dengan barang-barang esensial yang memberikan rasa memiliki.
+                    Mengubah ruang menjadi rumah yang hangat dan aman dengan
+                    barang-barang esensial yang memberikan rasa memiliki.
                   </p>
                 </div>
               </div>
@@ -138,7 +161,8 @@ export default function LandingPage() {
                   </h2>
                 </div>
                 <p className="text-white/90 text-lg leading-relaxed max-w-sm font-sans">
-                  Jadwalkan kunjungan untuk melihat langsung kegiatan kami. Kami percaya transparansi adalah kunci kepercayaan.
+                  Jadwalkan kunjungan untuk melihat langsung kegiatan kami. Kami
+                  percaya transparansi adalah kunci kepercayaan.
                 </p>
                 <div className="pt-4">
                   <button className="w-full md:w-auto bg-white text-[#0B648C] px-10 py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors font-sans shadow-sm cursor-pointer border-none">
@@ -197,7 +221,7 @@ export default function LandingPage() {
               Momen bahagia dan edukatif bersama anak-anak panti.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[500px]">
             {/* Kiri: Card Lanskap Panjang */}
             <div className="md:col-span-2 relative rounded-3xl overflow-hidden shadow-sm group bg-gray-200 min-h-[300px]">
@@ -209,8 +233,13 @@ export default function LandingPage() {
                 <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-xs font-bold rounded-full uppercase tracking-widest mb-3 inline-block">
                   Pendidikan
                 </span>
-                <h3 className="text-2xl font-bold text-white mb-2">Kelas Menggambar Bersama Relawan</h3>
-                <p className="text-white/80 line-clamp-2 max-w-md">Anak-anak mengekspresikan imajinasi mereka melalui warna dan bentuk didampingi kakak relawan dari universitas setempat.</p>
+                <h3 className="text-2xl font-bold text-white mb-2">
+                  Kelas Menggambar Bersama Relawan
+                </h3>
+                <p className="text-white/80 line-clamp-2 max-w-md">
+                  Anak-anak mengekspresikan imajinasi mereka melalui warna dan
+                  bentuk didampingi kakak relawan dari universitas setempat.
+                </p>
               </div>
             </div>
 
@@ -251,13 +280,18 @@ export default function LandingPage() {
 
           <div className="flex flex-col gap-4 max-w-4xl mx-auto">
             {MOCK_TESTIMONI.map((testimoni) => (
-              <div key={testimoni.id} className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-sm border-none flex items-start gap-4 transition-all hover:shadow-md hover:-translate-y-0.5">
+              <div
+                key={testimoni.id}
+                className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-sm border-none flex items-start gap-4 transition-all hover:shadow-md hover:-translate-y-0.5"
+              >
                 <div className="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 font-bold flex-shrink-0">
                   {testimoni.name.charAt(0)}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
-                    <h4 className="font-bold text-gray-900">{testimoni.name}</h4>
+                    <h4 className="font-bold text-gray-900">
+                      {testimoni.name}
+                    </h4>
                     <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold uppercase tracking-wider rounded-md">
                       BARU SAJA
                     </span>
@@ -273,7 +307,6 @@ export default function LandingPage() {
             ))}
           </div>
         </section>
-
       </main>
 
       <Footer />

@@ -99,10 +99,10 @@ interface Capacity {
 }
 
 const SLOT_DEF = [
-  { id: 'MORNING', label: 'PAGI', time: '08:00 - 10:00' },
-  { id: 'AFTERNOON', label: 'SIANG', time: '13:00 - 15:00' },
-  { id: 'EVENING', label: 'SORE', time: '15:30 - 18:00' },
-  { id: 'NIGHT', label: 'MALAM', time: '19:00 - 20:00' },
+  { id: "MORNING", label: "PAGI", time: "08:00 - 10:00" },
+  { id: "AFTERNOON", label: "SIANG", time: "13:00 - 15:00" },
+  { id: "EVENING", label: "SORE", time: "15:30 - 18:00" },
+  { id: "NIGHT", label: "MALAM", time: "19:00 - 20:00" },
 ];
 
 /* ──────────────────────────────────────────
@@ -136,7 +136,11 @@ export default function AturJadwalPage() {
   const [capacities, setCapacities] = useState<Capacity[]>([]);
 
   // H+1 lead time: strip time so today is fully disabled
-  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
 
   // State leakage fix: reset session when date context changes
   useEffect(() => {
@@ -145,10 +149,10 @@ export default function AturJadwalPage() {
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/capacities`, {
-      headers: { 'Accept': 'application/json' },
+      headers: { Accept: "application/json" },
     })
-      .then(res => res.ok ? res.json() : { data: [] })
-      .then(json => setCapacities(json.data || []))
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .then((json) => setCapacities(json.data || []))
       .catch(() => setCapacities([]));
   }, []);
 
@@ -177,7 +181,9 @@ export default function AturJadwalPage() {
     ? capacities.filter((c) => c.date.startsWith(selectedDateStr))
     : [];
 
-  const selectedDate = selectedDay ? new Date(viewYear, viewMonth, selectedDay) : null;
+  const selectedDate = selectedDay
+    ? new Date(viewYear, viewMonth, selectedDay)
+    : null;
   const dayName = selectedDate ? DAY_FULL[selectedDate.getDay()] : "";
 
   const currentStep = 1;
@@ -316,7 +322,7 @@ export default function AturJadwalPage() {
           </h1>
           <p className="text-on-surface-variant font-sans text-sm md:text-base leading-relaxed max-w-lg mx-auto">
             Pilih waktu terbaik untuk bertemu dengan anak-anak dan berbagi
-            kebahagiaan di Empanti.
+            kebahagiaan di Panti Asuhan.
           </p>
         </div>
       </section>
@@ -364,7 +370,7 @@ export default function AturJadwalPage() {
             <div className="grid grid-cols-7">
               {rows.map((row, rowIdx) => (
                 <React.Fragment key={rowIdx}>
-              {row.map((cell, colIdx) => {
+                  {row.map((cell, colIdx) => {
                     const isOtherMonth = cell.month !== "current";
                     const isPast = cell.fullDate <= todayMidnight;
                     const isDisabledCell = isOtherMonth || isPast;
@@ -488,7 +494,9 @@ export default function AturJadwalPage() {
          ═══════════════════════════════════════ */}
       {(() => {
         const activeCap = capacities.find((c) => c.id === selectedSession);
-        const activeDef = activeCap ? SLOT_DEF.find((d) => d.id === activeCap.slot) : null;
+        const activeDef = activeCap
+          ? SLOT_DEF.find((d) => d.id === activeCap.slot)
+          : null;
         if (!activeCap || !activeDef) return null;
 
         return (
@@ -520,8 +528,7 @@ export default function AturJadwalPage() {
                       Kapasitas Sesi
                     </span>
                     <span className="font-sans text-sm font-bold text-primary">
-                      Tersedia ({activeCap.booked}/
-                      {activeCap.quota})
+                      Tersedia ({activeCap.booked}/{activeCap.quota})
                     </span>
                   </div>
                   <div className="w-full h-1.5 rounded-full bg-surface-dim/40 overflow-hidden">
@@ -536,8 +543,8 @@ export default function AturJadwalPage() {
 
                 {/* Recommendation text */}
                 <p className="font-sans text-xs text-on-surface-variant text-center italic leading-relaxed">
-                  &ldquo;Waktu ini sangat disarankan untuk kunjungan keluarga atau
-                  kelompok kecil.&rdquo;
+                  &ldquo;Waktu ini sangat disarankan untuk kunjungan keluarga
+                  atau kelompok kecil.&rdquo;
                 </p>
               </GlassContainer>
             </div>
@@ -551,10 +558,12 @@ export default function AturJadwalPage() {
       <section className="px-6 pb-8">
         <div className="max-w-xl mx-auto">
           {(() => {
-             const activeCap = capacities.find((c) => c.id === selectedSession);
-             const activeDef = activeCap ? SLOT_DEF.find((d) => d.id === activeCap.slot) : null;
-             
-             return (
+            const activeCap = capacities.find((c) => c.id === selectedSession);
+            const activeDef = activeCap
+              ? SLOT_DEF.find((d) => d.id === activeCap.slot)
+              : null;
+
+            return (
               <Link
                 href={`/jadwal-kunjungan/detail?capacity_id=${activeCap?.id ?? ""}&date=${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}&session_label=${encodeURIComponent(activeDef?.label ?? "")}&session_time=${encodeURIComponent(activeDef?.time ?? "")}`}
               >
@@ -565,7 +574,7 @@ export default function AturJadwalPage() {
                   Ajukan Kunjungan
                 </PrimaryButton>
               </Link>
-             )
+            );
           })()}
         </div>
       </section>
@@ -582,8 +591,8 @@ export default function AturJadwalPage() {
             </span>
           </div>
           <p className="font-sans text-xs text-on-surface-variant/50 leading-relaxed max-w-sm mx-auto">
-            Empanti menjamin data pribadi Anda dienkripsi dan hanya digunakan
-            untuk keperluan administrasi kunjungan.
+            Panti Asuhan Dr Lucas menjamin data pribadi Anda dienkripsi dan
+            hanya digunakan untuk keperluan administrasi kunjungan.
           </p>
         </div>
       </section>

@@ -326,9 +326,9 @@ export default function JadwalKunjunganPage() {
               Rencanakan Momen Berharga Anda
             </h2>
             <p className="text-on-surface-variant font-sans text-base leading-relaxed max-w-md mb-8">
-              Bawa kehangatan untuk anak-anak di Empanti. Untuk memastikan
-              kenyamanan bersama, setiap kunjungan memerlukan akun terverifikasi
-              dan persetujuan jadwal.
+              Bawa kehangatan untuk anak-anak di Panti Asuhan Dr Lucas. Untuk
+              memastikan kenyamanan bersama, setiap kunjungan memerlukan akun
+              terverifikasi dan persetujuan jadwal.
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -353,7 +353,7 @@ export default function JadwalKunjunganPage() {
           <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-ambient">
             <Image
               src="/assets/kunjungan-cta.jpg"
-              alt="Kunjungan ke Panti Asuhan Empanti"
+              alt="Kunjungan ke Panti Asuhan"
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"

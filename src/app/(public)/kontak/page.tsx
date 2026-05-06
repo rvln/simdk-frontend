@@ -1,47 +1,38 @@
-import React from 'react';
-import Image from 'next/image';
-import { GlassContainer } from '@/components/ui/GlassContainer';
-import { InputField } from '@/components/ui/InputField';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import {
-  FiMapPin,
-  FiPhone,
-  FiMail,
-  FiSend,
-} from 'react-icons/fi';
+import React from "react";
+import Image from "next/image";
+import { GlassContainer } from "@/components/ui/GlassContainer";
+import { InputField } from "@/components/ui/InputField";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { FiMapPin, FiPhone, FiMail, FiSend } from "react-icons/fi";
 
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Kontak Kami | Empanti - Panti Asuhan Dr. J. Lucas',
+  title: "Kontak Kami | Panti Asuhan Dr. J. Lucas",
   description:
-    'Hubungi Panti Asuhan Dr. J. Lucas (Empanti) Manado. Kirim pesan, kunjungi lokasi, atau hubungi kami via telepon dan email.',
+    "Hubungi Panti Asuhan Dr. J. Lucas Manado. Kirim pesan, kunjungi lokasi, atau hubungi kami via telepon dan email.",
 };
 
 /* ───── Contact info items ───── */
 const contactItems = [
   {
     icon: <FiMapPin className="text-xl text-primary" />,
-    title: 'Alamat Utama',
+    title: "Alamat Utama",
     lines: [
-      'Jl. Karombasan Ling No. 2, Tikala Baru,',
-      'Kec. Tikala, Kota Manado,',
-      'Sulawesi Utara.',
+      "Jl. Karombasan Ling No. 2, Tikala Baru,",
+      "Kec. Tikala, Kota Manado,",
+      "Sulawesi Utara.",
     ],
   },
   {
     icon: <FiPhone className="text-xl text-primary" />,
-    title: 'Telepon',
-    lines: [
-      '0431-864749',
-      'Senin – Jumat, 09:00',
-      '– 17:00 WITA',
-    ],
+    title: "Telepon",
+    lines: ["0431-864749", "Senin – Jumat, 09:00", "– 17:00 WITA"],
   },
   {
     icon: <FiMail className="text-xl text-primary" />,
-    title: 'Email',
-    lines: ['halo@empanti.org', 'donasi@empanti.org'],
+    title: "Email",
+    lines: ["halo@panti.org", "donasi@empanti.org"],
   },
 ];
 
@@ -72,7 +63,7 @@ export default function KontakPage() {
           <div className="relative w-full aspect-[16/7] md:aspect-[16/6] rounded-2xl overflow-hidden shadow-ambient">
             <Image
               src="/assets/kontak-hero.jpg"
-              alt="Lokasi Empanti - Panti Asuhan Dr. J. Lucas"
+              alt="Lokasi Panti Asuhan Dr. J. Lucas"
               fill
               className="object-cover"
               sizes="100vw"
@@ -131,7 +122,7 @@ export default function KontakPage() {
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-ambient max-w-sm">
               <Image
                 src="/assets/kontak-illustration.jpg"
-                alt="Ilustrasi Empanti"
+                alt="Ilustrasi Panti Asuhan"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 400px"

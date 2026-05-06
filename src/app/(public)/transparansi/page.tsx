@@ -1,7 +1,7 @@
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { GlassContainer } from '@/components/ui/GlassContainer';
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { GlassContainer } from "@/components/ui/GlassContainer";
 import {
   FiShield,
   FiCalendar,
@@ -11,19 +11,19 @@ import {
   FiUser,
   FiBox,
   FiTruck,
-} from 'react-icons/fi';
+} from "react-icons/fi";
 import {
   MdOutlineSchool,
   MdOutlineRestaurant,
   MdOutlineMedicalServices,
-} from 'react-icons/md';
+} from "react-icons/md";
 
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Portal Transparansi | Empanti - Panti Asuhan Dr. J. Lucas',
+  title: "Portal Transparansi | Panti Asuhan Dr. J. Lucas",
   description:
-    'Jejak kebaikan real-time. Pantau secara langsung bagaimana setiap donasi dan kunjungan membawa dampak nyata di Panti Asuhan Dr. J. Lucas.',
+    "Jejak kebaikan real-time. Pantau secara langsung bagaimana setiap donasi dan kunjungan membawa dampak nyata di Panti Asuhan Dr. J. Lucas.",
 };
 
 /* ───── Needs data ───── */
@@ -34,59 +34,60 @@ interface NeedItem {
   current: number;
   target: number;
   unit: string;
-  priority: 'high' | 'fulfilled' | 'moderate';
+  priority: "high" | "fulfilled" | "moderate";
   priorityLabel: string;
 }
 
 const needsData: NeedItem[] = [
   {
     icon: <MdOutlineSchool className="text-2xl text-primary" />,
-    name: 'Pakaian Sekolah',
-    description: 'Seragam dan kelengkapan edukasi untuk tahun ajaran baru.',
+    name: "Pakaian Sekolah",
+    description: "Seragam dan kelengkapan edukasi untuk tahun ajaran baru.",
     current: 12,
     target: 20,
-    unit: 'Setel',
-    priority: 'high',
-    priorityLabel: 'Prioritas Tinggi',
+    unit: "Setel",
+    priority: "high",
+    priorityLabel: "Prioritas Tinggi",
   },
   {
     icon: <MdOutlineRestaurant className="text-2xl text-primary" />,
-    name: 'Beras Premium',
-    description: 'Stok bahan pangan pokok untuk konsumsi bulanan anak asuh.',
+    name: "Beras Premium",
+    description: "Stok bahan pangan pokok untuk konsumsi bulanan anak asuh.",
     current: 50,
     target: 50,
-    unit: 'Karung',
-    priority: 'fulfilled',
-    priorityLabel: 'Tercapai',
+    unit: "Karung",
+    priority: "fulfilled",
+    priorityLabel: "Tercapai",
   },
   {
     icon: <MdOutlineMedicalServices className="text-2xl text-primary" />,
-    name: 'Vitamin & Nutrisi',
-    description: 'Suplemen kesehatan harian untuk menjaga daya tahan tubuh.',
+    name: "Vitamin & Nutrisi",
+    description: "Suplemen kesehatan harian untuk menjaga daya tahan tubuh.",
     current: 85,
     target: 100,
-    unit: 'Paket',
-    priority: 'moderate',
-    priorityLabel: 'Rutin',
+    unit: "Paket",
+    priority: "moderate",
+    priorityLabel: "Rutin",
   },
 ];
 
-function getPriorityStyle(priority: NeedItem['priority']) {
+function getPriorityStyle(priority: NeedItem["priority"]) {
   switch (priority) {
-    case 'high':
+    case "high":
       return {
-        badge: 'bg-primary/10 text-primary border border-primary/20',
-        bar: 'bg-primary',
+        badge: "bg-primary/10 text-primary border border-primary/20",
+        bar: "bg-primary",
       };
-    case 'fulfilled':
+    case "fulfilled":
       return {
-        badge: 'bg-tertiary/10 text-tertiary border border-tertiary/20',
-        bar: 'bg-tertiary',
+        badge: "bg-tertiary/10 text-tertiary border border-tertiary/20",
+        bar: "bg-tertiary",
       };
-    case 'moderate':
+    case "moderate":
       return {
-        badge: 'bg-surface-container-low text-on-surface-variant border border-outline-variant/15',
-        bar: 'bg-primary',
+        badge:
+          "bg-surface-container-low text-on-surface-variant border border-outline-variant/15",
+        bar: "bg-primary",
       };
   }
 }
@@ -98,57 +99,57 @@ interface DonationLog {
   description: string;
   timeAgo: string;
   statusLabel: string;
-  statusColor: 'green' | 'blue' | 'amber';
+  statusColor: "green" | "blue" | "amber";
   icon: React.ReactNode;
 }
 
 const donationLogs: DonationLog[] = [
   {
-    id: '1',
-    name: 'Hamba Allah',
-    description: 'Donasi Dana (Sukses)',
-    timeAgo: '10 Menit Lalu',
-    statusLabel: 'TERVALIDASI SISTEM',
-    statusColor: 'green',
+    id: "1",
+    name: "Hamba Allah",
+    description: "Donasi Dana (Sukses)",
+    timeAgo: "10 Menit Lalu",
+    statusLabel: "TERVALIDASI SISTEM",
+    statusColor: "green",
     icon: <FiUser className="text-primary" />,
   },
   {
-    id: '2',
-    name: 'Bapak Ahmad',
-    description: 'Sepatu Anak (Tervalidasi di Gudang)',
-    timeAgo: '2 Jam Lalu',
-    statusLabel: 'STOK MASUK',
-    statusColor: 'blue',
+    id: "2",
+    name: "Bapak Ahmad",
+    description: "Sepatu Anak (Tervalidasi di Gudang)",
+    timeAgo: "2 Jam Lalu",
+    statusLabel: "STOK MASUK",
+    statusColor: "blue",
     icon: <FiBox className="text-primary" />,
   },
   {
-    id: '3',
-    name: 'Ibu Maria S.',
-    description: 'Perlengkapan Bayi (Selesai Sortir)',
-    timeAgo: '5 Jam Lalu',
-    statusLabel: 'SIAP DISTRIBUSI',
-    statusColor: 'amber',
+    id: "3",
+    name: "Ibu Maria S.",
+    description: "Perlengkapan Bayi (Selesai Sortir)",
+    timeAgo: "5 Jam Lalu",
+    statusLabel: "SIAP DISTRIBUSI",
+    statusColor: "amber",
     icon: <FiTruck className="text-primary" />,
   },
   {
-    id: '4',
-    name: 'Anonim – Jakarta',
-    description: 'Donasi Dana Pendidikan',
-    timeAgo: 'Kemarin',
-    statusLabel: 'TERVALIDASI SISTEM',
-    statusColor: 'green',
+    id: "4",
+    name: "Anonim – Jakarta",
+    description: "Donasi Dana Pendidikan",
+    timeAgo: "Kemarin",
+    statusLabel: "TERVALIDASI SISTEM",
+    statusColor: "green",
     icon: <FiUser className="text-primary" />,
   },
 ];
 
-function getStatusStyle(color: DonationLog['statusColor']) {
+function getStatusStyle(color: DonationLog["statusColor"]) {
   switch (color) {
-    case 'green':
-      return 'text-tertiary';
-    case 'blue':
-      return 'text-primary';
-    case 'amber':
-      return 'text-[#b8860b]';
+    case "green":
+      return "text-tertiary";
+    case "blue":
+      return "text-primary";
+    case "amber":
+      return "text-[#b8860b]";
   }
 }
 
@@ -156,7 +157,7 @@ function getStatusStyle(color: DonationLog['statusColor']) {
 interface VisitEvent {
   id: string;
   image: string;
-  status: 'completed' | 'upcoming';
+  status: "completed" | "upcoming";
   statusLabel: string;
   title: string;
   description: string;
@@ -165,31 +166,33 @@ interface VisitEvent {
 
 const visitEvents: VisitEvent[] = [
   {
-    id: '1',
-    image: '/assets/visit-1.jpg',
-    status: 'completed',
-    statusLabel: 'SELESAI',
-    title: 'Kunjungan BEM Universitas X',
-    description: 'Sesi berbagi motivasi dan bantuan alat tulis untuk seluruh penghuni panti.',
-    date: '15 Okt 2024',
+    id: "1",
+    image: "/assets/visit-1.jpg",
+    status: "completed",
+    statusLabel: "SELESAI",
+    title: "Kunjungan BEM Universitas X",
+    description:
+      "Sesi berbagi motivasi dan bantuan alat tulis untuk seluruh penghuni panti.",
+    date: "15 Okt 2024",
   },
   {
-    id: '2',
-    image: '/assets/visit-2.jpg',
-    status: 'upcoming',
-    statusLabel: 'MENDATANG',
-    title: 'Pesta Makan Siang Komunitas',
-    description: 'Acara ramah tamah tahunan bersama lingkungan sekitar panti.',
-    date: '22 Nov 2024',
+    id: "2",
+    image: "/assets/visit-2.jpg",
+    status: "upcoming",
+    statusLabel: "MENDATANG",
+    title: "Pesta Makan Siang Komunitas",
+    description: "Acara ramah tamah tahunan bersama lingkungan sekitar panti.",
+    date: "22 Nov 2024",
   },
   {
-    id: '3',
-    image: '/assets/visit-3.jpg',
-    status: 'completed',
-    statusLabel: 'SELESAI',
-    title: 'Pemeriksaan Kesehatan Rutin',
-    description: 'Skrining kesehatan berkala oleh tim dokter relawan RSUD setempat.',
-    date: '05 Nov 2024',
+    id: "3",
+    image: "/assets/visit-3.jpg",
+    status: "completed",
+    statusLabel: "SELESAI",
+    title: "Pemeriksaan Kesehatan Rutin",
+    description:
+      "Skrining kesehatan berkala oleh tim dokter relawan RSUD setempat.",
+    date: "05 Nov 2024",
   },
 ];
 
@@ -208,8 +211,8 @@ export default function TransparansiPage() {
             Jejak Kebaikan Real-Time
           </h1>
           <p className="text-on-surface-variant font-sans text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-            Komitmen mutlak kami pada keterbukaan arsitektural. Pantau secara langsung
-            bagaimana setiap donasi dan kunjungan membawa dampak nyata.
+            Komitmen mutlak kami pada keterbukaan arsitektural. Pantau secara
+            langsung bagaimana setiap donasi dan kunjungan membawa dampak nyata.
           </p>
         </div>
       </section>
@@ -299,15 +302,16 @@ export default function TransparansiPage() {
               Log Transparansi Donasi Terkini
             </h2>
             <p className="text-on-surface-variant font-sans text-sm leading-relaxed max-w-md mb-8">
-              Sistem kami secara otomatis memvalidasi setiap bantuan yang masuk baik
-              melalui transfer digital maupun serah terima barang di gudang logistik.
+              Sistem kami secara otomatis memvalidasi setiap bantuan yang masuk
+              baik melalui transfer digital maupun serah terima barang di gudang
+              logistik.
             </p>
 
             {/* Privacy notice */}
             <div className="bg-surface-container-low rounded-xl p-5 border-l-4 border-primary/40 max-w-md">
               <p className="text-sm text-on-surface-variant leading-relaxed font-sans italic">
-                Kami menjaga privasi donatur dengan sistem masking nama otomatis pada
-                tampilan publik sesuai dengan kebijakan etis panti.
+                Kami menjaga privasi donatur dengan sistem masking nama otomatis
+                pada tampilan publik sesuai dengan kebijakan etis panti.
               </p>
             </div>
           </div>
@@ -315,7 +319,10 @@ export default function TransparansiPage() {
           {/* Right: Log entries */}
           <div className="space-y-4">
             {donationLogs.map((log) => (
-              <GlassContainer key={log.id} className="px-5 py-4 flex items-center gap-4">
+              <GlassContainer
+                key={log.id}
+                className="px-5 py-4 flex items-center gap-4"
+              >
                 {/* Avatar */}
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/8 flex items-center justify-center">
                   {log.icon}
@@ -382,9 +389,9 @@ export default function TransparansiPage() {
                   <div className="absolute bottom-3 left-3">
                     <span
                       className={`inline-flex items-center font-public-sans text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${
-                        evt.status === 'completed'
-                          ? 'bg-primary text-white'
-                          : 'bg-tertiary text-white'
+                        evt.status === "completed"
+                          ? "bg-primary text-white"
+                          : "bg-tertiary text-white"
                       }`}
                     >
                       {evt.statusLabel}

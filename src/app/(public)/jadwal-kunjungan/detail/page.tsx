@@ -1,18 +1,17 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { GlassContainer } from '@/components/ui/GlassContainer';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { GlassContainer } from "@/components/ui/GlassContainer";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { FiCalendar, FiClock, FiShield, FiAlertCircle } from "react-icons/fi";
+import { FaRegHeart, FaRunning } from "react-icons/fa";
 import {
-  FiCalendar,
-  FiClock,
-  FiShield,
-  FiAlertCircle,
-} from 'react-icons/fi';
-import { FaRegHeart, FaRunning } from 'react-icons/fa';
-import { MdAddShoppingCart, MdOutlineDeleteOutline, MdArrowBack } from 'react-icons/md';
-import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+  MdAddShoppingCart,
+  MdOutlineDeleteOutline,
+  MdArrowBack,
+} from "react-icons/md";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 
 /* ──────────────────────────────────────────
    Stepper
@@ -23,15 +22,15 @@ interface StepInfo {
 }
 
 const steps: StepInfo[] = [
-  { number: 1, label: 'Jadwal' },
-  { number: 2, label: 'Detail' },
-  { number: 3, label: 'Konfirmasi' },
+  { number: 1, label: "Jadwal" },
+  { number: 2, label: "Detail" },
+  { number: 3, label: "Konfirmasi" },
 ];
 
 /* ──────────────────────────────────────────
    Identity type tabs
    ────────────────────────────────────────── */
-type IdentityType = 'individu' | 'lembaga';
+type IdentityType = "individu" | "lembaga";
 
 /* ──────────────────────────────────────────
    Visit category cards
@@ -46,18 +45,19 @@ interface VisitCategory {
 
 const visitCategories: VisitCategory[] = [
   {
-    id: 'biasa',
-    label: 'Kunjungan Biasa',
-    description: 'Pertemuan santai, perkenalan, dan bermain bersama anak-anak.',
+    id: "biasa",
+    label: "Kunjungan Biasa",
+    description: "Pertemuan santai, perkenalan, dan bermain bersama anak-anak.",
     icon: <FaRegHeart className="text-primary text-lg" />,
-    iconBg: 'bg-primary/10',
+    iconBg: "bg-primary/10",
   },
   {
-    id: 'kegiatan',
-    label: 'Melakukan Kegiatan',
-    description: 'Workshop, donasi formal, hiburan, atau perayaan ulang tahun bersama.',
+    id: "kegiatan",
+    label: "Melakukan Kegiatan",
+    description:
+      "Workshop, donasi formal, hiburan, atau perayaan ulang tahun bersama.",
     icon: <FaRunning className="text-tertiary text-lg" />,
-    iconBg: 'bg-tertiary/10',
+    iconBg: "bg-tertiary/10",
   },
 ];
 
@@ -80,57 +80,63 @@ function DetailPengunjungContent() {
   const searchParams = useSearchParams();
 
   // Read schedule selection from URL params (set by atur-jadwal page)
-  const capacityId = searchParams.get('capacity_id') || '';
-  const scheduledDate = searchParams.get('date') || '';
-  const sessionLabel = decodeURIComponent(searchParams.get('session_label') || '');
-  const sessionTime = decodeURIComponent(searchParams.get('session_time') || '');
+  const capacityId = searchParams.get("capacity_id") || "";
+  const scheduledDate = searchParams.get("date") || "";
+  const sessionLabel = decodeURIComponent(
+    searchParams.get("session_label") || "",
+  );
+  const sessionTime = decodeURIComponent(
+    searchParams.get("session_time") || "",
+  );
 
-  const [identityType, setIdentityType] = useState<IdentityType>('individu');
-  const [selectedCategory, setSelectedCategory] = useState<string>('biasa');
+  const [identityType, setIdentityType] = useState<IdentityType>("individu");
+  const [selectedCategory, setSelectedCategory] = useState<string>("biasa");
   const [bringDonation, setBringDonation] = useState(false);
-  const [namaField, setNamaField] = useState('');
-  const [whatsappField, setWhatsappField] = useState('');
-  const [tujuanField, setTujuanField] = useState('');
+  const [namaField, setNamaField] = useState("");
+  const [whatsappField, setWhatsappField] = useState("");
+  const [tujuanField, setTujuanField] = useState("");
   const [showModal, setShowModal] = useState(false);
 
   // API integration state
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Multistep Logic
-  const [formStep, setFormStep] = useState<'detail' | 'cart'>('detail');
+  const [formStep, setFormStep] = useState<"detail" | "cart">("detail");
 
   // Smart Cart State (uses inventory UUIDs from API)
-  const [cartItems, setCartItems] = useState<{id: string; name: string; qty: number; inventory_id: string}[]>([]);
-  const [selectedInventoryId, setSelectedInventoryId] = useState('');
-  const [itemQty, setItemQty] = useState('');
+  const [cartItems, setCartItems] = useState<
+    { id: string; name: string; qty: number; inventory_id: string }[]
+  >([]);
+  const [selectedInventoryId, setSelectedInventoryId] = useState("");
+  const [itemQty, setItemQty] = useState("");
 
   // Inventory items fetched from backend
   const [inventoryList, setInventoryList] = useState<InventoryItem[]>([]);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventories`, {
-      headers: { 'Accept': 'application/json' },
+      headers: { Accept: "application/json" },
     })
-      .then(res => res.ok ? res.json() : { data: [] })
-      .then(json => setInventoryList(json.data || []))
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .then((json) => setInventoryList(json.data || []))
       .catch(() => setInventoryList([]));
   }, []);
 
-  const currentStep = formStep === 'detail' ? 2 : 2;
+  const currentStep = formStep === "detail" ? 2 : 2;
 
   const handleNext = () => {
-    if (bringDonation && formStep === 'detail') {
-      setFormStep('cart');
+    if (bringDonation && formStep === "detail") {
+      setFormStep("cart");
     } else {
-      setErrorMessage('');
+      setErrorMessage("");
       setShowModal(true);
     }
   };
 
   const handleSubmitToApi = async () => {
     setIsLoading(true);
-    setErrorMessage('');
+    setErrorMessage("");
     setShowModal(false);
 
     const payload: Record<string, unknown> = {
@@ -140,20 +146,20 @@ function DetailPengunjungContent() {
 
     if (bringDonation && cartItems.length > 0) {
       payload.donorPhone = whatsappField;
-      payload.items = cartItems.map(item => ({
+      payload.items = cartItems.map((item) => ({
         inventory_id: item.inventory_id,
         qty: item.qty,
       }));
     }
 
     try {
-      const token = localStorage.getItem('auth_token') || '';
+      const token = localStorage.getItem("auth_token") || "";
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/visits`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(payload),
       });
@@ -162,10 +168,12 @@ function DetailPengunjungContent() {
 
       if (!res.ok) {
         if (res.status === 422 && data.errors) {
-          const msgs = Object.values(data.errors).flat().join(' ');
+          const msgs = Object.values(data.errors).flat().join(" ");
           setErrorMessage(msgs);
         } else {
-          setErrorMessage(data.message || 'Terjadi kesalahan. Silakan coba lagi.');
+          setErrorMessage(
+            data.message || "Terjadi kesalahan. Silakan coba lagi.",
+          );
         }
         return;
       }
@@ -174,12 +182,15 @@ function DetailPengunjungContent() {
         date: scheduledDate,
         session_label: sessionLabel,
         session_time: sessionTime,
-        category: selectedCategory === 'kegiatan' ? 'Melakukan Kegiatan' : 'Kunjungan Biasa',
-        has_donation: bringDonation ? '1' : '0',
+        category:
+          selectedCategory === "kegiatan"
+            ? "Melakukan Kegiatan"
+            : "Kunjungan Biasa",
+        has_donation: bringDonation ? "1" : "0",
       });
       router.push(`/jadwal-kunjungan/konfirmasi?${confirmParams.toString()}`);
     } catch {
-      setErrorMessage('Tidak dapat terhubung ke server. Periksa koneksi Anda.');
+      setErrorMessage("Tidak dapat terhubung ke server. Periksa koneksi Anda.");
     } finally {
       setIsLoading(false);
     }
@@ -187,21 +198,24 @@ function DetailPengunjungContent() {
 
   const handleAddToCart = () => {
     if (selectedInventoryId && itemQty) {
-      const inv = inventoryList.find(i => i.id === selectedInventoryId);
+      const inv = inventoryList.find((i) => i.id === selectedInventoryId);
       if (!inv) return;
-      setCartItems([...cartItems, {
-        id: `${Date.now()}`,
-        name: `${inv.itemName} (${inv.unit})`,
-        qty: parseInt(itemQty),
-        inventory_id: inv.id,
-      }]);
-      setSelectedInventoryId('');
-      setItemQty('');
+      setCartItems([
+        ...cartItems,
+        {
+          id: `${Date.now()}`,
+          name: `${inv.itemName} (${inv.unit})`,
+          qty: parseInt(itemQty),
+          inventory_id: inv.id,
+        },
+      ]);
+      setSelectedInventoryId("");
+      setItemQty("");
     }
   };
 
   const handleRemoveItem = (id: string) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+    setCartItems(cartItems.filter((item) => item.id !== id));
   };
 
   return (
@@ -218,8 +232,8 @@ function DetailPengunjungContent() {
                   <span
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                       step.number <= currentStep
-                        ? 'bg-primary text-white'
-                        : 'bg-surface-container-low text-on-surface-variant'
+                        ? "bg-primary text-white"
+                        : "bg-surface-container-low text-on-surface-variant"
                     }`}
                   >
                     {step.number}
@@ -227,10 +241,10 @@ function DetailPengunjungContent() {
                   <span
                     className={`font-sans text-sm font-medium ${
                       step.number === currentStep
-                        ? 'text-on-surface font-bold'
+                        ? "text-on-surface font-bold"
                         : step.number < currentStep
-                          ? 'text-on-surface-variant'
-                          : 'text-on-surface-variant'
+                          ? "text-on-surface-variant"
+                          : "text-on-surface-variant"
                     }`}
                   >
                     {step.label}
@@ -241,8 +255,8 @@ function DetailPengunjungContent() {
                   <div
                     className={`flex-1 h-px mx-4 ${
                       step.number < currentStep
-                        ? 'bg-primary'
-                        : 'bg-outline-variant/30'
+                        ? "bg-primary"
+                        : "bg-outline-variant/30"
                     }`}
                   />
                 )}
@@ -261,8 +275,8 @@ function DetailPengunjungContent() {
             Detail Pengunjung &amp; Kegiatan
           </h1>
           <p className="text-on-surface-variant font-sans text-sm md:text-base leading-relaxed max-w-lg mx-auto">
-            Lengkapi informasi diri Anda atau lembaga Anda untuk memastikan proses
-            kunjungan berjalan selaras dengan rutinitas anak-anak.
+            Lengkapi informasi diri Anda atau lembaga Anda untuk memastikan
+            proses kunjungan berjalan selaras dengan rutinitas anak-anak.
           </p>
         </div>
       </section>
@@ -272,246 +286,266 @@ function DetailPengunjungContent() {
          ═══════════════════════════════════════ */}
       <section className="px-6 pb-10">
         <div className="max-w-2xl mx-auto">
-
           {/* ── JENIS IDENTITAS ── */}
-          {formStep === 'detail' ? (
+          {formStep === "detail" ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="mb-8">
-            <h3 className="font-public-sans text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface-variant text-center mb-4">
-              Jenis Identitas
-            </h3>
-            <div className="flex justify-center">
-              <div className="inline-flex bg-surface-container-low rounded-xl p-1">
-                <button
-                  onClick={() => setIdentityType('individu')}
-                  className={`px-8 py-2.5 rounded-lg font-sans text-sm font-semibold transition-all duration-200 ${
-                    identityType === 'individu'
-                      ? 'bg-surface-container-lowest text-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-on-surface'
-                  }`}
-                >
-                  Individu
-                </button>
-                <button
-                  onClick={() => setIdentityType('lembaga')}
-                  className={`px-8 py-2.5 rounded-lg font-sans text-sm font-semibold transition-all duration-200 ${
-                    identityType === 'lembaga'
-                      ? 'bg-surface-container-lowest text-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-on-surface'
-                  }`}
-                >
-                  Lembaga
-                </button>
+                <h3 className="font-public-sans text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface-variant text-center mb-4">
+                  Jenis Identitas
+                </h3>
+                <div className="flex justify-center">
+                  <div className="inline-flex bg-surface-container-low rounded-xl p-1">
+                    <button
+                      onClick={() => setIdentityType("individu")}
+                      className={`px-8 py-2.5 rounded-lg font-sans text-sm font-semibold transition-all duration-200 ${
+                        identityType === "individu"
+                          ? "bg-surface-container-lowest text-primary shadow-sm"
+                          : "text-on-surface-variant hover:text-on-surface"
+                      }`}
+                    >
+                      Individu
+                    </button>
+                    <button
+                      onClick={() => setIdentityType("lembaga")}
+                      className={`px-8 py-2.5 rounded-lg font-sans text-sm font-semibold transition-all duration-200 ${
+                        identityType === "lembaga"
+                          ? "bg-surface-container-lowest text-primary shadow-sm"
+                          : "text-on-surface-variant hover:text-on-surface"
+                      }`}
+                    >
+                      Lembaga
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* ── NAME + WHATSAPP FIELDS ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-            {/* Nama */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-public-sans font-semibold text-on-surface/80">
-                {identityType === 'individu' ? 'Nama Perwakilan / Lembaga' : 'Nama Lembaga / Organisasi'}
-              </label>
-              <input
-                type="text"
-                value={namaField}
-                onChange={(e) => setNamaField(e.target.value)}
-                placeholder={
-                  identityType === 'individu'
-                    ? 'Contoh: Budi Santoso / PT. Sinergi'
-                    : 'Contoh: Yayasan Peduli Anak'
-                }
-                className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl transition-colors
+              {/* ── NAME + WHATSAPP FIELDS ── */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                {/* Nama */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-public-sans font-semibold text-on-surface/80">
+                    {identityType === "individu"
+                      ? "Nama Perwakilan / Lembaga"
+                      : "Nama Lembaga / Organisasi"}
+                  </label>
+                  <input
+                    type="text"
+                    value={namaField}
+                    onChange={(e) => setNamaField(e.target.value)}
+                    placeholder={
+                      identityType === "individu"
+                        ? "Contoh: Budi Santoso / PT. Sinergi"
+                        : "Contoh: Yayasan Peduli Anak"
+                    }
+                    className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl transition-colors
                   focus:outline-none focus:ring-0 border border-outline-variant/15 focus:border-primary/40
                   font-sans text-sm text-on-surface placeholder:text-on-surface-variant/40"
-              />
-            </div>
+                  />
+                </div>
 
-            {/* WhatsApp */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-public-sans font-semibold text-on-surface/80">
-                Nomor WhatsApp (Aktif)
-              </label>
-              <input
-                type="tel"
-                value={whatsappField}
-                onChange={(e) => setWhatsappField(e.target.value)}
-                placeholder="0812-xxxx-xxxx"
-                className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl transition-colors
+                {/* WhatsApp */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-public-sans font-semibold text-on-surface/80">
+                    Nomor WhatsApp (Aktif)
+                  </label>
+                  <input
+                    type="tel"
+                    value={whatsappField}
+                    onChange={(e) => setWhatsappField(e.target.value)}
+                    placeholder="0812-xxxx-xxxx"
+                    className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl transition-colors
                   focus:outline-none focus:ring-0 border border-outline-variant/15 focus:border-primary/40
                   font-sans text-sm text-on-surface placeholder:text-on-surface-variant/40"
-              />
-            </div>
-          </div>
+                  />
+                </div>
+              </div>
 
-          {/* ── KATEGORI KUNJUNGAN ── */}
-          <div className="mb-8">
-            <h3 className="font-public-sans text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface mb-4">
-              Kategori Kunjungan
-            </h3>
+              {/* ── KATEGORI KUNJUNGAN ── */}
+              <div className="mb-8">
+                <h3 className="font-public-sans text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface mb-4">
+                  Kategori Kunjungan
+                </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {visitCategories.map((cat) => {
-                const isActive = selectedCategory === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`text-left p-5 rounded-xl transition-all duration-200 ${
-                      isActive
-                        ? 'bg-surface-container-lowest ring-2 ring-primary/30 shadow-ambient'
-                        : 'bg-surface-container-lowest border border-outline-variant/10 hover:border-outline-variant/25'
-                    }`}
-                  >
-                    {/* Icon */}
-                    <div className={`w-10 h-10 rounded-xl ${cat.iconBg} flex items-center justify-center mb-3`}>
-                      {cat.icon}
-                    </div>
-                    {/* Label */}
-                    <h4 className="font-sans font-bold text-sm text-on-surface mb-1">
-                      {cat.label}
-                    </h4>
-                    {/* Description */}
-                    <p className="font-sans text-xs text-on-surface-variant leading-relaxed">
-                      {cat.description}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {visitCategories.map((cat) => {
+                    const isActive = selectedCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`text-left p-5 rounded-xl transition-all duration-200 ${
+                          isActive
+                            ? "bg-surface-container-lowest ring-2 ring-primary/30 shadow-ambient"
+                            : "bg-surface-container-lowest border border-outline-variant/10 hover:border-outline-variant/25"
+                        }`}
+                      >
+                        {/* Icon */}
+                        <div
+                          className={`w-10 h-10 rounded-xl ${cat.iconBg} flex items-center justify-center mb-3`}
+                        >
+                          {cat.icon}
+                        </div>
+                        {/* Label */}
+                        <h4 className="font-sans font-bold text-sm text-on-surface mb-1">
+                          {cat.label}
+                        </h4>
+                        {/* Description */}
+                        <p className="font-sans text-xs text-on-surface-variant leading-relaxed">
+                          {cat.description}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-          {/* ── RINCIAN TUJUAN / SUSUNAN KEGIATAN ── */}
-          <div className="mb-6">
-            <label className="block text-sm font-public-sans font-semibold text-on-surface/80 mb-1.5">
-              Rincian Tujuan / Susunan Kegiatan
-            </label>
-            <textarea
-              value={tujuanField}
-              onChange={(e) => setTujuanField(e.target.value)}
-              rows={4}
-              placeholder="Ceritakan sedikit rencana kegiatan Anda atau barang apa yang ingin didonasikan..."
-              className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl transition-colors resize-none
+              {/* ── RINCIAN TUJUAN / SUSUNAN KEGIATAN ── */}
+              <div className="mb-6">
+                <label className="block text-sm font-public-sans font-semibold text-on-surface/80 mb-1.5">
+                  Rincian Tujuan / Susunan Kegiatan
+                </label>
+                <textarea
+                  value={tujuanField}
+                  onChange={(e) => setTujuanField(e.target.value)}
+                  rows={4}
+                  placeholder="Ceritakan sedikit rencana kegiatan Anda atau barang apa yang ingin didonasikan..."
+                  className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl transition-colors resize-none
                 focus:outline-none focus:ring-0 border border-outline-variant/15 focus:border-primary/40
                 font-sans text-sm text-on-surface placeholder:text-on-surface-variant/40 leading-relaxed"
-            />
-          </div>
-
-          {/* ── BRING DONATION TOGGLE ── */}
-          <div className="mb-10">
-            <GlassContainer className="px-5 py-4 flex items-start gap-4">
-              <div className="flex-1">
-                <p className="font-sans text-sm font-bold text-on-surface leading-snug">
-                  Saya berencana membawa buah tangan / donasi fisik saat berkunjung
-                </p>
-                <p className="font-sans text-xs text-on-surface-variant mt-1 leading-relaxed">
-                  Kami akan menyiapkan Resi Penitipan untuk mendata barang bawaan Anda agar transparan.
-                </p>
-              </div>
-              {/* Toggle Switch */}
-              <button
-                type="button"
-                role="switch"
-                aria-checked={bringDonation}
-                onClick={() => setBringDonation(!bringDonation)}
-                className={`relative flex-shrink-0 w-12 h-7 rounded-full transition-colors duration-200 ${
-                  bringDonation ? 'bg-primary' : 'bg-surface-dim'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                    bringDonation ? 'translate-x-5' : 'translate-x-0'
-                  }`}
                 />
-              </button>
-            </GlassContainer>
-          </div>
+              </div>
 
-          {/* ═══════════════════════════════════════
+              {/* ── BRING DONATION TOGGLE ── */}
+              <div className="mb-10">
+                <GlassContainer className="px-5 py-4 flex items-start gap-4">
+                  <div className="flex-1">
+                    <p className="font-sans text-sm font-bold text-on-surface leading-snug">
+                      Saya berencana membawa buah tangan / donasi fisik saat
+                      berkunjung
+                    </p>
+                    <p className="font-sans text-xs text-on-surface-variant mt-1 leading-relaxed">
+                      Kami akan menyiapkan Resi Penitipan untuk mendata barang
+                      bawaan Anda agar transparan.
+                    </p>
+                  </div>
+                  {/* Toggle Switch */}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={bringDonation}
+                    onClick={() => setBringDonation(!bringDonation)}
+                    className={`relative flex-shrink-0 w-12 h-7 rounded-full transition-colors duration-200 ${
+                      bringDonation ? "bg-primary" : "bg-surface-dim"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                        bringDonation ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </GlassContainer>
+              </div>
+
+              {/* ═══════════════════════════════════════
               RINGKASAN KUNJUNGAN
              ═══════════════════════════════════════ */}
-          {/* ── ERROR MESSAGE ── */}
-          {errorMessage && (
-            <div className="mb-6 flex items-start gap-3 bg-red-50/80 rounded-xl px-5 py-4 animate-in fade-in duration-300">
-              <FiAlertCircle className="text-red-500 text-base flex-shrink-0 mt-0.5" />
-              <p className="font-sans text-sm text-red-600 leading-relaxed">{errorMessage}</p>
-            </div>
-          )}
-
-          <GlassContainer className="p-6 md:p-8 bg-surface-container-low/60 mb-6">
-            <h3 className="font-sans font-black text-lg text-on-surface mb-5">
-              Ringkasan Kunjungan
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Tanggal */}
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <FiCalendar className="text-primary text-base" />
+              {/* ── ERROR MESSAGE ── */}
+              {errorMessage && (
+                <div className="mb-6 flex items-start gap-3 bg-red-50/80 rounded-xl px-5 py-4 animate-in fade-in duration-300">
+                  <FiAlertCircle className="text-red-500 text-base flex-shrink-0 mt-0.5" />
+                  <p className="font-sans text-sm text-red-600 leading-relaxed">
+                    {errorMessage}
+                  </p>
                 </div>
-                <div>
-                  <span className="block font-public-sans text-[10px] font-bold uppercase tracking-[0.14em] text-on-surface-variant">
-                    Tanggal Kunjungan
-                  </span>
-                  <span className="block font-sans text-sm font-bold text-on-surface mt-0.5">
-                    {scheduledDate || 'Belum dipilih'}
-                  </span>
-                </div>
-              </div>
+              )}
 
-              {/* Sesi */}
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <FiClock className="text-primary text-base" />
-                </div>
-                <div>
-                  <span className="block font-public-sans text-[10px] font-bold uppercase tracking-[0.14em] text-on-surface-variant">
-                    Sesi Terpilih
-                  </span>
-                  <span className="block font-sans text-sm font-bold text-on-surface mt-0.5">
-                    Sesi {sessionLabel} ({sessionTime})
-                  </span>
-                </div>
-              </div>
-            </div>
-          </GlassContainer>
+              <GlassContainer className="p-6 md:p-8 bg-surface-container-low/60 mb-6">
+                <h3 className="font-sans font-black text-lg text-on-surface mb-5">
+                  Ringkasan Kunjungan
+                </h3>
 
-          {/* ═══════════════════════════════════════
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Tanggal */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <FiCalendar className="text-primary text-base" />
+                    </div>
+                    <div>
+                      <span className="block font-public-sans text-[10px] font-bold uppercase tracking-[0.14em] text-on-surface-variant">
+                        Tanggal Kunjungan
+                      </span>
+                      <span className="block font-sans text-sm font-bold text-on-surface mt-0.5">
+                        {scheduledDate || "Belum dipilih"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Sesi */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <FiClock className="text-primary text-base" />
+                    </div>
+                    <div>
+                      <span className="block font-public-sans text-[10px] font-bold uppercase tracking-[0.14em] text-on-surface-variant">
+                        Sesi Terpilih
+                      </span>
+                      <span className="block font-sans text-sm font-bold text-on-surface mt-0.5">
+                        Sesi {sessionLabel} ({sessionTime})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </GlassContainer>
+
+              {/* ═══════════════════════════════════════
               CTA BUTTON
              ═══════════════════════════════════════ */}
-          <PrimaryButton
-            onClick={handleNext}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
-          >
-            {isLoading ? 'Mengirim...' : bringDonation && formStep === 'detail' ? 'Lanjut Isi Data Barang' : 'Lanjut ke Konfirmasi'}
-          </PrimaryButton>
-          </div>
+              <PrimaryButton
+                onClick={handleNext}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
+              >
+                {isLoading
+                  ? "Mengirim..."
+                  : bringDonation && formStep === "detail"
+                    ? "Lanjut Isi Data Barang"
+                    : "Lanjut ke Konfirmasi"}
+              </PrimaryButton>
+            </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-right-8 duration-500">
               <div className="mb-6 flex items-center gap-4">
-                <button onClick={() => setFormStep('detail')} className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-colors">
+                <button
+                  onClick={() => setFormStep("detail")}
+                  className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-colors"
+                >
                   <MdArrowBack className="text-xl" />
                 </button>
                 <div>
-                  <h3 className="font-sans font-black text-xl text-on-surface">Data Barang Bawaan</h3>
-                  <p className="font-sans text-xs text-on-surface-variant mt-1">Tambahkan barang yang akan Anda bawa saat kunjungan.</p>
+                  <h3 className="font-sans font-black text-xl text-on-surface">
+                    Data Barang Bawaan
+                  </h3>
+                  <p className="font-sans text-xs text-on-surface-variant mt-1">
+                    Tambahkan barang yang akan Anda bawa saat kunjungan.
+                  </p>
                 </div>
               </div>
 
               <GlassContainer className="p-6 mb-8">
                 <div className="flex gap-3 items-end">
                   <div className="flex-1">
-                    <label className="text-xs font-public-sans font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">Pilih Barang</label>
+                    <label className="text-xs font-public-sans font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">
+                      Pilih Barang
+                    </label>
                     <select
                       value={selectedInventoryId}
                       onChange={(e) => setSelectedInventoryId(e.target.value)}
                       className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/15 focus:border-primary/40 focus:ring-0 font-sans text-sm text-on-surface outline-none appearance-none"
                     >
                       <option value="">— Pilih dari daftar kebutuhan —</option>
-                      {inventoryList.map(inv => (
+                      {inventoryList.map((inv) => (
                         <option key={inv.id} value={inv.id}>
                           {inv.itemName} ({inv.unit}) — Stok: {inv.stock}
                         </option>
@@ -519,27 +553,51 @@ function DetailPengunjungContent() {
                     </select>
                   </div>
                   <div className="w-24">
-                    <label className="text-xs font-public-sans font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">Jumlah</label>
-                    <input type="number" value={itemQty} onChange={(e)=>setItemQty(e.target.value)} placeholder="0" className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/15 focus:border-primary/40 focus:ring-0 font-sans text-sm text-on-surface text-center outline-none" />
+                    <label className="text-xs font-public-sans font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">
+                      Jumlah
+                    </label>
+                    <input
+                      type="number"
+                      value={itemQty}
+                      onChange={(e) => setItemQty(e.target.value)}
+                      placeholder="0"
+                      className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/15 focus:border-primary/40 focus:ring-0 font-sans text-sm text-on-surface text-center outline-none"
+                    />
                   </div>
-                  <button type="button" onClick={handleAddToCart} className="h-[46px] px-6 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl font-bold flex items-center justify-center transition-colors">
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    className="h-[46px] px-6 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl font-bold flex items-center justify-center transition-colors"
+                  >
                     <MdAddShoppingCart className="text-xl" />
                   </button>
                 </div>
-                
+
                 <div className="mt-8 space-y-3">
                   {cartItems.length === 0 ? (
                     <div className="text-center py-8 border border-dashed border-outline-variant/20 rounded-xl">
-                      <p className="text-sm text-on-surface-variant font-sans">Belum ada barang ditambahkan.</p>
+                      <p className="text-sm text-on-surface-variant font-sans">
+                        Belum ada barang ditambahkan.
+                      </p>
                     </div>
                   ) : (
                     cartItems.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm">
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm"
+                      >
                         <div>
-                          <p className="font-sans font-bold text-on-surface text-sm">{item.name}</p>
-                          <p className="font-sans text-xs text-on-surface-variant mt-0.5">{item.qty} item</p>
+                          <p className="font-sans font-bold text-on-surface text-sm">
+                            {item.name}
+                          </p>
+                          <p className="font-sans text-xs text-on-surface-variant mt-0.5">
+                            {item.qty} item
+                          </p>
                         </div>
-                        <button onClick={() => handleRemoveItem(item.id)} className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors">
+                        <button
+                          onClick={() => handleRemoveItem(item.id)}
+                          className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors"
+                        >
                           <MdOutlineDeleteOutline className="text-lg" />
                         </button>
                       </div>
@@ -547,13 +605,13 @@ function DetailPengunjungContent() {
                   )}
                 </div>
               </GlassContainer>
-              
+
               <PrimaryButton
                 onClick={handleNext}
                 disabled={isLoading || cartItems.length === 0}
                 className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide rounded-xl"
               >
-                {isLoading ? 'Mengirim...' : 'Konfirmasi Seluruh Data'}
+                {isLoading ? "Mengirim..." : "Konfirmasi Seluruh Data"}
               </PrimaryButton>
             </div>
           )}
@@ -563,7 +621,7 @@ function DetailPengunjungContent() {
             isOpen={showModal}
             onClose={() => setShowModal(false)}
             onConfirm={handleSubmitToApi}
-            confirmText={isLoading ? 'Mengirim...' : 'Ya, Ajukan Kunjungan'}
+            confirmText={isLoading ? "Mengirim..." : "Ya, Ajukan Kunjungan"}
             date={scheduledDate}
             time={`Sesi ${sessionLabel} (${sessionTime})`}
           />
@@ -575,12 +633,12 @@ function DetailPengunjungContent() {
             <div className="flex items-start gap-3 bg-surface-container-low/50 rounded-xl px-5 py-4">
               <FiShield className="text-primary text-base flex-shrink-0 mt-0.5" />
               <p className="font-sans text-xs text-on-surface-variant leading-relaxed">
-                Data Anda dienkripsi dan hanya digunakan untuk kepentingan verifikasi kunjungan oleh Empanti. Kami
-                menghargai privasi Anda sebagaimana kami menjaga kenyamanan anak-anak.
+                Data Anda dienkripsi dan hanya digunakan untuk kepentingan
+                verifikasi kunjungan oleh Panti Asuhan Dr Lucas. Kami menghargai
+                privasi Anda sebagaimana kami menjaga kenyamanan anak-anak.
               </p>
             </div>
           </div>
-
         </div>
       </section>
     </div>
@@ -589,11 +647,15 @@ function DetailPengunjungContent() {
 
 export default function DetailPengunjungPage() {
   return (
-    <Suspense fallback={
-      <div className="bg-surface min-h-screen flex items-center justify-center">
-        <p className="text-on-surface-variant font-sans text-sm animate-pulse">Memuat halaman...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="bg-surface min-h-screen flex items-center justify-center">
+          <p className="text-on-surface-variant font-sans text-sm animate-pulse">
+            Memuat halaman...
+          </p>
+        </div>
+      }
+    >
       <DetailPengunjungContent />
     </Suspense>
   );

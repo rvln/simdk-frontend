@@ -170,7 +170,7 @@ function KonfirmasiContent() {
           <div className="relative aspect-[16/7] rounded-2xl overflow-hidden shadow-ambient">
             <Image
               src="/assets/kunjungan-success.png"
-              alt="Empanti — Anak-anak dan relawan bersama"
+              alt="Panti Asuhan — Anak-anak dan relawan bersama"
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 672px"
