@@ -9,7 +9,8 @@ import {
   FiCheckSquare, 
   FiArchive, 
   FiTruck,
-  FiUser
+  FiUser,
+  FiFileText
 } from "react-icons/fi";
 
 interface SidebarProps {
@@ -41,6 +42,11 @@ const MENU_ITEMS = [
     name: "Distribusi",
     href: "/dashboard/distribusi",
     icon: FiTruck,
+  },
+  {
+    name: "Moderasi Laporan",
+    href: "/dashboard/moderasi-laporan",
+    icon: FiFileText,
   },
 ];
 

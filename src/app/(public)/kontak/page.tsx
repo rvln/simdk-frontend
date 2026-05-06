@@ -32,7 +32,7 @@ const contactItems = [
   {
     icon: <FiMail className="text-xl text-primary" />,
     title: "Email",
-    lines: ["halo@panti.org", "donasi@empanti.org"],
+    lines: ["halo@panti.org", "donasi@panti.org"],
   },
 ];
 
@@ -62,7 +62,7 @@ export default function KontakPage() {
         <div className="max-w-7xl mx-auto">
           <div className="relative w-full aspect-[16/7] md:aspect-[16/6] rounded-2xl overflow-hidden shadow-ambient">
             <Image
-              src="/assets/kontak-hero.jpg"
+              src="/example_img/unsplash5.png"
               alt="Lokasi Panti Asuhan Dr. J. Lucas"
               fill
               className="object-cover"
