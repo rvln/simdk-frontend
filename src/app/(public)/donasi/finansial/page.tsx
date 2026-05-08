@@ -57,6 +57,8 @@ function formatRp(value: number): string {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
+type PaymentState = 'IDLE' | 'PROCESSING' | 'PENDING_PAYMENT' | 'SUCCESS';
+
 /* ══════════════════════════════════════════
    COMPONENT
    ══════════════════════════════════════════ */
@@ -65,6 +67,9 @@ export default function DonasiFinansialPage() {
   const [customAmount, setCustomAmount] = useState("");
   const [privacyMode, setPrivacyMode] = useState("show");
   const [isLoading, setIsLoading] = useState(false);
+  const [paymentState, setPaymentState] = useState<PaymentState>('IDLE');
+  const [snapToken, setSnapToken] = useState<string | null>(null);
+  const [donationId, setDonationId] = useState<string | null>(null);
 
   const effectiveAmount =
     selectedAmount ?? (customAmount ? parseInt(customAmount, 10) : 0);
@@ -119,40 +124,63 @@ export default function DonasiFinansialPage() {
 
       const result = await res.json();
 
-      if (res.status === 201 && result.status === "success") {
-        const snapToken = result.data.snap_token;
-
-        // Panggil Midtrans Snap
-        (window as any).snap.pay(snapToken, {
-          onSuccess: function (snapResult: any) {
-            setIsLoading(false);
-            alert("Pembayaran berhasil! Terima kasih.");
-            // Redirect ke halaman tracking, atau update UI
-          },
-          onPending: function (snapResult: any) {
-            setIsLoading(false);
-            alert("Menunggu pembayaran Anda...");
-          },
-          onError: function (snapResult: any) {
-            setIsLoading(false);
-            alert("Pembayaran gagal. Silakan coba lagi.");
-          },
-          onClose: function () {
-            setIsLoading(false);
-            // Popup ditutup tanpa menyelesaikan pembayaran
-            console.log("Popup pembayaran ditutup.");
-          },
-        });
-      } else {
-        alert("Gagal menginisiasi donasi: " + result.message);
-        setIsLoading(false);
+      const token = result.data.snap_token;
+      setSnapToken(token);
+      if (result.data.donation && result.data.donation.id) {
+        setDonationId(result.data.donation.id);
       }
+      triggerSnap(token);
     } catch (error) {
       console.error("Network error:", error);
       alert("Terjadi kesalahan jaringan. Silakan coba lagi.");
       setIsLoading(false);
     }
   };
+
+  const handleCancelTransaction = async () => {
+    if (donationId) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/donations/${donationId}/cancel`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
+      } catch (error) {
+        console.error("Failed to cancel donation:", error);
+      }
+    }
+    setSnapToken(null);
+    setDonationId(null);
+    setPaymentState("IDLE");
+  };
+
+   const triggerSnap = (token: string) => {
+     if (!(window as any).snap) {
+       alert("Sistem pembayaran belum siap. Silakan refresh halaman.");
+       return;
+     }
+     (window as any).snap.pay(token, {
+       onSuccess: () => {
+         setPaymentState("SUCCESS");
+         setSnapToken(null);
+       },
+       onPending: () => {
+         setPaymentState("PENDING_PAYMENT");
+       },
+       onError: () => {
+         alert("Transaksi gagal. Silakan coba lagi.");
+         setPaymentState("IDLE");
+         setSnapToken(null);
+       },
+       onClose: () => {
+         setPaymentState("PENDING_PAYMENT");
+       },
+     });
+   };
+
+   
 
   return (
     <div className="bg-surface">
@@ -198,8 +226,10 @@ export default function DonasiFinansialPage() {
 
           {/* ── Right Column: Form ── */}
           <div>
-            {/* Headline */}
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-[1.08] text-on-surface mb-3 italic">
+            {(paymentState === 'IDLE' || paymentState === 'PROCESSING') && (
+              <>
+                {/* Headline */}
+                <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-[1.08] text-on-surface mb-3 italic">
               Wujudkan Kepedulian Anda
             </h1>
             <div className="flex items-center gap-2 mb-10">
@@ -409,6 +439,44 @@ export default function DonasiFinansialPage() {
                 </span>
               </div>
             </div>
+              </>
+            )}
+
+            {/* STATE 2: PENDING PAYMENT (RESUME FLOW) */}
+            {paymentState === 'PENDING_PAYMENT' && snapToken && (
+              <div className="text-center p-8 rounded-2xl bg-surface-container-lowest border border-outline-variant/15 mt-10">
+                <h2 className="text-2xl font-bold text-yellow-600 mb-4">Menunggu Pembayaran</h2>
+                <p className="mb-6 text-on-surface-variant">
+                  Anda belum menyelesaikan pembayaran. Silakan lanjutkan pembayaran Anda, 
+                  atau batalkan jika ingin membuat nominal donasi baru.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <PrimaryButton onClick={() => triggerSnap(snapToken!)}>
+                    Lanjutkan Pembayaran
+                  </PrimaryButton>
+                  <button 
+                    onClick={handleCancelTransaction}
+                    className="bg-error/10 text-error px-6 py-2 rounded-xl font-semibold transition-colors hover:bg-error/20"
+                  >
+                    Batalkan
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STATE 3: SUCCESS */}
+            {paymentState === 'SUCCESS' && (
+              <div className="text-center p-8 rounded-2xl bg-surface-container-lowest border border-outline-variant/15 mt-10">
+                <h2 className="text-2xl font-bold text-primary mb-2">Terima Kasih!</h2>
+                <p className="text-on-surface-variant">Donasi Anda telah berhasil kami terima.</p>
+                <button 
+                  onClick={handleCancelTransaction}
+                  className="mt-6 text-primary font-bold underline underline-offset-4"
+                >
+                  Buat Donasi Lagi
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>
