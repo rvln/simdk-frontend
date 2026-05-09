@@ -34,6 +34,8 @@ export interface ValidasiData {
   status: string;
   expires_at?: string;
   visit_id?: string;
+  payment_channel?: string;
+  payment_proof?: string | null;
 }
 
 interface ValidasiContentProps {
@@ -124,7 +126,56 @@ export function ValidasiContent({
     }
   };
 
+  const handleManualApprove = async () => {
+    setIsSubmitting(true);
+    setApiError(null);
+    try {
+      const res = await fetch(
+        `${API_BASE}/admin/donations/${data.id}/approve`,
+        {
+          method: "PATCH",
+          headers: authHeaders,
+        },
+      );
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.message ?? `HTTP ${res.status}`);
+      onSuccess();
+      onClose();
+    } catch (err: unknown) {
+      setApiError(
+        err instanceof Error ? err.message : "Terjadi kesalahan. Coba lagi.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleManualReject = async () => {
+    setIsSubmitting(true);
+    setApiError(null);
+    try {
+      const res = await fetch(`${API_BASE}/admin/donations/${data.id}/reject`, {
+        method: "PATCH",
+        headers: authHeaders,
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.message ?? `HTTP ${res.status}`);
+      onSuccess();
+      onClose();
+    } catch (err: unknown) {
+      setApiError(
+        err instanceof Error ? err.message : "Terjadi kesalahan. Coba lagi.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const isBarang = data.type === "BARANG";
+  const isManualFinancial = !isBarang && data.payment_channel === "MANUAL";
+  const isManualPending =
+    data.status === "PENDING" && data.payment_channel === "MANUAL";
+
   const isExpired =
     data.status === "PENDING_DELIVERY" &&
     !!data.expires_at &&
@@ -171,8 +222,14 @@ export function ValidasiContent({
         )}
 
         {/* Photo Evidence */}
-        <div className="w-full h-48 bg-slate-100 rounded-2xl overflow-hidden relative shadow-sm">
-          {data.imageUrl ? (
+        <div className="w-full h-48 bg-slate-100 rounded-2xl overflow-hidden relative shadow-sm flex items-center justify-center">
+          {data.payment_proof ? (
+            <img
+              src={`${process.env.NEXT_PUBLIC_BACKEND_URL ?? API_BASE.replace("/api", "")}/storage/${data.payment_proof}`}
+              alt="Bukti Transfer"
+              className="w-full h-full object-contain"
+            />
+          ) : data.imageUrl ? (
             <img
               src={data.imageUrl}
               alt="Bukti"
@@ -265,7 +322,7 @@ export function ValidasiContent({
             )}
           </>
         ) : (
-          <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
+          <div className="bg-green-50 p-4 rounded-2xl border border-green-100 flex flex-col gap-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-green-800 font-medium">
                 Nominal Transfer
@@ -274,13 +331,24 @@ export function ValidasiContent({
                 {data.amount}
               </span>
             </div>
+            {isManualFinancial && (
+              <div className="flex justify-between items-center border-t border-green-200/50 pt-3">
+                <span className="text-sm text-green-800 font-medium">
+                  Metode
+                </span>
+                <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded uppercase">
+                  MANUAL TRANSFER
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Sticky footer */}
       <div className="p-6 flex flex-col gap-3 bg-white border-t border-gray-50/50 mt-auto">
-        {data.status !== "PENDING_DELIVERY" ? (
+        {/* Render for pending Item Donations OR pending Manual Financial Donations */}
+        {data.status !== "PENDING_DELIVERY" && !isManualPending ? (
           (() => {
             const stateConfig: Record<
               string,
@@ -296,7 +364,7 @@ export function ValidasiContent({
                 bg: "bg-red-50 border-red-200",
                 icon: "text-red-500",
                 text: "text-red-700",
-                message: "Donasi fisik ditolak",
+                message: "Donasi ditolak",
               },
               FAILED: {
                 bg: "bg-red-50 border-red-200",
@@ -314,7 +382,16 @@ export function ValidasiContent({
                 bg: "bg-amber-50 border-amber-200",
                 icon: "text-amber-500",
                 text: "text-amber-700",
-                message: "Menunggu konfirmasi donatur",
+                message:
+                  !isBarang && data.payment_channel === "MIDTRANS"
+                    ? "Menunggu pembayaran"
+                    : "Menunggu validasi",
+              },
+              CANCELLED: {
+                bg: "bg-red-50 border-red-200",
+                icon: "text-red-500",
+                text: "text-red-700",
+                message: "Transaksi dibatalkan",
               },
             };
             const config = stateConfig[data.status] || {
@@ -349,68 +426,99 @@ export function ValidasiContent({
               </p>
             </div>
           </div>
-        ) : (
-          isBarang && (
-            <>
-              {!isRejecting && (
-                <button
-                  onClick={handleApprove}
-                  disabled={isSubmitting}
-                  className="w-full py-3.5 bg-teal-700 text-white font-bold rounded-xl shadow-[0_4px_20px_rgba(15,118,110,0.2)] hover:shadow-[0_6px_24px_rgba(15,118,110,0.3)] hover:-translate-y-0.5 border-none transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 flex items-center justify-center gap-2"
-                >
-                  {isSubmitting && !isRejecting ? (
-                    <>
-                      <FiLoader className="animate-spin" /> Memproses...
-                    </>
-                  ) : (
-                    "Validasi & Masukkan Inventaris"
-                  )}
-                </button>
-              )}
-
+        ) : isBarang ? (
+          <>
+            {!isRejecting && (
               <button
-                onClick={() => {
-                  if (!isRejecting) {
-                    setIsRejecting(true);
-                    setApiError(null);
-                  } else {
-                    handleReject();
-                  }
-                }}
+                onClick={handleApprove}
                 disabled={isSubmitting}
-                className={`w-full py-3.5 font-bold rounded-xl transition-all border-none disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-                  isRejecting
-                    ? "bg-red-600 text-white hover:bg-red-700 shadow-md hover:-translate-y-0.5"
-                    : "text-red-600 bg-transparent hover:bg-red-50"
-                }`}
+                className="w-full py-3.5 bg-teal-700 text-white font-bold rounded-xl shadow-[0_4px_20px_rgba(15,118,110,0.2)] hover:shadow-[0_6px_24px_rgba(15,118,110,0.3)] hover:-translate-y-0.5 border-none transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 flex items-center justify-center gap-2"
               >
-                {isSubmitting && isRejecting ? (
+                {isSubmitting && !isRejecting ? (
                   <>
-                    <FiLoader className="animate-spin" /> Mencatat Log...
+                    <FiLoader className="animate-spin" /> Memproses...
                   </>
-                ) : isRejecting ? (
-                  "Konfirmasi Tolak & Catat Log"
                 ) : (
-                  "Tolak Donasi"
+                  "Validasi & Masukkan Inventaris"
                 )}
               </button>
+            )}
 
-              {isRejecting && (
-                <button
-                  onClick={() => {
-                    setIsRejecting(false);
-                    setRejectReason("");
-                    setApiError(null);
-                  }}
-                  disabled={isSubmitting}
-                  className="w-full py-3 text-gray-500 font-bold bg-transparent hover:bg-gray-100 rounded-xl transition-colors border-none disabled:opacity-50"
-                >
-                  Batal
-                </button>
+            <button
+              onClick={() => {
+                if (!isRejecting) {
+                  setIsRejecting(true);
+                  setApiError(null);
+                } else {
+                  handleReject();
+                }
+              }}
+              disabled={isSubmitting}
+              className={`w-full py-3.5 font-bold rounded-xl transition-all border-none disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+                isRejecting
+                  ? "bg-red-600 text-white hover:bg-red-700 shadow-md hover:-translate-y-0.5"
+                  : "text-red-600 bg-transparent hover:bg-red-50"
+              }`}
+            >
+              {isSubmitting && isRejecting ? (
+                <>
+                  <FiLoader className="animate-spin" /> Mencatat Log...
+                </>
+              ) : isRejecting ? (
+                "Konfirmasi Tolak & Catat Log"
+              ) : (
+                "Tolak Donasi"
               )}
-            </>
-          )
-        )}
+            </button>
+
+            {isRejecting && (
+              <button
+                onClick={() => {
+                  setIsRejecting(false);
+                  setRejectReason("");
+                  setApiError(null);
+                }}
+                disabled={isSubmitting}
+                className="w-full py-3 text-gray-500 font-bold bg-transparent hover:bg-gray-100 rounded-xl transition-colors border-none disabled:opacity-50"
+              >
+                Batal
+              </button>
+            )}
+          </>
+        ) : isManualPending ? (
+          <>
+            {data.payment_proof && (
+              <a
+                href={`${process.env.NEXT_PUBLIC_BACKEND_URL ?? API_BASE.replace("/api", "")}/storage/${data.payment_proof}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 bg-blue-50 text-blue-700 font-bold rounded-xl hover:bg-blue-100 border-none transition-all flex items-center justify-center gap-2"
+              >
+                <FiImage className="text-lg" /> Lihat Bukti Full
+              </a>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={handleManualApprove}
+                disabled={isSubmitting}
+                className="flex-1 py-3.5 bg-teal-700 text-white font-bold rounded-xl shadow-[0_4px_20px_rgba(15,118,110,0.2)] hover:shadow-[0_6px_24px_rgba(15,118,110,0.3)] hover:-translate-y-0.5 border-none transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <FiLoader className="animate-spin" />
+                ) : (
+                  "Setujui"
+                )}
+              </button>
+              <button
+                onClick={handleManualReject}
+                disabled={isSubmitting}
+                className="flex-1 py-3.5 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 border-none transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? <FiLoader className="animate-spin" /> : "Tolak"}
+              </button>
+            </div>
+          </>
+        ) : null}
       </div>
     </>
   );

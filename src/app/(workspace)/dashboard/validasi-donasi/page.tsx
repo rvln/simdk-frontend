@@ -90,6 +90,8 @@ function mapDonation(raw: any): ValidasiData {
     status: raw.status,
     expires_at: raw.expires_at ?? undefined,
     visit_id: raw.visit_id ?? undefined,
+    payment_channel: raw.payment_channel,
+    payment_proof: raw.payment_proof,
   };
 }
 
@@ -172,6 +174,8 @@ export default function ValidasiDonasiPage() {
 
   const handleTabSwitch = (tab: DonationType) => {
     setActiveTab(tab);
+    // Reset filter to each tab's default so backend receives a valid status value
+    setFilterStatus(tab === "BARANG" ? "PENDING_DELIVERY" : "PENDING_MANUAL");
     handleClose();
   };
 
@@ -186,11 +190,26 @@ export default function ValidasiDonasiPage() {
 
     // 2. Evaluate against the selected Dropdown Filter
     if (filterStatus === "ALL") return true;
-    if (filterStatus === "EXPIRED") return isExpired; // Catch expired items
-    if (filterStatus === "PENDING_DELIVERY")
-      return donation.status === "PENDING_DELIVERY" && !isExpired; // Catch ONLY active pending items
-    if (filterStatus === "SUCCESS") return donation.status === "SUCCESS";
-    if (filterStatus === "REJECTED") return donation.status === "REJECTED";
+
+    if (activeTab === "BARANG") {
+      if (filterStatus === "EXPIRED") return isExpired;
+      if (isExpired) return false;
+      if (filterStatus === "PENDING_DELIVERY") return donation.status === "PENDING_DELIVERY";
+      if (filterStatus === "SUCCESS") return donation.status === "SUCCESS";
+      if (filterStatus === "REJECTED") return donation.status === "REJECTED";
+    } else {
+      // For DANA, do not display MIDTRANS PENDING in this admin view
+      if (donation.status === "PENDING" && donation.payment_channel === "MIDTRANS") {
+        return false;
+      }
+      if (filterStatus === "PENDING_MANUAL") return donation.status === "PENDING" && donation.payment_channel === "MANUAL";
+      if (filterStatus === "SUCCESS") return donation.status === "SUCCESS";
+      if (filterStatus === "REJECTED") return donation.status === "REJECTED";
+      if (filterStatus === "EXPIRED_FAILED") return ["EXPIRED", "FAILED", "CANCELLED"].includes(donation.status);
+
+      // Fallback if switching tabs before state updates
+      if (filterStatus === "PENDING_DELIVERY") return donation.status === "PENDING" && donation.payment_channel === "MANUAL";
+    }
 
     return true;
   });
@@ -268,11 +287,23 @@ export default function ValidasiDonasiPage() {
                   backgroundSize: "1em 1em",
                 }}
               >
-                <option value="PENDING_DELIVERY">Menunggu Kedatangan</option>
-                <option value="SUCCESS">Telah Divalidasi</option>
-                <option value="REJECTED">Ditolak</option>
-                <option value="EXPIRED">Kedaluwarsa</option>
-                <option value="ALL">Semua Status</option>
+                {activeTab === "BARANG" ? (
+                  <>
+                    <option value="PENDING_DELIVERY">Menunggu Kedatangan</option>
+                    <option value="SUCCESS">Telah Divalidasi</option>
+                    <option value="REJECTED">Ditolak</option>
+                    <option value="EXPIRED">Kedaluwarsa</option>
+                    <option value="ALL">Semua Status</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="PENDING_MANUAL">Menunggu Validasi</option>
+                    <option value="SUCCESS">Telah Divalidasi</option>
+                    <option value="REJECTED">Ditolak</option>
+                    <option value="EXPIRED_FAILED">Kedaluwarsa/Gagal</option>
+                    <option value="ALL">Semua Status</option>
+                  </>
+                )}
               </select>
             </div>
           </div>
@@ -374,20 +405,23 @@ export default function ValidasiDonasiPage() {
                         className={`px-3 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${
                           item.status === "SUCCESS"
                             ? "bg-green-100 text-green-700"
-                            : item.status === "REJECTED"
+                            : item.status === "REJECTED" || item.status === "FAILED" || item.status === "CANCELLED" || item.status === "EXPIRED" || isExpired
                               ? "bg-red-100 text-red-700"
-                              : isExpired
+                              : item.status === "PENDING" && item.payment_channel === "MIDTRANS"
                                 ? "bg-amber-100 text-amber-700"
-                                : "bg-gray-200/60 text-gray-600"
+                                : item.status === "PENDING" && item.payment_channel === "MANUAL"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-gray-200/60 text-gray-600"
                         }`}
                       >
-                        {item.status === "SUCCESS"
-                          ? "TERVALIDASI"
-                          : item.status === "REJECTED"
-                            ? "DITOLAK"
-                            : isExpired
-                              ? "KEDALUWARSA"
-                              : "MENUNGGU KEDATANGAN"}
+                        {(() => {
+                          if (item.status === "SUCCESS") return "TELAH DIVALIDASI";
+                          if (item.status === "REJECTED") return "DITOLAK";
+                          if (item.status === "FAILED" || item.status === "CANCELLED" || isExpired || item.status === "EXPIRED") return "KEDALUWARSA/GAGAL";
+                          if (item.status === "PENDING" && item.payment_channel === "MIDTRANS") return "MENUNGGU PEMBAYARAN";
+                          if (item.status === "PENDING" && item.payment_channel === "MANUAL") return "MENUNGGU VALIDASI";
+                          return "MENUNGGU KEDATANGAN";
+                        })()}
                       </span>
                       <FiChevronRight
                         className={`text-xl transition-transform duration-300 ${
