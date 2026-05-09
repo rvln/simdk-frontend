@@ -37,6 +37,7 @@ function mapVisit(raw: any) {
     iconBg = "bg-teal-100/70";
   }
 
+  // Parse capacity date to local WITA — backend sends ISO UTC (e.g. "2026-05-11T16:00:00Z" = May 12 WITA)
   const dateObj = new Date(raw.capacity?.date || raw.created_at);
   const formattedDate = dateObj.toLocaleDateString("id-ID", {
     day: "numeric",

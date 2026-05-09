@@ -178,7 +178,12 @@ export default function AturJadwalPage() {
     ? `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`
     : "";
   const slotsForDate = selectedDay
-    ? capacities.filter((c) => c.date.startsWith(selectedDateStr))
+    ? capacities.filter((c) => {
+        // Convert ISO timestamp to local WITA date string for accurate comparison
+        const d = new Date(c.date);
+        const localStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        return localStr === selectedDateStr;
+      })
     : [];
 
   const selectedDate = selectedDay

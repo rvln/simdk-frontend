@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -17,25 +21,34 @@ import {
 const MOCK_TESTIMONI = [
   {
     id: 1,
-    name: "Bapak Budi",
+    name: "Bapak Budi (Donasi Finansial)",
     message:
       "Semoga bantuan kecil ini bisa memberikan senyuman untuk anak-anak panti. Terus semangat belajar!",
   },
   {
     id: 2,
-    name: "Hamba Allah",
+    name: "Hamba Allah (Donasi Barang)",
     message:
       "Titipan doa dan sedikit rezeki untuk keberlangsungan fasilitas pendidikan adik-adik.",
   },
   {
     id: 3,
-    name: "Ibu Siti",
+    name: "Ibu Siti (Donasi Finansial)",
     message:
       "Sangat mudah berdonasi lewat sistem ini, transparan dan jelas laporannya. Sehat selalu semuanya.",
   },
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
+  const [trackingCode, setTrackingCode] = useState("");
+
+  const handleTrack = () => {
+    if (trackingCode.trim()) {
+      router.push(`/donasi/lacak-donasi/${trackingCode.trim()}`);
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -58,11 +71,14 @@ export default function LandingPage() {
               memastikan setiap anak terlindungi dan dihargai.
             </p>
             <div className="flex items-center gap-6 pt-4 font-sans">
-              <PrimaryButton className="shadow-md">
+              <PrimaryButton
+                className="shadow-md"
+                onClick={() => router.push("/donasi/barang")}
+              >
                 Donasi Sekarang
               </PrimaryButton>
               <Link
-                href="/misi"
+                href="/profil"
                 className="flex items-center gap-2 font-semibold text-teal-700 hover:text-teal-800 transition-colors"
               >
                 Jelajahi Misi Kami <MdArrowForward className="text-xl" />
@@ -165,9 +181,12 @@ export default function LandingPage() {
                   percaya transparansi adalah kunci kepercayaan.
                 </p>
                 <div className="pt-4">
-                  <button className="w-full md:w-auto bg-white text-[#0B648C] px-10 py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors font-sans shadow-sm cursor-pointer border-none">
+                  <Link
+                    href="/jadwal-kunjungan"
+                    className="w-full md:w-auto bg-white text-[#0B648C] px-10 py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors font-sans shadow-sm cursor-pointer border-none inline-flex"
+                  >
                     Mulai Penjadwalan <MdArrowForward className="text-xl" />
-                  </button>
+                  </Link>
                 </div>
               </div>
               {/* Decorative elements */}
@@ -199,9 +218,14 @@ export default function LandingPage() {
                         label="IDENTIFIKASI TRANSAKSI"
                         placeholder="TXN-DON-2026-XXXX"
                         id="tracking-input"
+                        value={trackingCode}
+                        onChange={(e) => setTrackingCode(e.target.value)}
                       />
                     </div>
-                    <PrimaryButton className="w-full sm:w-auto py-[13px]">
+                    <PrimaryButton
+                      className="w-full sm:w-auto py-[13px]"
+                      onClick={handleTrack}
+                    >
                       Lacak
                     </PrimaryButton>
                   </div>

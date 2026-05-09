@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { GlassContainer } from "@/components/ui/GlassContainer";
@@ -22,6 +23,7 @@ import {
 import { FiInfo } from "react-icons/fi";
 
 export default function LacakDonasiPage({ params }: { params: Promise<{ resi: string }> }) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const resi = resolvedParams.resi;
 
@@ -136,14 +138,36 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
   }
 
   if (error) {
+    if (error === "Resi tidak ditemukan") {
+      return (
+        <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-6 text-center">
+          <div className="bg-white/80 backdrop-blur-xl p-12 rounded-3xl shadow-sm border-none max-w-lg w-full flex flex-col items-center">
+            <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-8">
+              <MdInfoOutline className="text-5xl" />
+            </div>
+            <h1 className="text-8xl font-black text-gray-200 tracking-tighter mb-2 font-sans">404</h1>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4 font-sans tracking-tight">Resi Tidak Ditemukan</h2>
+            <p className="text-gray-500 mb-8 font-sans leading-relaxed">
+              Maaf, kode resi <span className="font-bold text-teal-700">{resi}</span> tidak ditemukan dalam sistem kami. Pastikan kode yang Anda masukkan sudah benar.
+            </p>
+            <PrimaryButton onClick={() => router.back()} className="w-full flex items-center justify-center gap-2 py-4 shadow-md">
+              <MdArrowBack className="text-xl" />
+              Kembali
+            </PrimaryButton>
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-6 text-center">
         <MdInfoOutline className="text-6xl text-red-500 mb-4" />
-        <h1 className="text-2xl font-black text-on-surface mb-2">Pencarian Gagal</h1>
-        <p className="text-on-surface-variant max-w-md">{error}</p>
-        <Link href="/" className="mt-8 text-emerald-600 font-bold hover:underline">
-          Kembali ke Beranda
-        </Link>
+        <h1 className="text-2xl font-black text-on-surface mb-2">Terjadi Kesalahan</h1>
+        <p className="text-on-surface-variant max-w-md mb-8">{error}</p>
+        <PrimaryButton onClick={() => router.back()} className="flex items-center justify-center gap-2 px-8 py-3 shadow-sm">
+          <MdArrowBack className="text-xl" />
+          Kembali
+        </PrimaryButton>
       </div>
     );
   }

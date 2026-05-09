@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { GlassContainer } from "@/components/ui/GlassContainer";
@@ -10,10 +10,12 @@ import {
   FiChevronRight,
   FiCalendar,
   FiFileText,
-  FiCheckCircle,
-  FiUsers,
   FiClock,
+  FiUser,
+  FiLoader,
 } from "react-icons/fi";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
 /* ──────────────────────────────────────────
    Calendar helpers
@@ -77,65 +79,97 @@ function buildCalendarGrid(year: number, month: number): CalendarDay[] {
 }
 
 /* ──────────────────────────────────────────
-   Mock upcoming events
+   Types
    ────────────────────────────────────────── */
-interface VisitEvent {
+interface Capacity {
   id: string;
-  sessionLabel: string;
-  sessionTime: string;
   date: string;
-  dateObj: Date;
-  title: string;
-  status: "booked" | "open";
-  statusLabel: string;
-  participantsLabel: string;
-  participantsIcon: "users" | "check";
+  slot: string;
+  quota: number;
+  booked: number;
+  is_active: boolean;
 }
 
-const upcomingEvents: VisitEvent[] = [
-  {
-    id: "1",
-    sessionLabel: "SESI SIANG (13:00 – 15:00)",
-    sessionTime: "13:00 – 15:00",
-    date: "Kamis, 15 Okt 2024",
-    dateObj: new Date(2024, 9, 15),
-    title: "Kunjungan Kasih – BEM Universitas X",
-    status: "booked",
-    statusLabel: "TELAH DIPESAN",
-    participantsLabel: "12 PESERTA TERDAFTAR",
-    participantsIcon: "users",
-  },
-  {
-    id: "2",
-    sessionLabel: "SESI PAGI (09:00 – 11:30)",
-    sessionTime: "09:00 – 11:30",
-    date: "Sabtu, 18 Okt 2024",
-    dateObj: new Date(2024, 9, 18),
-    title: "Kegiatan Mewarnai Bersama – Komunitas Peduli Anak",
-    status: "booked",
-    statusLabel: "TELAH DIPESAN",
-    participantsLabel: "8 RELAWAN TERVERIFIKASI",
-    participantsIcon: "check",
-  },
-];
-
-/* Helper: check if a date has an event */
-function dateHasEvent(date: Date): boolean {
-  return upcomingEvents.some(
-    (evt) =>
-      evt.dateObj.getFullYear() === date.getFullYear() &&
-      evt.dateObj.getMonth() === date.getMonth() &&
-      evt.dateObj.getDate() === date.getDate(),
-  );
+interface UpcomingVisit {
+  id: string;
+  visitor_name: string;
+  status: string;
+  visit_date: string | null;
+  slot: string | null;
+  created_at: string;
 }
+
+const SLOT_MAP: Record<string, { label: string; time: string }> = {
+  MORNING: { label: "SESI PAGI", time: "08:00 – 10:00" },
+  AFTERNOON: { label: "SESI SIANG", time: "13:00 – 15:00" },
+  EVENING: { label: "SESI SORE", time: "15:30 – 18:00" },
+  NIGHT: { label: "SESI MALAM", time: "19:00 – 20:00" },
+};
+
+
+
+function formatDate(dateStr: string): string {
+  // Parse date-only strings (YYYY-MM-DD) manually to avoid UTC interpretation
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const dt = new Date(
+      parseInt(parts[0], 10),
+      parseInt(parts[1], 10) - 1,
+      parseInt(parts[2], 10),
+    );
+    return dt.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+  // Fallback for full ISO timestamps — use local timezone
+  return new Date(dateStr).toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+
 
 /* ══════════════════════════════════════════
    COMPONENT
    ══════════════════════════════════════════ */
 export default function JadwalKunjunganPage() {
-  const [viewYear, setViewYear] = useState(2024);
-  const [viewMonth, setViewMonth] = useState(9); // October (0-indexed)
-  const [selectedDay, setSelectedDay] = useState<number | null>(15);
+  const now = new Date();
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth());
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+
+  /* ── API State ── */
+  const [capacities, setCapacities] = useState<Capacity[]>([]);
+  const [upcomingVisits, setUpcomingVisits] = useState<UpcomingVisit[]>([]);
+  const [isLoadingVisits, setIsLoadingVisits] = useState(true);
+
+  /* ── Fetch capacities (same pattern as atur-jadwal) ── */
+  useEffect(() => {
+    fetch(`${API_BASE}/capacities`, {
+      headers: { Accept: "application/json" },
+    })
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .then((json) => setCapacities(json.data || []))
+      .catch(() => setCapacities([]));
+  }, []);
+
+  /* ── Fetch upcoming visits ── */
+  useEffect(() => {
+    setIsLoadingVisits(true);
+    fetch(`${API_BASE}/public/kunjungan/upcoming`, {
+      headers: { Accept: "application/json" },
+    })
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .then((json) => setUpcomingVisits(json.data || []))
+      .catch(() => setUpcomingVisits([]))
+      .finally(() => setIsLoadingVisits(false));
+  }, []);
 
   const grid = useMemo(
     () => buildCalendarGrid(viewYear, viewMonth),
@@ -154,6 +188,35 @@ export default function JadwalKunjunganPage() {
       setViewYear((y) => y + 1);
     } else setViewMonth((m) => m + 1);
   };
+
+  /* ── Calendar event markers from capacities ── */
+  const dateHasCapacity = useCallback(
+    (date: Date): boolean => {
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      return capacities.some((c) => {
+        // Convert ISO timestamp to local WITA date string for accurate comparison
+        const d = new Date(c.date);
+        const localStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        return localStr === dateStr && c.is_active;
+      });
+    },
+    [capacities],
+  );
+
+  /* ── Calendar event markers from upcoming visits ── */
+  const dateHasVisit = useCallback(
+    (date: Date): boolean => {
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      return upcomingVisits.some((v) => v.visit_date === dateStr);
+    },
+    [upcomingVisits],
+  );
+
+  /* ── Filter only APPROVED visits for public display ── */
+  const approvedVisits = useMemo(
+    () => upcomingVisits.filter((v) => v.status === "APPROVED"),
+    [upcomingVisits],
+  );
 
   return (
     <div className="bg-surface">
@@ -175,150 +238,193 @@ export default function JadwalKunjunganPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          SECTION 2 — CALENDAR + SESSION CARDS
+          SECTION 2 — CALENDAR + KEGIATAN MENDATANG (SIDE BY SIDE)
       ═══════════════════════════════════════════ */}
       <section className="bg-surface px-6 md:px-12 lg:px-20 py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 lg:gap-14 items-start">
-          {/* ── Calendar ── */}
-          <GlassContainer className="p-6 md:p-8">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl md:text-2xl font-black tracking-tight text-on-surface font-sans">
-                {MONTH_NAMES[viewMonth]} {viewYear}
-              </h2>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={goToPrev}
-                  aria-label="Bulan sebelumnya"
-                  className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors"
-                >
-                  <FiChevronLeft className="text-lg" />
-                </button>
-                <button
-                  onClick={goToNext}
-                  aria-label="Bulan berikutnya"
-                  className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors"
-                >
-                  <FiChevronRight className="text-lg" />
-                </button>
-              </div>
-            </div>
-
-            {/* Day-of-week labels */}
-            <div className="grid grid-cols-7 mb-2">
-              {DAY_LABELS.map((d) => (
-                <div
-                  key={d}
-                  className="text-center font-public-sans text-[11px] font-bold uppercase tracking-widest text-on-surface-variant py-2"
-                >
-                  {d}
-                </div>
-              ))}
-            </div>
-
-            {/* Date grid */}
-            <div className="grid grid-cols-7">
-              {grid.map((cell, i) => {
-                const isOtherMonth = cell.month !== "current";
-                const isSelected = !isOtherMonth && cell.date === selectedDay;
-                const hasEvent = !isOtherMonth && dateHasEvent(cell.fullDate);
-
-                return (
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10 items-start">
+            {/* ── LEFT: Calendar ── */}
+            <div className="lg:col-span-3">
+            <GlassContainer className="p-6 md:p-8">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl md:text-2xl font-black tracking-tight text-on-surface font-sans">
+                  {MONTH_NAMES[viewMonth]} {viewYear}
+                </h2>
+                <div className="flex items-center gap-1">
                   <button
-                    key={i}
-                    onClick={() => {
-                      if (!isOtherMonth) setSelectedDay(cell.date);
-                    }}
-                    className={`
-                      relative flex flex-col items-center justify-center py-3 md:py-4 rounded-xl
-                      transition-all duration-200 text-sm font-sans font-medium
-                      ${
-                        isOtherMonth
-                          ? "text-on-surface-variant/30 cursor-default"
-                          : isSelected
-                            ? "bg-primary text-white font-bold shadow-ambient"
-                            : hasEvent
-                              ? "bg-primary/10 text-primary font-bold hover:bg-primary/20 cursor-pointer"
-                              : "text-on-surface hover:bg-surface-container-low cursor-pointer"
-                      }
-                    `}
+                    onClick={goToPrev}
+                    aria-label="Bulan sebelumnya"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors"
                   >
-                    {cell.date}
-                    {/* Dot indicator for events */}
-                    {hasEvent && !isSelected && (
-                      <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-primary" />
-                    )}
-                    {hasEvent && isSelected && (
-                      <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-white" />
-                    )}
+                    <FiChevronLeft className="text-lg" />
                   </button>
-                );
-              })}
-            </div>
-          </GlassContainer>
-
-          {/* ── Right Column: Upcoming Sessions ── */}
-          <div>
-            <h3 className="font-public-sans text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface-variant mb-6">
-              Kegiatan Mendatang
-            </h3>
-
-            <div className="space-y-5">
-              {upcomingEvents.map((evt) => (
-                <GlassContainer
-                  key={evt.id}
-                  className="p-5 flex flex-col gap-3"
-                >
-                  {/* Top row: session badge + status */}
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary font-public-sans text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-primary/20">
-                      {evt.sessionLabel}
-                    </span>
-                    <span className="inline-flex items-center gap-1 bg-primary text-white font-public-sans text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
-                      {evt.statusLabel}
-                    </span>
-                  </div>
-
-                  {/* Date */}
-                  <h4 className="font-bold text-base text-on-surface font-sans">
-                    {evt.date}
-                  </h4>
-
-                  {/* Title */}
-                  <p className="text-sm text-on-surface-variant leading-relaxed font-sans">
-                    {evt.title}
-                  </p>
-
-                  {/* Participants */}
-                  <div className="flex items-center gap-2 pt-1">
-                    {evt.participantsIcon === "users" ? (
-                      <FiUsers className="text-primary text-sm" />
-                    ) : (
-                      <FiCheckCircle className="text-primary text-sm" />
-                    )}
-                    <span className="font-public-sans text-[10px] font-bold uppercase tracking-widest text-on-surface">
-                      {evt.participantsLabel}
-                    </span>
-                  </div>
-                </GlassContainer>
-              ))}
-
-              {/* Slot availability notice */}
-              <div className="flex flex-col items-center justify-center py-8 rounded-xl border border-dashed border-outline-variant/20 text-center">
-                <FiClock className="text-3xl text-on-surface-variant/40 mb-3" />
-                <p className="text-sm text-on-surface-variant font-sans">
-                  Slot tersedia pada 20–25 Oktober
-                </p>
+                  <button
+                    onClick={goToNext}
+                    aria-label="Bulan berikutnya"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors"
+                  >
+                    <FiChevronRight className="text-lg" />
+                  </button>
+                </div>
               </div>
+
+              {/* Day-of-week labels */}
+              <div className="grid grid-cols-7 mb-2">
+                {DAY_LABELS.map((d) => (
+                  <div
+                    key={d}
+                    className="text-center font-public-sans text-[11px] font-bold uppercase tracking-widest text-on-surface-variant py-2"
+                  >
+                    {d}
+                  </div>
+                ))}
+              </div>
+
+              {/* Date grid */}
+              <div className="grid grid-cols-7">
+                {grid.map((cell, i) => {
+                  const isOtherMonth = cell.month !== "current";
+                  const isSelected = !isOtherMonth && cell.date === selectedDay;
+                  const hasCapacity =
+                    !isOtherMonth && dateHasCapacity(cell.fullDate);
+                  const hasVisit =
+                    !isOtherMonth && dateHasVisit(cell.fullDate);
+                  const hasEvent = hasCapacity || hasVisit;
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        if (!isOtherMonth) setSelectedDay(cell.date);
+                      }}
+                      className={`
+                        relative flex flex-col items-center justify-center py-3 md:py-4 rounded-xl
+                        transition-all duration-200 text-sm font-sans font-medium
+                        ${
+                          isOtherMonth
+                            ? "text-on-surface-variant/30 cursor-default"
+                            : isSelected
+                              ? "bg-primary text-white font-bold shadow-ambient"
+                              : hasEvent
+                                ? "bg-primary/1 text-primary font-bold hover:bg-primary/20 cursor-pointer"
+                                : "text-on-surface hover:bg-surface-container-low cursor-pointer"
+                        }
+                      `}
+                    >
+                      {cell.date}
+                      {/* Dot indicator for events */}
+                      {hasEvent && !isSelected && (
+                        <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-primary" />
+                      )}
+                      {hasEvent && isSelected && (
+                        <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-white" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center gap-6 mt-6 pt-4 border-t border-outline-variant/10">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="font-public-sans text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">
+                    Ada Jadwal / Sesi
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-md bg-primary" />
+                  <span className="font-public-sans text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">
+                    Tanggal Terpilih
+                  </span>
+                </div>
+              </div>
+            </GlassContainer>
+            </div>
+
+            {/* ── RIGHT: Kegiatan Mendatang ── */}
+            <div className="lg:col-span-2">
+              <div className="mb-6">
+                <span className="font-public-sans text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant block mb-2">
+                  Jadwal Terkini
+                </span>
+                <h2 className="text-2xl font-black tracking-tight text-on-surface">
+                  Kegiatan Mendatang
+                </h2>
+                <span className="font-public-sans text-[11px] font-semibold text-on-surface-variant italic mt-1 block">
+                  Sinkronisasi real-time dari sistem kapasitas
+                </span>
+              </div>
+
+              {isLoadingVisits ? (
+                <div className="flex items-center justify-center py-16 text-on-surface-variant gap-3">
+                  <FiLoader className="animate-spin text-xl" />
+                  <span className="font-sans text-sm">
+                    Memuat kegiatan mendatang...
+                  </span>
+                </div>
+              ) : approvedVisits.length === 0 ? (
+                <GlassContainer className="p-10 text-center">
+                  <FiClock className="text-4xl text-on-surface-variant/40 mx-auto mb-3" />
+                  <p className="text-sm text-on-surface-variant font-sans">
+                    Belum ada kegiatan kunjungan yang terjadwal.
+                  </p>
+                </GlassContainer>
+              ) : (
+                <div className="flex flex-col gap-4 max-h-[520px] overflow-y-auto pr-1" style={{ scrollbarWidth: "thin" }}>
+                  {approvedVisits.map((visit) => {
+                    const slotInfo = visit.slot
+                      ? SLOT_MAP[visit.slot]
+                      : null;
+
+                    return (
+                      <GlassContainer
+                        key={visit.id}
+                        className="p-5 flex flex-col gap-3"
+                      >
+                        {/* Session badge */}
+                        {slotInfo && (
+                          <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary font-public-sans text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-primary/20 self-start">
+                            {slotInfo.label} ({slotInfo.time})
+                          </span>
+                        )}
+
+                        {/* Date */}
+                        <div className="flex items-center gap-2">
+                          <FiCalendar className="text-primary text-sm flex-shrink-0" />
+                          <h4 className="font-bold text-sm text-on-surface font-sans">
+                            {visit.visit_date
+                              ? formatDate(visit.visit_date)
+                              : "Tanggal belum ditentukan"}
+                          </h4>
+                        </div>
+
+                        {/* Visitor name */}
+                        <div className="flex items-center gap-2 mt-auto pt-2 border-t border-outline-variant/10">
+                          <div className="w-7 h-7 rounded-full bg-primary/8 flex items-center justify-center flex-shrink-0">
+                            <FiUser className="text-primary text-xs" />
+                          </div>
+                          <span className="font-public-sans text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider truncate">
+                            {visit.visitor_name}
+                          </span>
+                        </div>
+                      </GlassContainer>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </section>
 
+
+
       {/* ═══════════════════════════════════════════
-          SECTION 3 — CTA BANNER
+          SECTION 4 — CTA BANNER
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 py-16 lg:py-24">
+      <section className="bg-surface px-6 md:px-12 lg:px-20 py-16 lg:py-24">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left: Text + CTAs */}
           <div>
