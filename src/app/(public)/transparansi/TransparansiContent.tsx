@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { GlassContainer } from "@/components/ui/GlassContainer";
 import {
@@ -218,6 +218,152 @@ function FilterChips({
 }
 
 /* ═══════════════════════════════════════════
+   Horizontal Carousel with Gradient Masking
+   Only activates when children count exceeds threshold (default 3).
+   ═══════════════════════════════════════════ */
+function HorizontalScroller({
+  children,
+  threshold = 3,
+}: {
+  children: React.ReactNode;
+  threshold?: number;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const count = React.Children.count(children);
+  const shouldScroll = count > threshold;
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    updateScrollState();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", updateScrollState);
+      ro.disconnect();
+    };
+  }, [updateScrollState, children]);
+
+  if (!shouldScroll) {
+    return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">{children}</div>;
+  }
+
+  // Build CSS mask-image based on scroll position
+  const maskLeft = canScrollLeft ? "transparent, black 64px" : "black, black 0px";
+  const maskRight = canScrollRight ? "black calc(100% - 64px), transparent" : "black 100%, black 100%";
+  const maskImage = `linear-gradient(to right, ${maskLeft}, ${maskRight})`;
+
+  return (
+    <div className="relative">
+      <div
+        ref={scrollRef}
+        className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+        style={{
+          WebkitMaskImage: maskImage,
+          maskImage,
+          scrollbarWidth: "none",
+        }}
+      >
+        {React.Children.map(children, (child) => (
+          <div className="min-w-[300px] max-w-[340px] flex-shrink-0 snap-start">
+            {child}
+          </div>
+        ))}
+      </div>
+      {/* Scroll hint arrows */}
+      {canScrollLeft && (
+        <button
+          onClick={() => scrollRef.current?.scrollBy({ left: -320, behavior: "smooth" })}
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-9 h-9 rounded-full bg-surface/90 shadow-md flex items-center justify-center text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors border-none"
+          aria-label="Scroll kiri"
+        >
+          <FiChevronLeft />
+        </button>
+      )}
+      {canScrollRight && (
+        <button
+          onClick={() => scrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-9 h-9 rounded-full bg-surface/90 shadow-md flex items-center justify-center text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors border-none"
+          aria-label="Scroll kanan"
+        >
+          <FiChevronRight />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   Vertical Scroll Fade Effect
+   Constrains height and applies bottom gradient fade when items > threshold.
+   ═══════════════════════════════════════════ */
+function VerticalScrollFade({
+  children,
+  threshold = 4,
+  maxHeight = "420px",
+}: {
+  children: React.ReactNode;
+  threshold?: number;
+  maxHeight?: string;
+}) {
+  const count = React.Children.count(children);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
+  const checkBottom = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 8);
+  }, []);
+
+  useEffect(() => {
+    checkBottom();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", checkBottom, { passive: true });
+    return () => el.removeEventListener("scroll", checkBottom);
+  }, [checkBottom, children]);
+
+  if (count <= threshold) {
+    return <div className="space-y-4">{children}</div>;
+  }
+
+  return (
+    <div className="relative">
+      <div
+        ref={scrollRef}
+        className="space-y-4 overflow-y-auto pr-1"
+        style={{
+          maxHeight,
+          scrollbarWidth: "thin",
+          scrollbarColor: "rgba(0,0,0,0.12) transparent",
+        }}
+      >
+        {children}
+      </div>
+      {/* Bottom gradient fade overlay */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none transition-opacity duration-300"
+        style={{
+          background: "linear-gradient(to bottom, transparent, var(--color-surface, #fff))",
+          opacity: isAtBottom ? 0 : 1,
+        }}
+      />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
    MAIN CLIENT COMPONENT
    ═══════════════════════════════════════════ */
 export default function TransparansiContent() {
@@ -314,64 +460,66 @@ export default function TransparansiContent() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {needsLoading
-              ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
-              : filteredNeeds.length === 0
-              ? (
-                <GlassContainer className="p-8 col-span-full text-center">
-                  <MdOutlineChecklistRtl className="text-4xl text-on-surface-variant/40 mx-auto mb-3" />
-                  <p className="text-sm text-on-surface-variant font-sans">
-                    Tidak ada data kebutuhan untuk filter ini.
-                  </p>
-                </GlassContainer>
-              )
-              : filteredNeeds.map((item: TransparencyNeed) => {
-                  const style = getPriorityStyle(item.priority);
-                  const pct = item.target_qty > 0 ? Math.round((item.stock / item.target_qty) * 100) : 0;
-                  const isFulfilled = pct >= 100;
-                  return (
-                    <GlassContainer key={item.id} className="p-6 flex flex-col gap-5">
-                      <div className="flex items-center justify-between">
-                        <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center">
-                          {getCategoryIcon(item.category)}
-                        </div>
-                        <span
-                          className={`inline-flex items-center font-public-sans text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full ${
-                            isFulfilled
-                              ? "bg-tertiary/10 text-tertiary border border-tertiary/20"
-                              : style.badge
-                          }`}
-                        >
-                          {isFulfilled ? "Tercapai" : style.label}
+          {needsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : filteredNeeds.length === 0 ? (
+            <GlassContainer className="p-8 text-center">
+              <MdOutlineChecklistRtl className="text-4xl text-on-surface-variant/40 mx-auto mb-3" />
+              <p className="text-sm text-on-surface-variant font-sans">
+                Tidak ada data kebutuhan untuk filter ini.
+              </p>
+            </GlassContainer>
+          ) : (
+            <HorizontalScroller threshold={3}>
+              {filteredNeeds.map((item: TransparencyNeed) => {
+                const style = getPriorityStyle(item.priority);
+                const pct = item.target_qty > 0 ? Math.round((item.stock / item.target_qty) * 100) : 0;
+                const isFulfilled = pct >= 100;
+                return (
+                  <GlassContainer key={item.id} className="p-6 flex flex-col gap-5 h-full">
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center">
+                        {getCategoryIcon(item.category)}
+                      </div>
+                      <span
+                        className={`inline-flex items-center font-public-sans text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full ${
+                          isFulfilled
+                            ? "bg-tertiary/10 text-tertiary border border-tertiary/20"
+                            : style.badge
+                        }`}
+                      >
+                        {isFulfilled ? "Tercapai" : style.label}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-base text-on-surface font-sans mb-1">
+                        {item.name}
+                      </h4>
+                      <p className="text-sm text-on-surface-variant leading-relaxed font-sans">
+                        {item.description || "Kebutuhan operasional panti."}
+                      </p>
+                    </div>
+                    <div className="mt-auto">
+                      <div className="flex items-center justify-between text-xs font-public-sans font-semibold mb-2">
+                        <span className="text-on-surface">
+                          {item.stock} / {item.target_qty} {item.unit}
                         </span>
+                        <span className="text-on-surface-variant">{Math.min(pct, 100)}%</span>
                       </div>
-                      <div>
-                        <h4 className="font-bold text-base text-on-surface font-sans mb-1">
-                          {item.name}
-                        </h4>
-                        <p className="text-sm text-on-surface-variant leading-relaxed font-sans">
-                          {item.description || "Kebutuhan operasional panti."}
-                        </p>
+                      <div className="w-full h-2 rounded-full bg-surface-container-lowest overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${isFulfilled ? "bg-tertiary" : style.bar}`}
+                          style={{ width: `${Math.min(pct, 100)}%` }}
+                        />
                       </div>
-                      <div className="mt-auto">
-                        <div className="flex items-center justify-between text-xs font-public-sans font-semibold mb-2">
-                          <span className="text-on-surface">
-                            {item.stock} / {item.target_qty} {item.unit}
-                          </span>
-                          <span className="text-on-surface-variant">{Math.min(pct, 100)}%</span>
-                        </div>
-                        <div className="w-full h-2 rounded-full bg-surface-container-lowest overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-500 ${isFulfilled ? "bg-tertiary" : style.bar}`}
-                            style={{ width: `${Math.min(pct, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    </GlassContainer>
-                  );
-                })}
-          </div>
+                    </div>
+                  </GlassContainer>
+                );
+              })}
+            </HorizontalScroller>
+          )}
         </div>
       </section>
 
@@ -409,44 +557,46 @@ export default function TransparansiContent() {
           </div>
 
           <div>
-            <div className="space-y-4">
-              {donLoading
-                ? Array.from({ length: 4 }).map((_, i) => <SkeletonLogRow key={i} />)
-                : donations.length === 0
-                ? (
-                  <GlassContainer className="p-8 text-center">
-                    <FiUser className="text-3xl text-on-surface-variant/40 mx-auto mb-3" />
-                    <p className="text-sm text-on-surface-variant font-sans">
-                      Belum ada data donasi untuk filter ini.
-                    </p>
+            {donLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 4 }).map((_, i) => <SkeletonLogRow key={i} />)}
+              </div>
+            ) : donations.length === 0 ? (
+              <GlassContainer className="p-8 text-center">
+                <FiUser className="text-3xl text-on-surface-variant/40 mx-auto mb-3" />
+                <p className="text-sm text-on-surface-variant font-sans">
+                  Belum ada data donasi untuk filter ini.
+                </p>
+              </GlassContainer>
+            ) : (
+              <VerticalScrollFade threshold={4} maxHeight="420px">
+                {donations.map((log: TransparencyDonation) => (
+                  <GlassContainer key={log.id} className="px-5 py-4 flex items-center gap-4">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/8 flex items-center justify-center">
+                      {getDonationIcon(log.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-sm text-on-surface font-sans truncate">
+                        {log.masked_name}
+                      </h4>
+                      <p className="text-xs text-on-surface-variant font-sans truncate">
+                        {log.type === "DANA"
+                          ? `Donasi Dana — ${formatCurrency(log.amount || 0)}`
+                          : `Donasi Barang (${log.items?.map((i) => i.name).join(", ") || "Barang"})`}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0 text-right">
+                      <span className="block text-xs font-sans font-semibold text-on-surface">
+                        {formatRelativeTime(log.updated_at)}
+                      </span>
+                      <span className={`font-public-sans text-[9px] font-bold uppercase tracking-widest ${getStatusStyle(log.type)}`}>
+                        TERVALIDASI SISTEM
+                      </span>
+                    </div>
                   </GlassContainer>
-                )
-                : donations.map((log: TransparencyDonation) => (
-                    <GlassContainer key={log.id} className="px-5 py-4 flex items-center gap-4">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/8 flex items-center justify-center">
-                        {getDonationIcon(log.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-sm text-on-surface font-sans truncate">
-                          {log.masked_name}
-                        </h4>
-                        <p className="text-xs text-on-surface-variant font-sans truncate">
-                          {log.type === "DANA"
-                            ? `Donasi Dana — ${formatCurrency(log.amount || 0)}`
-                            : `Donasi Barang (${log.items?.map((i) => i.name).join(", ") || "Barang"})`}
-                        </p>
-                      </div>
-                      <div className="flex-shrink-0 text-right">
-                        <span className="block text-xs font-sans font-semibold text-on-surface">
-                          {formatRelativeTime(log.updated_at)}
-                        </span>
-                        <span className={`font-public-sans text-[9px] font-bold uppercase tracking-widest ${getStatusStyle(log.type)}`}>
-                          TERVALIDASI SISTEM
-                        </span>
-                      </div>
-                    </GlassContainer>
-                  ))}
-            </div>
+                ))}
+              </VerticalScrollFade>
+            )}
             {donMeta && (
               <Pagination meta={donMeta} paramKey="don_page" onPageChange={handlePageChange} />
             )}
@@ -476,52 +626,54 @@ export default function TransparansiContent() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {distLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <GlassContainer key={i} className="p-5 animate-pulse">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-9 h-9 rounded-lg bg-surface-container-low" />
-                      <div className="h-4 w-1/2 rounded bg-surface-container-low" />
-                    </div>
-                    <div className="h-3 w-3/4 rounded bg-surface-container-low mb-2" />
-                    <div className="h-3 w-1/2 rounded bg-surface-container-low" />
-                  </GlassContainer>
-                ))
-              : distributions.length === 0
-              ? (
-                <GlassContainer className="p-8 col-span-full text-center">
-                  <FiTruck className="text-3xl text-on-surface-variant/40 mx-auto mb-3" />
-                  <p className="text-sm text-on-surface-variant font-sans">
-                    Belum ada data distribusi untuk filter ini.
-                  </p>
+          {distLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <GlassContainer key={i} className="p-5 animate-pulse">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-lg bg-surface-container-low" />
+                    <div className="h-4 w-1/2 rounded bg-surface-container-low" />
+                  </div>
+                  <div className="h-3 w-3/4 rounded bg-surface-container-low mb-2" />
+                  <div className="h-3 w-1/2 rounded bg-surface-container-low" />
                 </GlassContainer>
-              )
-              : distributions.map((dist: TransparencyDistribution) => (
-                  <GlassContainer key={dist.id} className="p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center">
-                        <FiBox className="text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="font-bold text-sm text-on-surface font-sans truncate">
-                          {dist.item_name}
-                        </h4>
-                        <span className="font-public-sans text-[9px] font-bold uppercase tracking-widest text-tertiary">
-                          TERDISTRIBUSI
-                        </span>
-                      </div>
+              ))}
+            </div>
+          ) : distributions.length === 0 ? (
+            <GlassContainer className="p-8 text-center">
+              <FiTruck className="text-3xl text-on-surface-variant/40 mx-auto mb-3" />
+              <p className="text-sm text-on-surface-variant font-sans">
+                Belum ada data distribusi untuk filter ini.
+              </p>
+            </GlassContainer>
+          ) : (
+            <HorizontalScroller threshold={3}>
+              {distributions.map((dist: TransparencyDistribution) => (
+                <GlassContainer key={dist.id} className="p-5 h-full">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center">
+                      <FiBox className="text-primary" />
                     </div>
-                    <p className="text-xs text-on-surface-variant font-sans mb-1">
-                      <span className="font-semibold text-on-surface">{dist.qty} {dist.unit}</span> — {dist.target_recipient}
-                    </p>
-                    <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-sans">
-                      <FiCalendar className="text-primary text-[11px]" />
-                      {formatDate(dist.distributed_at)}
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-sm text-on-surface font-sans truncate">
+                        {dist.item_name}
+                      </h4>
+                      <span className="font-public-sans text-[9px] font-bold uppercase tracking-widest text-tertiary">
+                        TERDISTRIBUSI
+                      </span>
                     </div>
-                  </GlassContainer>
-                ))}
-          </div>
+                  </div>
+                  <p className="text-xs text-on-surface-variant font-sans mb-1">
+                    <span className="font-semibold text-on-surface">{dist.qty} {dist.unit}</span> — {dist.target_recipient}
+                  </p>
+                  <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-sans">
+                    <FiCalendar className="text-primary text-[11px]" />
+                    {formatDate(dist.distributed_at)}
+                  </div>
+                </GlassContainer>
+              ))}
+            </HorizontalScroller>
+          )}
           {distMeta && (
             <Pagination meta={distMeta} paramKey="dist_page" onPageChange={handlePageChange} />
           )}
@@ -542,66 +694,68 @@ export default function TransparansiContent() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visitLoading
-              ? Array.from({ length: 3 }).map((_, i) => (
-                  <GlassContainer key={i} className="p-5 animate-pulse">
-                    <div className="h-4 w-2/3 rounded bg-surface-container-low mb-3" />
-                    <div className="h-3 w-full rounded bg-surface-container-low mb-2" />
-                    <div className="h-3 w-1/2 rounded bg-surface-container-low" />
-                  </GlassContainer>
-                ))
-              : visits.length === 0
-              ? (
-                <GlassContainer className="p-8 col-span-full text-center">
-                  <FiCalendar className="text-3xl text-on-surface-variant/40 mx-auto mb-3" />
-                  <p className="text-sm text-on-surface-variant font-sans">
-                    Belum ada data kunjungan.
-                  </p>
+          {visitLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <GlassContainer key={i} className="p-5 animate-pulse">
+                  <div className="h-4 w-2/3 rounded bg-surface-container-low mb-3" />
+                  <div className="h-3 w-full rounded bg-surface-container-low mb-2" />
+                  <div className="h-3 w-1/2 rounded bg-surface-container-low" />
                 </GlassContainer>
-              )
-              : visits.map((visit: TransparencyVisit) => {
-                  const isCompleted = visit.status === "COMPLETED";
-                  const slotMap: Record<string, string> = {
-                    MORNING: "Pagi (08:00–10:00)",
-                    AFTERNOON: "Siang (12:00–15:00)",
-                    EVENING: "Sore (15:00–18:00)",
-                    NIGHT: "Malam (18:00–20:00)",
-                  };
-                  return (
-                    <GlassContainer key={visit.id} className="p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-primary/8 flex items-center justify-center">
-                            <FiUser className="text-primary text-sm" />
-                          </div>
-                          <h4 className="font-bold text-sm text-on-surface font-sans">
-                            {visit.visitor_name}
-                          </h4>
+              ))}
+            </div>
+          ) : visits.length === 0 ? (
+            <GlassContainer className="p-8 text-center">
+              <FiCalendar className="text-3xl text-on-surface-variant/40 mx-auto mb-3" />
+              <p className="text-sm text-on-surface-variant font-sans">
+                Belum ada data kunjungan.
+              </p>
+            </GlassContainer>
+          ) : (
+            <HorizontalScroller threshold={3}>
+              {visits.map((visit: TransparencyVisit) => {
+                const isCompleted = visit.status === "COMPLETED";
+                const slotMap: Record<string, string> = {
+                  MORNING: "Pagi (08:00–10:00)",
+                  AFTERNOON: "Siang (12:00–15:00)",
+                  EVENING: "Sore (15:00–18:00)",
+                  NIGHT: "Malam (18:00–20:00)",
+                };
+                return (
+                  <GlassContainer key={visit.id} className="p-5 h-full">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/8 flex items-center justify-center">
+                          <FiUser className="text-primary text-sm" />
                         </div>
-                        <span
-                          className={`font-public-sans text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full ${
-                            isCompleted
-                              ? "bg-primary text-white"
-                              : "bg-tertiary text-white"
-                          }`}
-                        >
-                          {isCompleted ? "SELESAI" : "TERJADWAL"}
-                        </span>
+                        <h4 className="font-bold text-sm text-on-surface font-sans">
+                          {visit.visitor_name}
+                        </h4>
                       </div>
-                      <p className="text-xs text-on-surface-variant font-sans mb-2">
-                        {slotMap[visit.slot] || visit.slot}
-                      </p>
-                      <div className="flex items-center gap-1.5">
-                        <FiCalendar className="text-primary text-sm" />
-                        <span className="font-public-sans text-xs font-semibold text-primary">
-                          {visit.visit_date ? formatDate(visit.visit_date) : "—"}
-                        </span>
-                      </div>
-                    </GlassContainer>
-                  );
-                })}
-          </div>
+                      <span
+                        className={`font-public-sans text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full ${
+                          isCompleted
+                            ? "bg-primary text-white"
+                            : "bg-tertiary text-white"
+                        }`}
+                      >
+                        {isCompleted ? "SELESAI" : "TERJADWAL"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-on-surface-variant font-sans mb-2">
+                      {slotMap[visit.slot] || visit.slot}
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <FiCalendar className="text-primary text-sm" />
+                      <span className="font-public-sans text-xs font-semibold text-primary">
+                        {visit.visit_date ? formatDate(visit.visit_date) : "—"}
+                      </span>
+                    </div>
+                  </GlassContainer>
+                );
+              })}
+            </HorizontalScroller>
+          )}
           {visitMeta && (
             <Pagination meta={visitMeta} paramKey="visit_page" onPageChange={handlePageChange} />
           )}
