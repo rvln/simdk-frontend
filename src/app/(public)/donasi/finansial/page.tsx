@@ -72,6 +72,8 @@ export default function DonasiFinansialPage() {
   const [paymentState, setPaymentState] = useState<PaymentState>('IDLE');
   const [snapToken, setSnapToken] = useState<string | null>(null);
   const [donationId, setDonationId] = useState<string | null>(null);
+  const [paymentChannel, setPaymentChannel] = useState<'MIDTRANS' | 'MANUAL'>('MIDTRANS');
+  const [paymentProof, setPaymentProof] = useState<File | null>(null);
 
   const effectiveAmount =
     selectedAmount ?? (customAmount ? parseInt(customAmount, 10) : 0);
@@ -104,39 +106,63 @@ export default function DonasiFinansialPage() {
       return;
     }
 
+    if (paymentChannel === "MANUAL" && !paymentProof) {
+      alert("Mohon unggah bukti transfer untuk metode pembayaran manual.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      const fd = new FormData();
+      fd.append("donorName", formData.donorName);
+      fd.append("donorEmail", formData.donorEmail);
+      fd.append("donorPhone", formData.donorPhone);
+      fd.append("amount", effectiveAmount.toString());
+      fd.append("payment_channel", paymentChannel);
+      
+      if (paymentChannel === "MANUAL" && paymentProof) {
+        fd.append("payment_proof", paymentProof);
+      }
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/donasi/finansial`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Accept: "application/json",
           },
-          body: JSON.stringify({
-            donorName: formData.donorName,
-            donorEmail: formData.donorEmail,
-            donorPhone: formData.donorPhone,
-            amount: effectiveAmount,
-            // Jika kamu ingin mengirim info privasi, bisa ditambahkan di sini
-            // privacyMode, anonAlias (jika anon)
-          }),
+          body: fd,
         },
       );
 
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "Gagal memproses donasi.");
+      }
+
       const result = await res.json();
 
-      const token = result.data.snap_token;
+      if (paymentChannel === "MANUAL") {
+        router.push('/donasi/menunggu-validasi');
+        return;
+      }
+
+      const token = result.data?.snap_token;
       setSnapToken(token);
       let newDonationId = null;
-      if (result.data.donation && result.data.donation.id) {
+      if (result.data?.donation && result.data.donation.id) {
         newDonationId = result.data.donation.id;
         setDonationId(newDonationId);
       }
-      triggerSnap(token, newDonationId);
-    } catch (error) {
+
+      if (token) {
+        triggerSnap(token, newDonationId);
+      } else {
+        throw new Error("Token pembayaran Midtrans tidak ditemukan.");
+      }
+    } catch (error: any) {
       console.error("Network error:", error);
-      alert("Terjadi kesalahan jaringan. Silakan coba lagi.");
+      alert(error.message || "Terjadi kesalahan jaringan. Silakan coba lagi.");
       setIsLoading(false);
     }
   };
@@ -414,6 +440,77 @@ export default function DonasiFinansialPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* ── Step 3: Metode Pembayaran ── */}
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
+                  3
+                </span>
+                <h2 className="font-bold text-lg text-on-surface font-sans">
+                  Metode Pembayaran
+                </h2>
+              </div>
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentChannel('MIDTRANS');
+                    setPaymentProof(null); // Hygiene Rule
+                  }}
+                  className={`w-full flex items-start gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
+                    paymentChannel === 'MIDTRANS'
+                      ? "bg-primary/5 ring-2 ring-primary/30"
+                      : "bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/10"
+                  }`}
+                >
+                  <span className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${paymentChannel === 'MIDTRANS' ? "border-primary" : "border-outline-variant/40"}`}>
+                    {paymentChannel === 'MIDTRANS' && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                  </span>
+                  <div>
+                    <span className="block font-sans font-bold text-sm text-on-surface">Pembayaran Otomatis (Midtrans)</span>
+                    <span className="block font-sans text-xs text-on-surface-variant mt-0.5">Bisa bayar pakai GoPay, OVO, Virtual Account, dll. Verifikasi instan.</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentChannel('MANUAL')}
+                  className={`w-full flex items-start gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
+                    paymentChannel === 'MANUAL'
+                      ? "bg-primary/5 ring-2 ring-primary/30"
+                      : "bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/10"
+                  }`}
+                >
+                  <span className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${paymentChannel === 'MANUAL' ? "border-primary" : "border-outline-variant/40"}`}>
+                    {paymentChannel === 'MANUAL' && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                  </span>
+                  <div>
+                    <span className="block font-sans font-bold text-sm text-on-surface">Transfer Bank Manual (BCA)</span>
+                    <span className="block font-sans text-xs text-on-surface-variant mt-0.5">Transfer langsung ke rekening panti. Perlu proses verifikasi manual oleh pengurus.</span>
+                  </div>
+                </button>
+
+                {paymentChannel === 'MANUAL' && (
+                  <div className="bg-surface-container-low rounded-xl p-5 border border-outline-variant/10 animate-in fade-in slide-in-from-top-2">
+                    <div className="mb-4">
+                      <span className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Rekening Tujuan</span>
+                      <span className="block font-mono text-lg font-bold text-on-surface">Bank BCA: 1234567890</span>
+                      <span className="block text-sm text-on-surface-variant">a.n. Panti Asuhan Dr. Lucas</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Unggah Bukti Transfer</span>
+                      <input 
+                        type="file" 
+                        accept="image/jpeg,image/png,image/jpg"
+                        onChange={(e) => setPaymentProof(e.target.files?.[0] || null)}
+                        className="block w-full text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
