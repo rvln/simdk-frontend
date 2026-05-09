@@ -7,6 +7,7 @@ import { InputField } from "@/components/ui/InputField";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { FiShield, FiCheckCircle, FiLock, FiChevronDown } from "react-icons/fi";
 import Script from "next/script";
+import { useRouter } from "next/navigation";
 
 /* ───── Amount presets ───── */
 interface AmountPreset {
@@ -63,6 +64,7 @@ type PaymentState = 'IDLE' | 'PROCESSING' | 'PENDING_PAYMENT' | 'SUCCESS';
    COMPONENT
    ══════════════════════════════════════════ */
 export default function DonasiFinansialPage() {
+  const router = useRouter();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(100000);
   const [customAmount, setCustomAmount] = useState("");
   const [privacyMode, setPrivacyMode] = useState("show");
@@ -126,10 +128,12 @@ export default function DonasiFinansialPage() {
 
       const token = result.data.snap_token;
       setSnapToken(token);
+      let newDonationId = null;
       if (result.data.donation && result.data.donation.id) {
-        setDonationId(result.data.donation.id);
+        newDonationId = result.data.donation.id;
+        setDonationId(newDonationId);
       }
-      triggerSnap(token);
+      triggerSnap(token, newDonationId);
     } catch (error) {
       console.error("Network error:", error);
       alert("Terjadi kesalahan jaringan. Silakan coba lagi.");
@@ -156,15 +160,19 @@ export default function DonasiFinansialPage() {
     setPaymentState("IDLE");
   };
 
-   const triggerSnap = (token: string) => {
+   const triggerSnap = (token: string, currentDonationId: string | null) => {
      if (!(window as any).snap) {
        alert("Sistem pembayaran belum siap. Silakan refresh halaman.");
        return;
      }
      (window as any).snap.pay(token, {
        onSuccess: () => {
-         setPaymentState("SUCCESS");
          setSnapToken(null);
+         if (currentDonationId) {
+           router.push(`/donasi/invoice/${currentDonationId}`);
+         } else {
+           setPaymentState("SUCCESS");
+         }
        },
        onPending: () => {
          setPaymentState("PENDING_PAYMENT");
@@ -451,7 +459,7 @@ export default function DonasiFinansialPage() {
                   atau batalkan jika ingin membuat nominal donasi baru.
                 </p>
                 <div className="flex justify-center gap-4">
-                  <PrimaryButton onClick={() => triggerSnap(snapToken!)}>
+                  <PrimaryButton onClick={() => triggerSnap(snapToken!, donationId)}>
                     Lanjutkan Pembayaran
                   </PrimaryButton>
                   <button 
