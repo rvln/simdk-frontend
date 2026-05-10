@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import {
   MdOutlineEmail,
@@ -15,11 +15,20 @@ import {
   MdArrowBack,
   MdOutlineAccessTime,
   MdOutlineEventNote,
+  MdCancel,
+  MdSchedule,
+  MdErrorOutline,
+  MdTimelapse,
+  MdLocalShipping,
+  MdEventBusy,
 } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import LogoutButton from "@/components/layout/LogoutButton";
+import { useAuth } from "@/hooks/useAuth";
 
-type TabState = "INFORMASI_UMUM" | "RIWAYAT_DONASI" | "RIWAYAT_KUNJUNGAN";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+
+type TabState = "INFORMASI_UMUM" | "RIWAYAT_DONASI" | "RIWAYAT_KUNJUNGAN" | "RESCHEDULE";
 
 interface ProfileFormData {
   fullName: string;
@@ -27,52 +36,278 @@ interface ProfileFormData {
   phone: string;
 }
 
-const MOCK_DONASI = [
-  {
-    id: 1,
-    type: "Dana",
-    nominal: "Rp 500.000",
-    date: "24 Okt 2026",
-    status: "Sukses",
-  },
-  {
-    id: 2,
-    type: "Barang",
-    nominal: "Sepatu Sekolah (2 Pasang)",
-    date: "10 Okt 2026",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    type: "Dana",
-    nominal: "Rp 1.000.000",
-    date: "01 Sep 2026",
-    status: "Sukses",
-  },
-];
+/* ── API Response Types ── */
+interface ApiCapacity {
+  id: string;
+  date: string;
+  slot: string;
+  quota: number;
+  booked: number;
+}
 
-const MOCK_KUNJUNGAN = [
-  {
-    id: 1,
-    purpose: "Kunjungan Personal",
-    date: "15 Sep 2026",
-    time: "10:00 WITA",
-    status: "Sukses",
-    pax: 2,
-  },
-  {
-    id: 2,
-    purpose: "Acara Syukuran",
-    date: "05 Nov 2026",
-    time: "14:00 WITA",
-    status: "Menunggu Persetujuan",
-    pax: 15,
-  },
-];
+interface ApiItemDonation {
+  id: string;
+  itemName_snapshot: string;
+  qty: number;
+}
+
+interface ApiDonation {
+  id: string;
+  type: "DANA" | "BARANG";
+  amount: string | null;
+  status: string;
+  tracking_code: string | null;
+  created_at: string;
+  item_donations: ApiItemDonation[];
+}
+
+interface ApiVisit {
+  id: string;
+  status: string;
+  admin_notes: string | null;
+  is_rescheduled: boolean;
+  created_at: string;
+  capacity: ApiCapacity | null;
+  donation: { id: string; item_donations: ApiItemDonation[] } | null;
+}
+
+type GroupedVisits = Record<string, ApiVisit[]>;
+
+const SLOT_LABELS: Record<string, string> = {
+  MORNING: "08:00 – 10:00 WITA",
+  AFTERNOON: "13:00 – 15:00 WITA",
+  EVENING: "15:30 – 18:00 WITA",
+  NIGHT: "19:00 – 20:00 WITA",
+};
+
+/* ── Status Badge Config ── */
+const VISIT_STATUS_MAP: Record<string, { label: string; bg: string; text: string; Icon: React.ComponentType<{ className?: string }> }> = {
+  PENDING: { label: "Menunggu", bg: "bg-amber-50", text: "text-amber-700", Icon: MdPendingActions },
+  APPROVED: { label: "Disetujui", bg: "bg-teal-50", text: "text-teal-700", Icon: MdCheckCircle },
+  REJECTED: { label: "Ditolak", bg: "bg-red-50", text: "text-red-700", Icon: MdCancel },
+  NEEDS_RESCHEDULE: { label: "Perlu Reschedule", bg: "bg-orange-50", text: "text-orange-700", Icon: MdSchedule },
+  COMPLETED: { label: "Selesai", bg: "bg-teal-50", text: "text-teal-700", Icon: MdCheckCircle },
+  NO_SHOW: { label: "Tidak Hadir", bg: "bg-gray-100", text: "text-gray-600", Icon: MdEventBusy },
+};
+
+const DONATION_STATUS_MAP: Record<string, { label: string; bg: string; text: string; Icon: React.ComponentType<{ className?: string }> }> = {
+  PENDING: { label: "Menunggu", bg: "bg-amber-50", text: "text-amber-700", Icon: MdPendingActions },
+  SUCCESS: { label: "Sukses", bg: "bg-teal-50", text: "text-teal-700", Icon: MdCheckCircle },
+  FAILED: { label: "Gagal", bg: "bg-red-50", text: "text-red-700", Icon: MdErrorOutline },
+  EXPIRED: { label: "Kedaluwarsa", bg: "bg-gray-100", text: "text-gray-600", Icon: MdTimelapse },
+  PENDING_DELIVERY: { label: "Menunggu Pengiriman", bg: "bg-blue-50", text: "text-blue-700", Icon: MdLocalShipping },
+  REJECTED: { label: "Ditolak", bg: "bg-red-50", text: "text-red-700", Icon: MdCancel },
+};
+
+/* ── Calendar Helpers ── */
+interface CalendarDay {
+  date: number;
+  month: "prev" | "current" | "next";
+  fullDate: Date;
+}
+
+const DAY_LABELS = ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"];
+const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+function buildCalendarGrid(year: number, month: number): CalendarDay[] {
+  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrev = new Date(year, month, 0).getDate();
+
+  const grid: CalendarDay[] = [];
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const d = daysInPrev - i;
+    grid.push({ date: d, month: "prev", fullDate: new Date(year, month - 1, d) });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    grid.push({ date: d, month: "current", fullDate: new Date(year, month, d) });
+  }
+  const remaining = 42 - grid.length;
+  for (let d = 1; d <= remaining; d++) {
+    grid.push({ date: d, month: "next", fullDate: new Date(year, month + 1, d) });
+  }
+  return grid;
+}
 
 export default function ProfilPublikPage() {
   const [activeTab, setActiveTab] = useState<TabState>("INFORMASI_UMUM");
   const router = useRouter();
+  const { user } = useAuth();
+
+  /* ── API State ── */
+  const [donations, setDonations] = useState<ApiDonation[]>([]);
+  const [groupedVisits, setGroupedVisits] = useState<GroupedVisits>({});
+  const [capacities, setCapacities] = useState<ApiCapacity[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
+  /* ── Reschedule State ── */
+  const [activeRescheduleVisit, setActiveRescheduleVisit] = useState<ApiVisit | null>(null);
+  const [draftItems, setDraftItems] = useState<{ id: string | null; itemName_snapshot: string; qty: number; tempId: string }[]>([]);
+  const [viewYear, setViewYear] = useState(new Date().getFullYear());
+  const [viewMonth, setViewMonth] = useState(new Date().getMonth());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<ApiCapacity | null>(null);
+  const [isSubmittingReschedule, setIsSubmittingReschedule] = useState(false);
+
+  const fetchProfileData = () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+
+    Promise.all([
+      fetch(`${API_BASE}/user/visits`, { headers }).then((r) => r.ok ? r.json() : { data: {} }),
+      fetch(`${API_BASE}/user/donations`, { headers }).then((r) => r.ok ? r.json() : { data: [] }),
+      fetch(`${API_BASE}/capacities`, { headers: { Accept: "application/json" } }).then((r) => r.ok ? r.json() : { data: [] }),
+    ])
+      .then(([visitsJson, donationsJson, capsJson]) => {
+        setGroupedVisits(visitsJson.data || {});
+        setDonations(donationsJson.data || []);
+        setCapacities(capsJson.data || []);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingData(false));
+  };
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  /* ── Derived metrics ── */
+  const allVisits = useMemo(() => Object.values(groupedVisits).flat(), [groupedVisits]);
+  const rescheduleVisits = useMemo(() => groupedVisits["NEEDS_RESCHEDULE"] || [], [groupedVisits]);
+  const hasReschedule = rescheduleVisits.length > 0;
+
+  const totalDonasi = useMemo(() => {
+    return donations
+      .filter((d) => d.type === "DANA" && d.status === "SUCCESS")
+      .reduce((sum, d) => sum + parseFloat(d.amount || "0"), 0);
+  }, [donations]);
+
+  const totalBarang = useMemo(() => {
+    return donations
+      .filter((d) => d.type === "BARANG")
+      .reduce((sum, d) => sum + d.item_donations.reduce((s, it) => s + it.qty, 0), 0);
+  }, [donations]);
+
+  const totalKunjungan = useMemo(
+    () => allVisits.filter((v) => v.status === "COMPLETED").length,
+    [allVisits],
+  );
+
+  /* ── Reschedule Handlers ── */
+  const openRescheduleSession = (visit: ApiVisit) => {
+    setActiveRescheduleVisit(visit);
+    if (visit.donation?.item_donations) {
+      setDraftItems(
+        visit.donation.item_donations.map((item) => ({
+          id: item.id,
+          itemName_snapshot: item.itemName_snapshot,
+          qty: item.qty,
+          tempId: item.id,
+        }))
+      );
+    } else {
+      setDraftItems([]);
+    }
+    const d = visit.capacity ? new Date(visit.capacity.date) : new Date();
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+    setSelectedDate(null);
+    setSelectedSlot(null);
+  };
+
+  const handleAddItem = () => {
+    setDraftItems((prev) => [
+      ...prev,
+      { id: null, itemName_snapshot: "", qty: 1, tempId: Math.random().toString(36).substring(7) },
+    ]);
+  };
+
+  const handleEditItem = (tempId: string, field: "itemName_snapshot" | "qty", value: any) => {
+    setDraftItems((prev) =>
+      prev.map((item) => (item.tempId === tempId ? { ...item, [field]: value } : item))
+    );
+  };
+
+  const handleDeleteItem = (tempId: string) => {
+    setDraftItems((prev) => prev.filter((item) => item.tempId !== tempId));
+  };
+
+  const handleReSubmit = async () => {
+    if (!activeRescheduleVisit || !selectedSlot) return;
+
+    const invalidItems = draftItems.some((it) => !it.itemName_snapshot.trim() || it.qty < 1);
+    if (invalidItems) {
+      alert("Pastikan semua item donasi memiliki nama dan jumlah minimal 1.");
+      return;
+    }
+
+    setIsSubmittingReschedule(true);
+    const payload = {
+      new_capacity_id: selectedSlot.id,
+      updated_items: draftItems.map((item) => ({
+        id: item.id,
+        itemName_snapshot: item.itemName_snapshot,
+        qty: item.qty,
+      })),
+    };
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch(`${API_BASE}/visits/${activeRescheduleVisit.id}/reschedule`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal melakukan reschedule");
+
+      alert("Reschedule berhasil diajukan!");
+      setActiveRescheduleVisit(null);
+      fetchProfileData();
+      setActiveTab("RIWAYAT_KUNJUNGAN");
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsSubmittingReschedule(false);
+    }
+  };
+
+  const grid = useMemo(() => buildCalendarGrid(viewYear, viewMonth), [viewYear, viewMonth]);
+  const goToPrev = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); }
+    else setViewMonth((m) => m - 1);
+  };
+  const goToNext = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); }
+    else setViewMonth((m) => m + 1);
+  };
+
+  const dateHasCapacity = useCallback(
+    (date: Date): boolean => {
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      return capacities.some((c) => {
+        const d = new Date(c.date);
+        const localStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        return localStr === dateStr && c.booked < c.quota;
+      });
+    },
+    [capacities]
+  );
+
+  const getAvailableSlots = (date: Date) => {
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return capacities.filter((c) => {
+      const d = new Date(c.date);
+      const localStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return localStr === dateStr && c.booked < c.quota;
+    });
+  };
 
   const {
     register,
@@ -80,9 +315,9 @@ export default function ProfilPublikPage() {
     formState: { errors },
   } = useForm<ProfileFormData>({
     defaultValues: {
-      fullName: "Budi Santoso",
-      email: "budi.santoso@gmail.com",
-      phone: "081234567890",
+      fullName: user?.name ?? "",
+      email: user?.email ?? "",
+      phone: "",
     },
   });
 
@@ -90,28 +325,27 @@ export default function ProfilPublikPage() {
     alert("Data berhasil disimpan:\n" + JSON.stringify(data, null, 2));
   };
 
-  const renderStatusBadge = (status: string) => {
-    switch (status) {
-      case "Sukses":
-        return (
-          <span className="px-3 py-1 bg-teal-50 text-teal-700 text-xs font-bold rounded-full flex items-center gap-1 w-fit">
-            <MdCheckCircle /> {status}
-          </span>
-        );
-      case "Pending":
-      case "Menunggu Persetujuan":
-        return (
-          <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full flex items-center gap-1 w-fit">
-            <MdPendingActions /> {status}
-          </span>
-        );
-      default:
-        return (
-          <span className="px-3 py-1 bg-gray-50 text-gray-700 text-xs font-bold rounded-full flex items-center gap-1 w-fit">
-            <MdHistory /> {status}
-          </span>
-        );
-    }
+  /* ── Helpers ── */
+  const formatDate = (iso: string) => {
+    const dt = new Date(iso);
+    return dt.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  };
+
+  const formatCurrency = (val: number) => {
+    if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(1)}M`;
+    if (val >= 1_000) return `Rp ${(val / 1_000).toFixed(0)}K`;
+    return `Rp ${val.toLocaleString("id-ID")}`;
+  };
+
+  const renderStatusBadge = (status: string, type: "visit" | "donation") => {
+    const map = type === "visit" ? VISIT_STATUS_MAP : DONATION_STATUS_MAP;
+    const cfg = map[status] || { label: status, bg: "bg-gray-50", text: "text-gray-700", Icon: MdHistory };
+    const BadgeIcon = cfg.Icon;
+    return (
+      <span className={`px-3 py-1 ${cfg.bg} ${cfg.text} text-xs font-bold rounded-full flex items-center gap-1 w-fit`}>
+        <BadgeIcon /> {cfg.label}
+      </span>
+    );
   };
 
   const HistoryCard = ({
@@ -120,7 +354,7 @@ export default function ProfilPublikPage() {
     date,
     time,
     pax,
-    status,
+    statusBadge,
     icon: Icon,
     iconBg,
     iconColor,
@@ -159,7 +393,7 @@ export default function ProfilPublikPage() {
           </div>
         </div>
       </div>
-      <div>{renderStatusBadge(status)}</div>
+      <div>{statusBadge}</div>
     </div>
   );
 
@@ -178,22 +412,21 @@ export default function ProfilPublikPage() {
 
         {/* Header Profil */}
         <div className="bg-white/80 backdrop-blur-xl shadow-sm rounded-3xl p-8 flex flex-col md:flex-row items-center md:items-start gap-8">
-          {/* Avatar */}
           <div className="w-28 h-28 rounded-full overflow-hidden shadow-sm flex-shrink-0 bg-teal-100 flex items-center justify-center">
-            <span className="text-4xl font-bold text-teal-700">BS</span>
+            <span className="text-4xl font-bold text-teal-700">{user?.name ? user.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase() : "?"}</span>
           </div>
 
           <div className="flex-1 text-center md:text-left">
             <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-3 mb-2">
               <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                Budi Santoso
+                {user?.name ?? "Pengguna"}
               </h1>
               <span className="px-3 py-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs font-bold tracking-wider uppercase rounded-full shadow-sm">
-                Donatur Tetap
+                Pengunjung
               </span>
             </div>
             <p className="text-gray-500 text-sm mb-6">
-              Bergabung sejak Januari 2024
+              {user?.email ?? ""}
             </p>
             {/* 3 Metrik Kontribusi */}
             <div className="flex flex-wrap justify-center md:justify-start gap-4">
@@ -205,7 +438,7 @@ export default function ProfilPublikPage() {
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">
                     Total Donasi
                   </p>
-                  <p className="text-lg font-bold text-teal-800">Rp 5.5M</p>
+                  <p className="text-lg font-bold text-teal-800">{isLoadingData ? "..." : formatCurrency(totalDonasi)}</p>
                 </div>
               </div>
               <div className="bg-blue-50/50 p-4 rounded-2xl flex items-center gap-4 flex-1 min-w-[150px]">
@@ -216,7 +449,7 @@ export default function ProfilPublikPage() {
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">
                     Barang
                   </p>
-                  <p className="text-lg font-bold text-blue-800">45 Item</p>
+                  <p className="text-lg font-bold text-blue-800">{isLoadingData ? "..." : `${totalBarang} Item`}</p>
                 </div>
               </div>
               <div className="bg-purple-50/50 p-4 rounded-2xl flex items-center gap-4 flex-1 min-w-[150px]">
@@ -227,7 +460,7 @@ export default function ProfilPublikPage() {
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">
                     Kunjungan
                   </p>
-                  <p className="text-lg font-bold text-purple-800">12 Kali</p>
+                  <p className="text-lg font-bold text-purple-800">{isLoadingData ? "..." : `${totalKunjungan} Kali`}</p>
                 </div>
               </div>
             </div>
@@ -259,6 +492,15 @@ export default function ProfilPublikPage() {
             >
               Riwayat Kunjungan
             </button>
+            {hasReschedule && (
+              <button
+                onClick={() => setActiveTab("RESCHEDULE")}
+                className={`px-6 py-3 rounded-full text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${activeTab === "RESCHEDULE" ? "bg-orange-600 text-white shadow-md" : "bg-orange-50 text-orange-700 hover:bg-orange-100 shadow-sm"}`}
+              >
+                <MdSchedule className="text-base" />
+                Reschedule ({rescheduleVisits.length})
+              </button>
+            )}
           </div>
           {/* Tab Content Area */}
           <div className="bg-white/80 backdrop-blur-xl shadow-sm rounded-3xl p-8">
@@ -352,30 +594,28 @@ export default function ProfilPublikPage() {
             {activeTab === "RIWAYAT_DONASI" && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="space-y-4">
-                  {MOCK_DONASI.map((donasi) => (
-                    <HistoryCard
-                      key={donasi.id}
-                      title={donasi.nominal}
-                      subtitleTop={`Donasi ${donasi.type}`}
-                      date={donasi.date}
-                      status={donasi.status}
-                      icon={
-                        donasi.type === "Dana"
-                          ? MdAttachMoney
-                          : MdOutlineCardGiftcard
-                      }
-                      iconBg={
-                        donasi.type === "Dana"
-                          ? "bg-teal-100/50"
-                          : "bg-blue-100/50"
-                      }
-                      iconColor={
-                        donasi.type === "Dana"
-                          ? "text-teal-600"
-                          : "text-blue-600"
-                      }
-                    />
-                  ))}
+                  {isLoadingData ? (
+                    <p className="text-sm text-gray-400 text-center py-8">Memuat riwayat donasi...</p>
+                  ) : donations.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-8">Belum ada riwayat donasi.</p>
+                  ) : (
+                    donations.map((donasi) => (
+                      <HistoryCard
+                        key={donasi.id}
+                        title={
+                          donasi.type === "DANA"
+                            ? `Rp ${parseFloat(donasi.amount || "0").toLocaleString("id-ID")}`
+                            : donasi.item_donations.map((it) => `${it.itemName_snapshot} (${it.qty})`).join(", ") || "Donasi Barang"
+                        }
+                        subtitleTop={`Donasi ${donasi.type === "DANA" ? "Dana" : "Barang"}`}
+                        date={formatDate(donasi.created_at)}
+                        statusBadge={renderStatusBadge(donasi.status, "donation")}
+                        icon={donasi.type === "DANA" ? MdAttachMoney : MdOutlineCardGiftcard}
+                        iconBg={donasi.type === "DANA" ? "bg-teal-100/50" : "bg-blue-100/50"}
+                        iconColor={donasi.type === "DANA" ? "text-teal-600" : "text-blue-600"}
+                      />
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -384,20 +624,210 @@ export default function ProfilPublikPage() {
             {activeTab === "RIWAYAT_KUNJUNGAN" && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="space-y-4">
-                  {MOCK_KUNJUNGAN.map((kunjungan) => (
-                    <HistoryCard
-                      key={kunjungan.id}
-                      title={kunjungan.purpose}
-                      subtitleTop="Pengajuan Kunjungan"
-                      date={kunjungan.date}
-                      time={kunjungan.time}
-                      pax={kunjungan.pax}
-                      status={kunjungan.status}
-                      icon={MdGroups}
-                      iconBg="bg-purple-100/50"
-                      iconColor="text-purple-600"
-                    />
-                  ))}
+                  {isLoadingData ? (
+                    <p className="text-sm text-gray-400 text-center py-8">Memuat riwayat kunjungan...</p>
+                  ) : allVisits.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-8">Belum ada riwayat kunjungan.</p>
+                  ) : (
+                    allVisits.map((visit) => (
+                      <HistoryCard
+                        key={visit.id}
+                        title={visit.capacity ? `Sesi ${visit.capacity.slot}` : "Kunjungan"}
+                        subtitleTop="Pengajuan Kunjungan"
+                        date={visit.capacity ? formatDate(visit.capacity.date) : formatDate(visit.created_at)}
+                        time={visit.capacity ? (SLOT_LABELS[visit.capacity.slot] || visit.capacity.slot) : undefined}
+                        statusBadge={renderStatusBadge(visit.status, "visit")}
+                        icon={MdGroups}
+                        iconBg="bg-purple-100/50"
+                        iconColor="text-purple-600"
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: RESCHEDULE */}
+            {activeTab === "RESCHEDULE" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="space-y-6">
+                  {rescheduleVisits.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-8">Tidak ada kunjungan yang perlu dijadwalkan ulang.</p>
+                  ) : !activeRescheduleVisit ? (
+                    rescheduleVisits.map((visit) => (
+                      <div key={visit.id} className="bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-[0_4px_16px_-4px_rgba(0,0,0,0.05)] space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-orange-100/50 text-orange-600">
+                              <MdSchedule className="text-2xl" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Perlu Reschedule</p>
+                              <h3 className="font-bold text-gray-900">{visit.capacity ? `Sesi ${visit.capacity.slot}` : "Kunjungan"}</h3>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {visit.capacity ? formatDate(visit.capacity.date) : formatDate(visit.created_at)}
+                                {visit.capacity ? ` \u2022 ${SLOT_LABELS[visit.capacity.slot] || ""}` : ""}
+                              </p>
+                            </div>
+                          </div>
+                          {renderStatusBadge(visit.status, "visit")}
+                        </div>
+                        {visit.admin_notes && (
+                          <div className="bg-orange-50/80 rounded-xl p-4">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-orange-600 mb-1">Catatan Admin</p>
+                            <p className="text-sm text-orange-800 leading-relaxed">{visit.admin_notes}</p>
+                          </div>
+                        )}
+                        {visit.donation && visit.donation.item_donations.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Barang Bawaan</p>
+                            <div className="space-y-2">
+                              {visit.donation.item_donations.map((item) => (
+                                <div key={item.id} className="flex items-center justify-between bg-white/60 rounded-lg px-4 py-2.5">
+                                  <span className="text-sm text-gray-800">{item.itemName_snapshot}</span>
+                                  <span className="text-xs font-bold text-gray-500">x{item.qty}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => openRescheduleSession(visit)}
+                          className="mt-4 w-full py-3 bg-orange-600 text-white font-bold rounded-xl shadow-md hover:bg-orange-700 transition-colors"
+                        >
+                          Mulai Reschedule
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                      <div className="flex items-center justify-between border-b pb-4">
+                        <h3 className="text-xl font-bold text-gray-900">Form Reschedule</h3>
+                        <button
+                          onClick={() => setActiveRescheduleVisit(null)}
+                          className="text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          Batal
+                        </button>
+                      </div>
+
+                      {/* Calendar Section */}
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">1. Pilih Jadwal Baru</h4>
+                        <div className="bg-white/60 rounded-2xl p-6 border shadow-sm">
+                          <div className="flex items-center justify-between mb-4">
+                            <button type="button" onClick={goToPrev} className="p-2 text-gray-400 hover:text-teal-700"><MdArrowBack /></button>
+                            <span className="font-bold text-gray-900 text-lg uppercase tracking-wide">
+                              {MONTH_NAMES[viewMonth]} {viewYear}
+                            </span>
+                            <button type="button" onClick={goToNext} className="p-2 text-gray-400 hover:text-teal-700"><MdArrowBack className="rotate-180" /></button>
+                          </div>
+                          <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2">
+                            {DAY_LABELS.map((day) => (
+                              <div key={day} className="text-center text-[10px] font-bold text-gray-400">
+                                {day}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-7 gap-1 md:gap-2">
+                            {grid.map((dayObj, i) => {
+                              const isCurrentMonth = dayObj.month === "current";
+                              const isSelected = selectedDate?.getTime() === dayObj.fullDate.getTime();
+                              const hasSlot = dateHasCapacity(dayObj.fullDate);
+                              return (
+                                <button
+                                  key={i}
+                                  onClick={() => {
+                                    if (hasSlot) {
+                                      setSelectedDate(dayObj.fullDate);
+                                      setSelectedSlot(null);
+                                    }
+                                  }}
+                                  disabled={!hasSlot}
+                                  className={`aspect-square flex flex-col items-center justify-center rounded-xl md:rounded-2xl text-sm md:text-base font-medium transition-all ${!isCurrentMonth ? "text-gray-300 opacity-50" : ""} ${isSelected ? "bg-teal-700 text-white shadow-lg shadow-teal-700/30 font-bold" : hasSlot ? "bg-teal-50 text-teal-800 hover:bg-teal-100 cursor-pointer" : "bg-gray-50 text-gray-400 cursor-not-allowed"}`}
+                                >
+                                  {dayObj.date}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Slot Selection */}
+                      {selectedDate && (
+                        <div className="animate-in fade-in slide-in-from-top-2">
+                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Pilih Sesi</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {getAvailableSlots(selectedDate).length === 0 ? (
+                              <p className="text-sm text-gray-500 col-span-full">Tidak ada sesi tersedia pada tanggal ini.</p>
+                            ) : (
+                              getAvailableSlots(selectedDate).map((cap) => (
+                                <button
+                                  key={cap.id}
+                                  onClick={() => setSelectedSlot(cap)}
+                                  className={`p-3 rounded-xl border text-left transition-all ${selectedSlot?.id === cap.id ? "border-teal-600 bg-teal-50 ring-1 ring-teal-600" : "border-gray-200 bg-white hover:border-teal-300"}`}
+                                >
+                                  <p className={`font-bold text-sm ${selectedSlot?.id === cap.id ? "text-teal-800" : "text-gray-700"}`}>Sesi {cap.slot}</p>
+                                  <p className="text-xs text-gray-500 mt-1">{SLOT_LABELS[cap.slot] || ""}</p>
+                                  <p className="text-[10px] text-teal-600 font-bold mt-2">Tersisa: {cap.quota - cap.booked}</p>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Items Sync (Draft) */}
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">2. Sesuaikan Barang Bawaan</h4>
+                          <button onClick={handleAddItem} className="text-xs font-bold text-teal-600 bg-teal-50 px-3 py-1.5 rounded-lg hover:bg-teal-100">
+                            + Tambah Barang
+                          </button>
+                        </div>
+                        <div className="space-y-3">
+                          {draftItems.length === 0 ? (
+                            <p className="text-sm text-gray-400 italic">Tidak ada barang bawaan.</p>
+                          ) : (
+                            draftItems.map((item) => (
+                              <div key={item.tempId} className="flex items-center gap-3 bg-white/60 p-3 rounded-xl border">
+                                <input
+                                  type="text"
+                                  value={item.itemName_snapshot}
+                                  onChange={(e) => handleEditItem(item.tempId, "itemName_snapshot", e.target.value)}
+                                  placeholder="Nama Barang"
+                                  className="flex-1 bg-transparent border-b border-gray-200 focus:border-teal-500 text-sm px-2 py-1 outline-none"
+                                />
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-400">Qty:</span>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={item.qty}
+                                    onChange={(e) => handleEditItem(item.tempId, "qty", parseInt(e.target.value) || 1)}
+                                    className="w-16 bg-gray-50 border rounded-lg text-sm px-2 py-1 outline-none focus:ring-1 focus:ring-teal-500 text-center"
+                                  />
+                                </div>
+                                <button onClick={() => handleDeleteItem(item.tempId)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                  <MdCancel className="text-lg" />
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Submit */}
+                      <button
+                        onClick={handleReSubmit}
+                        disabled={!selectedSlot || isSubmittingReschedule}
+                        className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all ${!selectedSlot || isSubmittingReschedule ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-teal-600 text-white hover:bg-teal-700 hover:-translate-y-0.5"}`}
+                      >
+                        {isSubmittingReschedule ? "Memproses..." : "Konfirmasi Reschedule"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
