@@ -28,6 +28,8 @@ export interface ApprovalData {
   capacityAvailable: boolean;
   status: string;
   is_expired?: boolean;
+  is_rescheduled?: boolean | number;
+  admin_notes?: string | null;
 }
 
 interface ApprovalContentProps {
@@ -219,6 +221,30 @@ export function ApprovalContent({
           <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
             <FiAlertCircle className="text-lg flex-shrink-0 mt-0.5" />
             <span>{apiError}</span>
+          </div>
+        )}
+
+        {/* Reschedule Notification */}
+        {data.status === "PENDING" && (data.is_rescheduled === true || data.is_rescheduled === 1) && (
+          <div className="animate-in fade-in slide-in-from-top-2 bg-blue-50 p-4 rounded-2xl border border-blue-200 shadow-sm">
+            <div className="flex items-start gap-3 text-blue-800">
+              <FiAlertCircle className="text-xl flex-shrink-0 mt-0.5 text-blue-600" />
+              <div>
+                <p className="font-bold text-sm">
+                  ℹ️ PENGAJUAN KEMBALI: User telah melakukan reschedule sesuai permintaan panti.
+                </p>
+                {data.admin_notes && (
+                  <div className="mt-3 bg-white/60 p-3 rounded-xl border border-blue-100">
+                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
+                      Catatan Reschedule Sebelumnya
+                    </p>
+                    <p className="text-xs text-blue-900 leading-relaxed italic">
+                      &quot;{data.admin_notes}&quot;
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
@@ -483,7 +509,7 @@ export function ApprovalContent({
               </button>
             )}
 
-            {!isRejecting && !isRescheduling && data.capacityAvailable && (
+            {!isRejecting && !isRescheduling && (data.capacityAvailable || data.is_rescheduled === true || data.is_rescheduled === 1) && (
               <button
                 onClick={handleApprove}
                 disabled={isSubmitting}
@@ -502,7 +528,7 @@ export function ApprovalContent({
               </button>
             )}
 
-            {!isRejecting && !isApproving && !data.capacityAvailable && (
+            {!isRejecting && !isApproving && !data.capacityAvailable && (!data.is_rescheduled) && (
               <button
                 onClick={handleReschedule}
                 disabled={isSubmitting}

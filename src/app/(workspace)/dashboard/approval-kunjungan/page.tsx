@@ -55,7 +55,8 @@ function mapVisit(raw: any) {
   const sessionStr = raw.capacity?.slot
     ? slotMap[raw.capacity.slot] || raw.capacity.slot
     : "Sesi Tidak Diketahui";
-  const isAvailable = raw.capacity ? raw.capacity.booked < 1 : false;
+  const isHoldingSlot = raw.status === "APPROVED" || (raw.status === "PENDING" && raw.is_rescheduled);
+  const isAvailable = raw.capacity ? raw.capacity.booked <= (isHoldingSlot ? 1 : 0) : false;
 
   return {
     id: raw.id,
@@ -73,6 +74,8 @@ function mapVisit(raw: any) {
     capacityAvailable: isAvailable,
     status: raw.status,
     is_expired: !!raw.is_expired,
+    is_rescheduled: raw.is_rescheduled,
+    admin_notes: raw.admin_notes,
   };
 }
 
