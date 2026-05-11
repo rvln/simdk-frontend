@@ -22,13 +22,31 @@ import {
   MdLocalShipping,
   MdEventBusy,
 } from "react-icons/md";
+import {
+  FiImage,
+  FiX,
+  FiCheck,
+  FiAlertCircle,
+  FiChevronDown,
+  FiSend,
+} from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import LogoutButton from "@/components/layout/LogoutButton";
 import { useAuth } from "@/hooks/useAuth";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
-type TabState = "INFORMASI_UMUM" | "RIWAYAT_DONASI" | "RIWAYAT_KUNJUNGAN" | "RESCHEDULE";
+type TabState = "INFORMASI_UMUM" | "RIWAYAT_DONASI" | "RIWAYAT_KUNJUNGAN" | "RESCHEDULE" | "LAPORAN_KUNJUNGAN";
+
+const ALLOWED_MIMES = ["image/jpeg", "image/png", "image/jpg"];
+const MAX_FILE_SIZE = 2048 * 1024; // 2 MB
+const MAX_FILES = 5;
+
+function validateFile(file: File): string | null {
+  if (!ALLOWED_MIMES.includes(file.type)) return `"${file.name}" — Format tidak didukung. Gunakan JPEG atau PNG.`;
+  if (file.size > MAX_FILE_SIZE) return `"${file.name}" — Ukuran ${(file.size / 1024 / 1024).toFixed(1)} MB melebihi batas 2 MB.`;
+  return null;
+}
 
 interface ProfileFormData {
   fullName: string;
@@ -148,6 +166,16 @@ export default function ProfilPublikPage() {
   const [selectedSlot, setSelectedSlot] = useState<ApiCapacity | null>(null);
   const [isSubmittingReschedule, setIsSubmittingReschedule] = useState(false);
 
+  /* ── Report Form State ── */
+  const [reportVisitId, setReportVisitId] = useState("");
+  const [reportContent, setReportContent] = useState("");
+  const [reportFiles, setReportFiles] = useState<File[]>([]);
+  const [reportFileErrors, setReportFileErrors] = useState<string[]>([]);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reportSubmitError, setReportSubmitError] = useState("");
+  const [reportSubmitSuccess, setReportSubmitSuccess] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const fetchProfileData = () => {
     const token = localStorage.getItem("auth_token");
     if (!token) return;
@@ -234,6 +262,74 @@ export default function ProfilPublikPage() {
       alert(err.message);
     } finally {
       setIsSubmittingReschedule(false);
+    }
+  };
+
+  /* ── Report Handlers ── */
+  const completedVisits = useMemo(() => {
+    return allVisits.filter((v) => v.status === "COMPLETED");
+  }, [allVisits]);
+
+  const handleReportFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? []);
+    const errors: string[] = [];
+
+    if (reportFiles.length + selected.length > MAX_FILES) {
+      errors.push(`Maksimal ${MAX_FILES} gambar per laporan.`);
+      return setReportFileErrors(errors);
+    }
+
+    const validFiles: File[] = [];
+    for (const file of selected) {
+      const error = validateFile(file);
+      if (error) errors.push(error);
+      else validFiles.push(file);
+    }
+
+    setReportFileErrors(errors);
+    if (validFiles.length > 0) setReportFiles((prev) => [...prev, ...validFiles]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setReportSubmitError("");
+    setReportSubmitSuccess(false);
+
+    if (!reportVisitId) return setReportSubmitError("Pilih kunjungan yang ingin dilaporkan.");
+    if (reportContent.trim().length < 10) return setReportSubmitError("Konten laporan minimal 10 karakter.");
+
+    setIsSubmittingReport(true);
+    try {
+      const formData = new FormData();
+      formData.append("visit_id", reportVisitId);
+      formData.append("content", reportContent);
+      reportFiles.forEach((file) => formData.append("images[]", file));
+
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch(`${API_BASE}/visit-reports`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 422 && data.errors) throw new Error(Object.values(data.errors).flat().join(" "));
+        throw new Error(data.message ?? `Error ${res.status}`);
+      }
+
+      setReportSubmitSuccess(true);
+      setReportContent("");
+      setReportFiles([]);
+      setReportVisitId("");
+    } catch (err: unknown) {
+      setReportSubmitError(err instanceof Error ? err.message : "Gagal mengirim laporan.");
+    } finally {
+      setIsSubmittingReport(false);
     }
   };
 
@@ -468,6 +564,12 @@ export default function ProfilPublikPage() {
                 Reschedule ({rescheduleVisits.length})
               </button>
             )}
+            <button
+              onClick={() => setActiveTab("LAPORAN_KUNJUNGAN")}
+              className={`px-6 py-3 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeTab === "LAPORAN_KUNJUNGAN" ? "bg-teal-700 text-white shadow-md" : "bg-white/80 text-gray-500 hover:bg-white hover:text-teal-700 shadow-sm"}`}
+            >
+              Tulis Laporan
+            </button>
           </div>
           {/* Tab Content Area */}
           <div className="bg-white/80 backdrop-blur-xl shadow-sm rounded-3xl p-8">
@@ -763,6 +865,159 @@ export default function ProfilPublikPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* TAB 5: LAPORAN KUNJUNGAN */}
+            {activeTab === "LAPORAN_KUNJUNGAN" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {reportSubmitSuccess ? (
+                  <div className="bg-white/40 backdrop-blur-md p-8 text-center rounded-2xl shadow-[0_4px_16px_-4px_rgba(0,0,0,0.05)]">
+                    <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-4">
+                      <FiCheck className="text-3xl text-teal-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Laporan Terkirim!</h3>
+                    <p className="text-sm text-gray-500 mb-6">
+                      Laporan Anda sedang ditinjau oleh pengurus panti. Laporan yang disetujui akan tampil di halaman transparansi.
+                    </p>
+                    <button
+                      onClick={() => setReportSubmitSuccess(false)}
+                      className="px-6 py-3 bg-teal-700 text-white font-bold text-sm rounded-xl hover:bg-teal-800 transition-colors shadow-md"
+                    >
+                      Tulis Laporan Lain
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleReportSubmit} className="bg-white/40 backdrop-blur-md p-8 rounded-2xl shadow-[0_4px_16px_-4px_rgba(0,0,0,0.05)] space-y-6">
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest block mb-2">
+                        Pilih Kunjungan
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={reportVisitId}
+                          onChange={(e) => setReportVisitId(e.target.value)}
+                          className="w-full py-3 px-4 bg-white text-gray-900 rounded-xl appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500/20 font-sans text-sm shadow-sm border border-gray-100"
+                        >
+                          <option value="">
+                            {completedVisits.length === 0 ? "Tidak ada kunjungan selesai yang dapat dilaporkan" : "Pilih kunjungan..."}
+                          </option>
+                          {completedVisits.map((visit) => (
+                            <option key={visit.id} value={visit.id}>
+                              {visit.capacity ? formatDate(visit.capacity.date) : formatDate(visit.created_at)}{" "}
+                              — {visit.capacity ? SLOT_LABELS[visit.capacity.slot] || visit.capacity.slot : ""}
+                            </option>
+                          ))}
+                        </select>
+                        <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest block mb-2">
+                        Isi Laporan
+                      </label>
+                      <textarea
+                        value={reportContent}
+                        onChange={(e) => setReportContent(e.target.value)}
+                        rows={6}
+                        placeholder="Ceritakan pengalaman kunjungan Anda, kesan, pesan, atau saran untuk panti..."
+                        className="w-full px-4 py-3 bg-white text-gray-900 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 font-sans text-sm resize-none leading-relaxed shadow-sm border border-gray-100"
+                      />
+                      <div className="flex justify-between mt-1.5 px-1">
+                        <span className="text-[10px] text-gray-400">Min. 10 karakter</span>
+                        <span className={`text-[10px] font-bold ${reportContent.length > 5000 ? "text-red-500" : "text-gray-400"}`}>
+                          {reportContent.length} / 5000
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest block mb-2">
+                        Lampiran Foto (Opsional)
+                      </label>
+                      {reportFileErrors.length > 0 && (
+                        <div className="mb-3 space-y-1">
+                          {reportFileErrors.map((err, i) => (
+                            <div key={i} className="flex items-start gap-2 text-xs text-red-500">
+                              <FiAlertCircle className="text-sm flex-shrink-0 mt-0.5" />
+                              <span>{err}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {reportFiles.length > 0 && (
+                        <div className="flex flex-wrap gap-3 mb-4">
+                          {reportFiles.map((file, idx) => (
+                            <div key={idx} className="relative group">
+                              <img
+                                src={URL.createObjectURL(file)}
+                                alt={`Preview ${idx + 1}`}
+                                className="w-20 h-20 rounded-xl object-cover shadow-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setReportFiles((prev) => prev.filter((_, i) => i !== idx));
+                                  setReportFileErrors([]);
+                                }}
+                                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                              >
+                                <FiX className="text-xs" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {reportFiles.length < MAX_FILES && (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 hover:text-teal-700 transition-colors text-sm font-medium shadow-sm"
+                        >
+                          <FiImage className="text-lg text-gray-400" />
+                          Tambah Foto ({reportFiles.length}/{MAX_FILES})
+                        </button>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".jpg,.jpeg,.png"
+                        multiple
+                        onChange={handleReportFileChange}
+                        className="hidden"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-2 px-1">
+                        Format: JPEG, PNG. Maks. 2 MB per file. Maks. {MAX_FILES} file.
+                      </p>
+                    </div>
+
+                    {reportSubmitError && (
+                      <div className="flex items-start gap-3 bg-red-50 rounded-xl px-5 py-4 border border-red-100">
+                        <FiAlertCircle className="text-red-500 text-base flex-shrink-0 mt-0.5" />
+                        <p className="font-sans text-sm text-red-700 leading-relaxed">{reportSubmitError}</p>
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={isSubmittingReport || !reportVisitId || reportContent.trim().length < 10}
+                      className={`w-full py-4 rounded-xl font-bold flex justify-center items-center gap-2 text-sm transition-all shadow-md ${isSubmittingReport || !reportVisitId || reportContent.trim().length < 10 ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none" : "bg-teal-700 hover:bg-teal-800 text-white"}`}
+                    >
+                      {isSubmittingReport ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Mengirim...
+                        </>
+                      ) : (
+                        <>
+                          <FiSend className="text-lg" />
+                          Kirim Laporan
+                        </>
+                      )}
+                    </button>
+                  </form>
+                )}
               </div>
             )}
           </div>

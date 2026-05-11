@@ -30,6 +30,7 @@ export interface ApprovalData {
   is_expired?: boolean;
   is_rescheduled?: boolean | number;
   admin_notes?: string | null;
+  visitor_type?: string;
   proposal_file_url?: string | null;
 }
 
