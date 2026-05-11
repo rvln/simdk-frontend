@@ -165,7 +165,7 @@ export function GlobalDomainDrawer(props: GlobalDomainDrawerProps) {
         aria-modal="true"
         aria-label={title}
         className={`
-          fixed ${topClass} right-0 bottom-0 w-[450px] z-50 flex flex-col
+          fixed ${topClass} right-0 bottom-0 w-full md:w-[480px] z-50 flex flex-col
           bg-white/95 backdrop-blur-xl shadow-[-10px_0_40px_rgba(0,0,0,0.06)]
           transform transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
           ${isOpen ? "translate-x-0" : "translate-x-full"}

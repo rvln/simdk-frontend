@@ -197,7 +197,7 @@ export default function ApprovalKunjunganPage() {
                 className="w-full pl-11 pr-4 py-3 bg-white rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-shadow border-none"
               />
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col md:flex-row gap-3">
               <div className="relative">
                 <input
                   type="date"

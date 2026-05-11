@@ -81,8 +81,8 @@ export default function PengurusLayout({
       <SidebarStaff role={user.role} />
 
       {/* Main Content Area */}
-      <main className="ml-64 pt-20 min-h-screen relative overflow-x-hidden">
-        <div className="p-8">
+      <main className="md:ml-64 pt-20 min-h-screen relative overflow-x-hidden">
+        <div className="p-4 md:p-8">
           {children}
         </div>
       </main>

@@ -3,13 +3,15 @@
 import React from "react";
 import Link from "next/link";
 import { FiBell, FiHelpCircle } from "react-icons/fi";
+import { MobileMenuToggle } from "@/components/workspace/MobileMenuToggle";
 
 export function Header() {
   return (
-    <header className="fixed top-0 left-0 right-0 h-20 bg-white/70 backdrop-blur-md z-30 flex items-center justify-between px-8 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
-      {/* Dashboard Title */}
-      <div className="flex items-center">
-        <h1 className="text-xl font-bold text-teal-700 tracking-tight uppercase">
+    <header className="fixed top-0 left-0 right-0 h-20 bg-white/70 backdrop-blur-md z-30 flex items-center justify-between px-4 md:px-8 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+      {/* Dashboard Title & Mobile Menu */}
+      <div className="flex items-center gap-3">
+        <MobileMenuToggle />
+        <h1 className="text-lg md:text-xl font-bold text-teal-700 tracking-tight uppercase">
           Panti Asuhan Workspace
         </h1>
       </div>

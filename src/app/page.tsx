@@ -70,16 +70,16 @@ export default function LandingPage() {
               Membangun ekosistem terbuka dengan pelaporan transparan demi
               memastikan setiap anak terlindungi dan dihargai.
             </p>
-            <div className="flex items-center gap-6 pt-4 font-sans">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 pt-4 font-sans">
               <PrimaryButton
-                className="shadow-md"
+                className="shadow-md py-4 sm:py-3 w-full sm:w-auto text-center justify-center min-h-[44px]"
                 onClick={() => router.push("/donasi/barang")}
               >
                 Donasi Sekarang
               </PrimaryButton>
               <Link
                 href="/profil"
-                className="flex items-center gap-2 font-semibold text-teal-700 hover:text-teal-800 transition-colors"
+                className="flex items-center justify-center gap-2 font-semibold text-teal-700 hover:text-teal-800 transition-colors py-3 min-h-[44px]"
               >
                 Jelajahi Misi Kami <MdArrowForward className="text-xl" />
               </Link>
@@ -223,7 +223,7 @@ export default function LandingPage() {
                       />
                     </div>
                     <PrimaryButton
-                      className="w-full sm:w-auto py-[13px]"
+                      className="w-full sm:w-auto py-3 min-h-[44px]"
                       onClick={handleTrack}
                     >
                       Lacak

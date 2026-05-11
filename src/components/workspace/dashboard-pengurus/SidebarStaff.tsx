@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import { 
   FiSettings, 
   FiLogOut, 
@@ -52,12 +53,29 @@ const MENU_ITEMS = [
 
 export function SidebarStaff({ role }: SidebarProps) {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const checkState = () => setIsOpen(document.body.classList.contains("sidebar-open"));
+    checkState();
+    const observer = new MutationObserver(checkState);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <aside className="fixed left-0 top-20 h-[calc(100vh-5rem)] w-64 bg-teal-50/50 backdrop-blur-md flex flex-col justify-between py-6 px-4 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-      <div>
-        {/* User Info block */}
-        <div className="mb-10 px-2 flex items-center gap-3">
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 z-10 md:hidden backdrop-blur-sm"
+          onClick={() => document.body.classList.remove('sidebar-open')}
+        />
+      )}
+      <aside className={`fixed left-0 top-20 h-[calc(100vh-5rem)] w-64 bg-teal-50/50 backdrop-blur-md flex flex-col justify-between py-6 px-4 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+        <div>
+          {/* User Info block */}
+          <div className="mb-10 px-2 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-[0_4px_12px_rgba(13,148,136,0.3)]">
             <FiUser className="text-lg" />
           </div>
@@ -111,5 +129,6 @@ export function SidebarStaff({ role }: SidebarProps) {
         </button>
       </div>
     </aside>
+    </>
   );
 }

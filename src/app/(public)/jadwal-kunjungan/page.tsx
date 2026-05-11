@@ -438,8 +438,8 @@ export default function JadwalKunjunganPage() {
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <Link href="/jadwal-kunjungan/atur-jadwal">
-                <PrimaryButton className="flex items-center gap-2.5 px-7 py-4 text-sm font-bold tracking-wide">
+              <Link href="/jadwal-kunjungan/atur-jadwal" className="w-full sm:w-auto">
+                <PrimaryButton className="flex items-center justify-center gap-2.5 px-7 py-4 text-sm font-bold tracking-wide w-full min-h-[44px]">
                   <FiCalendar className="text-base" />
                   Jadwalkan Kunjungan Sekarang
                 </PrimaryButton>
@@ -447,7 +447,7 @@ export default function JadwalKunjunganPage() {
 
               <Link
                 href="/panduan-kunjungan"
-                className="inline-flex items-center gap-2.5 bg-surface-container-lowest px-7 py-4 rounded-md font-public-sans text-sm font-bold text-on-surface hover:shadow-ambient transition-all border border-outline-variant/15"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-surface-container-lowest px-7 py-4 rounded-md font-public-sans text-sm font-bold text-on-surface hover:shadow-ambient transition-all border border-outline-variant/15 min-h-[44px]"
               >
                 <FiFileText className="text-primary text-base" />
                 Pelajari Panduan Kunjungan
