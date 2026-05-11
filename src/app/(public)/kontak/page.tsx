@@ -2,7 +2,6 @@ import React from "react";
 import Image from "next/image";
 import { GlassContainer } from "@/components/ui/GlassContainer";
 import { InputField } from "@/components/ui/InputField";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { FiMapPin, FiPhone, FiMail, FiSend } from "react-icons/fi";
 
 import type { Metadata } from "next";
@@ -181,10 +180,13 @@ export default function KontakPage() {
                   />
                 </div>
 
-                <PrimaryButton className="w-full flex items-center justify-center gap-2.5 py-4 text-sm font-bold shadow-md hover:shadow-lg transition-all tracking-wide uppercase">
+                <a 
+                  href="mailto:panti.asuhan.drlucas@gmail.com?subject=Pesan dari Website SIMDK"
+                  className="w-full flex items-center justify-center gap-2.5 py-4 px-6 text-sm font-bold font-public-sans rounded-md bg-gradient-to-r from-primary to-primary-container text-white shadow-md hover:shadow-lg hover:scale-[1.02] hover:text-on-primary-fixed-variant hover:shadow-ambient transition-all duration-300 tracking-wide uppercase"
+                >
                   Kirim Pesan
                   <FiSend className="text-base" />
-                </PrimaryButton>
+                </a>
               </form>
             </GlassContainer>
           </div>

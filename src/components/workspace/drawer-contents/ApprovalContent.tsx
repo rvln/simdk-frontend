@@ -30,6 +30,7 @@ export interface ApprovalData {
   is_expired?: boolean;
   is_rescheduled?: boolean | number;
   admin_notes?: string | null;
+  proposal_file_url?: string | null;
 }
 
 interface ApprovalContentProps {
@@ -319,6 +320,23 @@ export function ApprovalContent({
             )}
           </div>
         </div>
+
+        {/* Dokumen Pendukung */}
+        {data.visitor_type === "Lembaga/Instansi" && data.proposal_file_url && (
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col items-start gap-3">
+            <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase">
+              Dokumen Pendukung
+            </p>
+            <a
+              href={data.proposal_file_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 bg-indigo-50/50 border border-indigo-200 text-indigo-700 font-bold rounded-xl shadow-sm hover:shadow hover:-translate-y-0.5 hover:bg-indigo-100/50 transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              📄 Unduh / Lihat Berkas Instansi
+            </a>
+          </div>
+        )}
 
         {/* Dynamic Forms */}
         {isApproving && data.capacityAvailable && (

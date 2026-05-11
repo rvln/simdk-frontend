@@ -12,6 +12,7 @@ import {
   MdArrowBack,
 } from "react-icons/md";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { useAuth } from "@/hooks/useAuth";
 
 /* ──────────────────────────────────────────
    Stepper
@@ -78,6 +79,7 @@ interface InventoryItem {
 function DetailPengunjungContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
 
   // Read schedule selection from URL params (set by atur-jadwal page)
   const capacityId = searchParams.get("capacity_id") || "";
@@ -95,11 +97,18 @@ function DetailPengunjungContent() {
   const [namaField, setNamaField] = useState("");
   const [whatsappField, setWhatsappField] = useState("");
   const [tujuanField, setTujuanField] = useState("");
+  const [proposalFile, setProposalFile] = useState<File | null>(null);
   const [showModal, setShowModal] = useState(false);
 
   // API integration state
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      setNamaField(prev => prev || user.name || "");
+    }
+  }, [user]);
 
   // Multistep Logic
   const [formStep, setFormStep] = useState<"detail" | "cart">("detail");
@@ -135,33 +144,46 @@ function DetailPengunjungContent() {
   };
 
   const handleSubmitToApi = async () => {
+    if (identityType === "lembaga" && !proposalFile) {
+      setErrorMessage("Proposal / Surat Kunjungan wajib diunggah untuk lembaga.");
+      setShowModal(false);
+      return;
+    }
+
     setIsLoading(true);
     setErrorMessage("");
     setShowModal(false);
 
-    const payload: Record<string, unknown> = {
-      capacity_id: capacityId,
-      bringsDonation: bringDonation,
-    };
+    const formData = new FormData();
+    formData.append("capacity_id", capacityId);
+    formData.append("bringsDonation", bringDonation ? "1" : "0");
+    formData.append("visitor_type", identityType === "lembaga" ? "Lembaga/Instansi" : "Individu");
+
+    if (identityType === "lembaga" && proposalFile) {
+      formData.append("proposal_file", proposalFile);
+    }
 
     if (bringDonation && cartItems.length > 0) {
-      payload.donorPhone = whatsappField;
-      payload.items = cartItems.map((item) => ({
-        inventory_id: item.inventory_id,
-        qty: item.qty,
-      }));
+      formData.append("donorPhone", whatsappField);
+      cartItems.forEach((item, index) => {
+        formData.append(`items[${index}][inventory_id]`, item.inventory_id);
+        formData.append(`items[${index}][qty]`, item.qty.toString());
+      });
     }
 
     try {
       const token = localStorage.getItem("auth_token") || "";
+      const headers: HeadersInit = {
+        Accept: "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/visits`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
+        headers,
+        body: formData,
       });
 
       const data = await res.json();
@@ -359,6 +381,29 @@ function DetailPengunjungContent() {
                   />
                 </div>
               </div>
+
+              {/* ── PROPOSAL / SURAT KUNJUNGAN (LEMBAGA) ── */}
+              {identityType === "lembaga" && (
+                <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <h3 className="font-public-sans text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface mb-3">
+                    Dokumen Pendukung
+                  </h3>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-public-sans font-semibold text-on-surface/80">
+                      Unggah Proposal / Surat Kunjungan (Wajib)
+                    </label>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(e) => setProposalFile(e.target.files?.[0] || null)}
+                      className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl transition-colors border border-outline-variant/15 focus:border-primary/40 font-sans text-sm text-on-surface file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                    />
+                    <p className="text-xs text-on-surface-variant mt-1">
+                      Maksimal ukuran file: 5MB. Format: PDF, DOCX, JPG, PNG.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* ── KATEGORI KUNJUNGAN ── */}
               <div className="mb-8">

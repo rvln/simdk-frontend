@@ -142,7 +142,6 @@ export default function ProfilPublikPage() {
 
   /* ── Reschedule State ── */
   const [activeRescheduleVisit, setActiveRescheduleVisit] = useState<ApiVisit | null>(null);
-  const [draftItems, setDraftItems] = useState<{ id: string | null; itemName_snapshot: string; qty: number; tempId: string }[]>([]);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -197,18 +196,6 @@ export default function ProfilPublikPage() {
   /* ── Reschedule Handlers ── */
   const openRescheduleSession = (visit: ApiVisit) => {
     setActiveRescheduleVisit(visit);
-    if (visit.donation?.item_donations) {
-      setDraftItems(
-        visit.donation.item_donations.map((item) => ({
-          id: item.id,
-          itemName_snapshot: item.itemName_snapshot,
-          qty: item.qty,
-          tempId: item.id,
-        }))
-      );
-    } else {
-      setDraftItems([]);
-    }
     const d = visit.capacity ? new Date(visit.capacity.date) : new Date();
     setViewYear(d.getFullYear());
     setViewMonth(d.getMonth());
@@ -216,40 +203,12 @@ export default function ProfilPublikPage() {
     setSelectedSlot(null);
   };
 
-  const handleAddItem = () => {
-    setDraftItems((prev) => [
-      ...prev,
-      { id: null, itemName_snapshot: "", qty: 1, tempId: Math.random().toString(36).substring(7) },
-    ]);
-  };
-
-  const handleEditItem = (tempId: string, field: "itemName_snapshot" | "qty", value: any) => {
-    setDraftItems((prev) =>
-      prev.map((item) => (item.tempId === tempId ? { ...item, [field]: value } : item))
-    );
-  };
-
-  const handleDeleteItem = (tempId: string) => {
-    setDraftItems((prev) => prev.filter((item) => item.tempId !== tempId));
-  };
-
   const handleReSubmit = async () => {
     if (!activeRescheduleVisit || !selectedSlot) return;
-
-    const invalidItems = draftItems.some((it) => !it.itemName_snapshot.trim() || it.qty < 1);
-    if (invalidItems) {
-      alert("Pastikan semua item donasi memiliki nama dan jumlah minimal 1.");
-      return;
-    }
 
     setIsSubmittingReschedule(true);
     const payload = {
       new_capacity_id: selectedSlot.id,
-      updated_items: draftItems.map((item) => ({
-        id: item.id,
-        itemName_snapshot: item.itemName_snapshot,
-        qty: item.qty,
-      })),
     };
 
     try {
@@ -291,10 +250,14 @@ export default function ProfilPublikPage() {
   const dateHasCapacity = useCallback(
     (date: Date): boolean => {
       const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      const day = date.getDay(); // 0 is Sunday, 6 is Saturday
+      const isWeekend = day === 0 || day === 6;
+      const allowedSlots = isWeekend ? ["MORNING", "AFTERNOON", "EVENING"] : ["AFTERNOON", "EVENING"];
+
       return capacities.some((c) => {
         const d = new Date(c.date);
         const localStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-        return localStr === dateStr && c.booked < c.quota;
+        return localStr === dateStr && c.booked < c.quota && allowedSlots.includes(c.slot);
       });
     },
     [capacities]
@@ -302,10 +265,14 @@ export default function ProfilPublikPage() {
 
   const getAvailableSlots = (date: Date) => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const day = date.getDay();
+    const isWeekend = day === 0 || day === 6;
+    const allowedSlots = isWeekend ? ["MORNING", "AFTERNOON", "EVENING"] : ["AFTERNOON", "EVENING"];
+
     return capacities.filter((c) => {
       const d = new Date(c.date);
       const localStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      return localStr === dateStr && c.booked < c.quota;
+      return localStr === dateStr && c.booked < c.quota && allowedSlots.includes(c.slot);
     });
   };
 
@@ -778,53 +745,20 @@ export default function ProfilPublikPage() {
                         </div>
                       )}
 
-                      {/* Items Sync (Draft) */}
-                      <div>
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">2. Sesuaikan Barang Bawaan</h4>
-                          <button onClick={handleAddItem} className="text-xs font-bold text-teal-600 bg-teal-50 px-3 py-1.5 rounded-lg hover:bg-teal-100">
-                            + Tambah Barang
-                          </button>
-                        </div>
-                        <div className="space-y-3">
-                          {draftItems.length === 0 ? (
-                            <p className="text-sm text-gray-400 italic">Tidak ada barang bawaan.</p>
-                          ) : (
-                            draftItems.map((item) => (
-                              <div key={item.tempId} className="flex items-center gap-3 bg-white/60 p-3 rounded-xl border">
-                                <input
-                                  type="text"
-                                  value={item.itemName_snapshot}
-                                  onChange={(e) => handleEditItem(item.tempId, "itemName_snapshot", e.target.value)}
-                                  placeholder="Nama Barang"
-                                  className="flex-1 bg-transparent border-b border-gray-200 focus:border-teal-500 text-sm px-2 py-1 outline-none"
-                                />
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-400">Qty:</span>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={item.qty}
-                                    onChange={(e) => handleEditItem(item.tempId, "qty", parseInt(e.target.value) || 1)}
-                                    className="w-16 bg-gray-50 border rounded-lg text-sm px-2 py-1 outline-none focus:ring-1 focus:ring-teal-500 text-center"
-                                  />
-                                </div>
-                                <button onClick={() => handleDeleteItem(item.tempId)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                  <MdCancel className="text-lg" />
-                                </button>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-
                       {/* Submit */}
                       <button
                         onClick={handleReSubmit}
                         disabled={!selectedSlot || isSubmittingReschedule}
-                        className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all ${!selectedSlot || isSubmittingReschedule ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-teal-600 text-white hover:bg-teal-700 hover:-translate-y-0.5"}`}
+                        className="mt-6 w-full py-4 bg-teal-700 text-white font-bold rounded-xl shadow-lg hover:bg-teal-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex justify-center items-center gap-2"
                       >
-                        {isSubmittingReschedule ? "Memproses..." : "Konfirmasi Reschedule"}
+                        {isSubmittingReschedule ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Menyimpan Jadwal...
+                          </>
+                        ) : (
+                          "Konfirmasi Reschedule"
+                        )}
                       </button>
                     </div>
                   )}

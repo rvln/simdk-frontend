@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { GlassContainer } from "@/components/ui/GlassContainer";
 import { InputField } from "@/components/ui/InputField";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import imageCompression from "browser-image-compression";
+import { useAuth } from "@/hooks/useAuth";
 import {
   MdOutlinePerson,
   MdOutlineAssignment,
@@ -58,6 +59,7 @@ type CartItem = {
 
 export default function DonasiBarangCheckoutPage() {
   const router = useRouter();
+  const { user } = useAuth();
 
   // Global States
   const [identity, setIdentity] = useState({
@@ -65,6 +67,17 @@ export default function DonasiBarangCheckoutPage() {
     donor_phone: "",
     donor_email: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setIdentity(prev => ({
+        ...prev,
+        donor_name: prev.donor_name || user.name || "",
+        donor_email: prev.donor_email || user.email || "",
+        donor_phone: prev.donor_phone || user.phone || ""
+      }));
+    }
+  }, [user]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [activeTab, setActiveTab] = useState<"MANUAL" | "KATALOG">("KATALOG");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);

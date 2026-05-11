@@ -27,7 +27,11 @@ function mapVisit(raw: any) {
   let icon = <FaUsers className="text-2xl text-gray-500" />;
   let iconBg = "bg-gray-200/70";
 
-  if (isCorporate) {
+  if (raw.visitor_type === "Lembaga/Instansi") {
+    badge = "KUNJUNGAN LEMBAGA";
+    icon = <FaBuilding className="text-2xl text-indigo-500" />;
+    iconBg = "bg-indigo-100/70";
+  } else if (isCorporate) {
     badge = "CORPORATE VISIT";
     icon = <FaBuilding className="text-2xl text-blue-500" />;
     iconBg = "bg-blue-100/70";
@@ -76,6 +80,8 @@ function mapVisit(raw: any) {
     is_expired: !!raw.is_expired,
     is_rescheduled: raw.is_rescheduled,
     admin_notes: raw.admin_notes,
+    visitor_type: raw.visitor_type,
+    proposal_file_url: raw.proposal_file_url,
   };
 }
 

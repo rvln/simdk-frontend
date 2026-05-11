@@ -268,6 +268,52 @@ export default function ProfilPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
+          SECTION 4.5 — STRUKTUR ORGANISASI
+      ═══════════════════════════════════════════ */}
+      <section className="bg-surface px-6 md:px-12 lg:px-20 py-20 lg:py-28">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-14">
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-on-surface mb-3">
+              Struktur Organisasi
+            </h2>
+            <p className="text-on-surface-variant text-sm leading-relaxed max-w-xl mx-auto font-sans">
+              Susunan pengurus Panti Asuhan Dr. J. Lucas Manado yang
+              berdedikasi dalam melayani dan membimbing anak-anak dengan kasih sayang.
+            </p>
+          </div>
+
+          {/* Org Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { role: "PENASEHAT", name: "Pdt. Dr. J. Lucas, M.Th." },
+              { role: "KETUA", name: "Ibu Ny. F. Lucas-M." },
+              { role: "SEKRETARIS", name: "Ibu Ny. J. Sumampouw-L." },
+              { role: "BENDAHARA", name: "Ibu Ny. A. Lucas-P." },
+              { role: "SEKSI USAHA", name: "Bpk. J. Kereh." },
+              { role: "SEKSI PEMELIHARAAN", name: "Ibu Ny. S. Lucas-K." },
+              { role: "SEKSI PENDIDIKAN / ROHANI", name: "Pdt. J. Sumampouw, S.Th." },
+            ].map((member, i) => (
+              <GlassContainer
+                key={i}
+                className="p-6 flex flex-col justify-center text-center transition-all hover:shadow-ambient"
+              >
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 text-primary">
+                  <FiUsers className="text-xl" />
+                </div>
+                <span className="font-public-sans text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant mb-1">
+                  {member.role}
+                </span>
+                <h4 className="font-bold text-base text-on-surface font-sans">
+                  {member.name}
+                </h4>
+              </GlassContainer>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
           SECTION 5 — FOUNDER QUOTE
       ═══════════════════════════════════════════ */}
       <section className="bg-surface px-6 md:px-12 lg:px-20 py-16 lg:py-20">

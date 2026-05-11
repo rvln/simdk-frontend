@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { GlassContainer } from "@/components/ui/GlassContainer";
 import { InputField } from "@/components/ui/InputField";
@@ -8,6 +8,7 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { FiShield, FiCheckCircle, FiLock, FiChevronDown } from "react-icons/fi";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 /* ───── Amount presets ───── */
 interface AmountPreset {
@@ -65,6 +66,7 @@ type PaymentState = 'IDLE' | 'PROCESSING' | 'PENDING_PAYMENT' | 'SUCCESS';
    ══════════════════════════════════════════ */
 export default function DonasiFinansialPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(100000);
   const [customAmount, setCustomAmount] = useState("");
   const [privacyMode, setPrivacyMode] = useState("show");
@@ -83,6 +85,17 @@ export default function DonasiFinansialPage() {
     donorEmail: "",
     donorPhone: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        donorName: prev.donorName || user.name || "",
+        donorEmail: prev.donorEmail || user.email || "",
+        donorPhone: prev.donorPhone || user.phone || ""
+      }));
+    }
+  }, [user]);
 
   // Handler untuk mengubah nilai form
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
