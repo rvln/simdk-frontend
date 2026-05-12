@@ -13,6 +13,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: UserRole;
+  phone?: string;
   email_verified_at: string | null;
 }
 
