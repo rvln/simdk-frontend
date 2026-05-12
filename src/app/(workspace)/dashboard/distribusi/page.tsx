@@ -5,7 +5,7 @@ import { FiSearch, FiFilter, FiAlertCircle, FiRefreshCw, FiBox, FiCalendar, FiUs
 import { GlobalDomainDrawer } from "@/components/workspace/GlobalDomainDrawer";
 import { useAuth } from "@/hooks/useAuth";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export default function DistribusiPage() {
   const { user } = useAuth();
@@ -21,7 +21,8 @@ export default function DistribusiPage() {
     setIsLoading(true);
     setFetchError(null);
     try {
-      const res = await fetch(`${API_BASE}/distribusi`, {
+      const res = await fetch(`${API_BASE}/api/distribusi`, {
+        credentials: 'include',
         headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
       });
       if (!res.ok) throw new Error("Gagal memuat riwayat distribusi");

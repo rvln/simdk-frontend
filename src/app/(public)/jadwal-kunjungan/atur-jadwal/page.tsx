@@ -148,7 +148,8 @@ export default function AturJadwalPage() {
   }, [selectedDay, viewMonth, viewYear]);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/capacities`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/capacities`, {
+      credentials: 'include',
       headers: { Accept: "application/json" },
     })
       .then((res) => (res.ok ? res.json() : { data: [] }))

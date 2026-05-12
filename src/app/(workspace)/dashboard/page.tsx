@@ -15,7 +15,7 @@ import {
 } from "react-icons/md";
 import { useAuth } from "@/hooks/useAuth";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 interface OverviewMetrics {
   pending_visits: number;
@@ -67,7 +67,8 @@ export default function DashboardPage() {
     const fetchData = async () => {
       const token = localStorage.getItem("auth_token");
       try {
-        const res = await fetch(`${API_BASE}/dashboard/overview`, {
+        const res = await fetch(`${API_BASE}/api/dashboard/overview`, {
+          credentials: 'include',
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",

@@ -33,8 +33,9 @@ export default function InvoicePage() {
 
     const fetchInvoice = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/donations/${id}/invoice`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/public/donations/${id}/invoice`, {
           method: 'GET',
+          credentials: 'include',
           headers: {
             'Accept': 'application/json'
           }
@@ -71,7 +72,7 @@ export default function InvoicePage() {
   }, [id]);
 
   const handleDownload = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/public/donations/${id}/invoice/download`;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/public/donations/${id}/invoice/download`;
   };
 
   if (isLoading) {

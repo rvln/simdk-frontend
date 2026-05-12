@@ -14,7 +14,7 @@ import {
 } from "react-icons/fi";
 import { useAuth } from "@/hooks/useAuth";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const STORAGE_BASE = process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://localhost:8000/storage";
 
 interface ReportItem {
@@ -188,7 +188,8 @@ export default function ModerasiLaporanPage() {
       params.append("page", String(page));
       params.append("per_page", "12");
 
-      const res = await fetch(`${API_BASE}/admin/visit-reports?${params.toString()}`, {
+      const res = await fetch(`${API_BASE}/api/admin/visit-reports?${params.toString()}`, {
+        credentials: 'include',
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -216,8 +217,9 @@ export default function ModerasiLaporanPage() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${API_BASE}/admin/visit-reports/${modalReport.id}/moderate`, {
+      const res = await fetch(`${API_BASE}/api/admin/visit-reports/${modalReport.id}/moderate`, {
         method: "PATCH",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

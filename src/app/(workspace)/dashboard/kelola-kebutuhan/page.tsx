@@ -20,8 +20,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 
 // ─── API endpoint constant — swap this single string when the backend is ready ───
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
-const ENDPOINT = `${API_BASE}/kebutuhan`;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const ENDPOINT = `${API_BASE}/api/kebutuhan`;
 
 // ─── Derived UI helpers ───────────────────────────────────────────────────────
 
@@ -131,6 +131,7 @@ export default function KelolaKebutuhanPage() {
       if (priorityFilter) params.append("priority", priorityFilter);
 
       const res = await fetch(`${ENDPOINT}?${params.toString()}`, {
+        credentials: 'include',
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -180,6 +181,7 @@ export default function KelolaKebutuhanPage() {
 
       const res = await fetch(url, {
         method,
+        credentials: 'include',
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",

@@ -52,10 +52,12 @@ export function useAuth(): AuthState {
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user`, {
+        credentials: 'include',
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
+          'Content-Type': 'application/json',
         },
       });
 

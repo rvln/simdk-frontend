@@ -15,7 +15,7 @@ import {
   FiLoader,
 } from "react-icons/fi";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 /* ──────────────────────────────────────────
    Calendar helpers
@@ -151,7 +151,8 @@ export default function JadwalKunjunganPage() {
 
   /* ── Fetch capacities (same pattern as atur-jadwal) ── */
   useEffect(() => {
-    fetch(`${API_BASE}/capacities`, {
+    fetch(`${API_BASE}/api/capacities`, {
+      credentials: 'include',
       headers: { Accept: "application/json" },
     })
       .then((res) => (res.ok ? res.json() : { data: [] }))
@@ -162,7 +163,8 @@ export default function JadwalKunjunganPage() {
   /* ── Fetch upcoming visits ── */
   useEffect(() => {
     setIsLoadingVisits(true);
-    fetch(`${API_BASE}/public/kunjungan/upcoming`, {
+    fetch(`${API_BASE}/api/public/kunjungan/upcoming`, {
+      credentials: 'include',
       headers: { Accept: "application/json" },
     })
       .then((res) => (res.ok ? res.json() : { data: [] }))

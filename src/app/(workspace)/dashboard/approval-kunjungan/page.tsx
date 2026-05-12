@@ -14,7 +14,7 @@ import { FaUserGraduate, FaBuilding, FaUsers } from "react-icons/fa6";
 import { GlobalDomainDrawer } from "@/components/workspace/GlobalDomainDrawer";
 import { useAuth } from "@/hooks/useAuth";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapVisit(raw: any) {
@@ -129,8 +129,9 @@ export default function ApprovalKunjunganPage() {
       if (debouncedSearch) queryParams.append("search", debouncedSearch);
 
       const res = await fetch(
-        `${API_BASE}/kunjungan/manage?${queryParams.toString()}`,
+        `${API_BASE}/api/kunjungan/manage?${queryParams.toString()}`,
         {
+          credentials: 'include',
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",

@@ -138,9 +138,10 @@ export default function DonasiFinansialPage() {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/donasi/finansial`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/donasi/finansial`,
         {
           method: "POST",
+          credentials: 'include',
           headers: {
             Accept: "application/json",
           },
@@ -183,8 +184,9 @@ export default function DonasiFinansialPage() {
   const handleCancelTransaction = async () => {
     if (donationId) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/donations/${donationId}/cancel`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/public/donations/${donationId}/cancel`, {
           method: "PATCH",
+          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",

@@ -4,14 +4,16 @@
  * Uses the native `fetch` API to align with the existing useAuth.ts pattern
  * (no axios dependency). Reads NEXT_PUBLIC_API_URL from the environment.
  */
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 export async function fetcher<T = unknown>(url: string): Promise<T> {
   const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
 
   const res = await fetch(fullUrl, {
+    credentials: 'include',
     headers: {
       Accept: 'application/json',
+      'Content-Type': 'application/json',
     },
   });
 

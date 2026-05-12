@@ -124,7 +124,8 @@ export default function DonasiBarangCheckoutPage() {
     if (activeTab === "KATALOG" && catalogNeeds.length === 0) {
       setIsLoadingCatalog(true);
       fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/public/katalog-kebutuhan`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/public/katalog-kebutuhan`,
+        { credentials: 'include' }
       )
         .then((res) => res.json())
         .then((json) => {
@@ -285,9 +286,10 @@ export default function DonasiBarangCheckoutPage() {
       };
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/public/donasi-barang`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/public/donasi-barang`,
         {
           method: "POST",
+          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",

@@ -11,7 +11,7 @@ import {
 } from "react-icons/fi";
 import { FaCalendarCheck } from "react-icons/fa6";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export interface ApprovalData {
   id: string;
@@ -77,8 +77,9 @@ export function ApprovalContent({
     setIsSubmitting(true);
     setApiError(null);
     try {
-      const res = await fetch(`${API_BASE}/kunjungan/${data.id}/approve`, {
+      const res = await fetch(`${API_BASE}/api/kunjungan/${data.id}/approve`, {
         method: "POST",
+        credentials: 'include',
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -120,8 +121,9 @@ export function ApprovalContent({
     setIsSubmitting(true);
     setApiError(null);
     try {
-      const res = await fetch(`${API_BASE}/kunjungan/${data.id}/reject`, {
+      const res = await fetch(`${API_BASE}/api/kunjungan/${data.id}/reject`, {
         method: "POST",
+        credentials: 'include',
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -157,9 +159,10 @@ export function ApprovalContent({
     setApiError(null);
     try {
       const res = await fetch(
-        `${API_BASE}/kunjungan/${data.id}/request-reschedule`,
+        `${API_BASE}/api/kunjungan/${data.id}/request-reschedule`,
         {
           method: "POST",
+          credentials: 'include',
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
@@ -195,8 +198,9 @@ export function ApprovalContent({
     setIsSubmitting(true);
     setApiError(null);
     try {
-      const res = await fetch(`${API_BASE}/visits/${data.id}/resolve`, {
+      const res = await fetch(`${API_BASE}/api/visits/${data.id}/resolve`, {
         method: "PATCH",
+        credentials: 'include',
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",

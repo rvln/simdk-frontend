@@ -47,7 +47,7 @@ interface ValidasiContentProps {
   onClose: () => void;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 /**
  * ValidasiContent — Detail + validation panel for a single PENDING_DELIVERY donation.
@@ -81,9 +81,10 @@ export function ValidasiContent({
     setApiError(null);
     try {
       const res = await fetch(
-        `${API_BASE}/validasi-donasi/${data.id}/approve`,
+        `${API_BASE}/api/validasi-donasi/${data.id}/approve`,
         {
           method: "POST",
+          credentials: 'include',
           headers: authHeaders,
         },
       );
@@ -108,8 +109,9 @@ export function ValidasiContent({
     setIsSubmitting(true);
     setApiError(null);
     try {
-      const res = await fetch(`${API_BASE}/validasi-donasi/${data.id}/reject`, {
+      const res = await fetch(`${API_BASE}/api/validasi-donasi/${data.id}/reject`, {
         method: "POST",
+        credentials: 'include',
         headers: authHeaders,
         body: JSON.stringify({ reason: rejectReason }),
       });
@@ -131,9 +133,10 @@ export function ValidasiContent({
     setApiError(null);
     try {
       const res = await fetch(
-        `${API_BASE}/admin/donations/${data.id}/approve`,
+        `${API_BASE}/api/admin/donations/${data.id}/approve`,
         {
           method: "PATCH",
+          credentials: 'include',
           headers: authHeaders,
         },
       );
@@ -154,8 +157,9 @@ export function ValidasiContent({
     setIsSubmitting(true);
     setApiError(null);
     try {
-      const res = await fetch(`${API_BASE}/admin/donations/${data.id}/reject`, {
+      const res = await fetch(`${API_BASE}/api/admin/donations/${data.id}/reject`, {
         method: "PATCH",
+        credentials: 'include',
         headers: authHeaders,
       });
       const body = await res.json().catch(() => ({}));
@@ -225,7 +229,7 @@ export function ValidasiContent({
         <div className="w-full h-48 bg-slate-100 rounded-2xl overflow-hidden relative shadow-sm flex items-center justify-center">
           {data.payment_proof ? (
             <img
-              src={`${process.env.NEXT_PUBLIC_BACKEND_URL ?? API_BASE.replace("/api", "")}/storage/${data.payment_proof}`}
+              src={`${process.env.NEXT_PUBLIC_BACKEND_URL ?? API_BASE}/storage/${data.payment_proof}`}
               alt="Bukti Transfer"
               className="w-full h-full object-contain"
             />
@@ -489,7 +493,7 @@ export function ValidasiContent({
           <>
             {data.payment_proof && (
               <a
-                href={`${process.env.NEXT_PUBLIC_BACKEND_URL ?? API_BASE.replace("/api", "")}/storage/${data.payment_proof}`}
+                href={`${process.env.NEXT_PUBLIC_BACKEND_URL ?? API_BASE}/storage/${data.payment_proof}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3.5 bg-blue-50 text-blue-700 font-bold rounded-xl hover:bg-blue-100 border-none transition-all flex items-center justify-center gap-2"

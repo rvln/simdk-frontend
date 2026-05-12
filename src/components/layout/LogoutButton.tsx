@@ -24,11 +24,13 @@ export default function LogoutButton() {
     if (token) {
       try {
         // Beritahu server untuk menghapus token
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/logout`, {
           method: "POST",
+          credentials: 'include',
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
+            "Content-Type": "application/json",
           },
         });
       } catch (error) {

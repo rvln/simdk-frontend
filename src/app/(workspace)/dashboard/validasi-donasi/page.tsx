@@ -16,8 +16,8 @@ import { ValidasiData } from "@/components/workspace/drawer-contents/ValidasiCon
 import { useAuth } from "@/hooks/useAuth";
 
 // ─── API constant ─────────────────────────────────────────────────────────────
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
-const ENDPOINT = `${API_BASE}/validasi-donasi`;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const ENDPOINT = `${API_BASE}/api/validasi-donasi`;
 
 type DonationType = "BARANG" | "DANA";
 
@@ -134,6 +134,7 @@ export default function ValidasiDonasiPage() {
       if (filterDate) queryParams.append("date", filterDate);
 
       const res = await fetch(`${ENDPOINT}?${queryParams.toString()}`, {
+        credentials: 'include',
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",

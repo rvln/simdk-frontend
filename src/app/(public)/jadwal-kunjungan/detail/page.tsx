@@ -124,7 +124,8 @@ function DetailPengunjungContent() {
   const [inventoryList, setInventoryList] = useState<InventoryItem[]>([]);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventories`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/inventories`, {
+      credentials: 'include',
       headers: { Accept: "application/json" },
     })
       .then((res) => (res.ok ? res.json() : { data: [] }))
@@ -180,8 +181,9 @@ function DetailPengunjungContent() {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/visits`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/visits`, {
         method: "POST",
+        credentials: 'include',
         headers,
         body: formData,
       });

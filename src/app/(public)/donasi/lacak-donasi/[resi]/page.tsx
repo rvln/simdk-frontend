@@ -40,7 +40,9 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
   useEffect(() => {
     const fetchDonation = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/public/donasi-barang/${resi}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/public/donasi-barang/${resi}`, {
+          credentials: 'include'
+        });
         if (!response.ok) {
           throw new Error("Resi tidak ditemukan");
         }

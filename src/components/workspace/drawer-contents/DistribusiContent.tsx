@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { FiLoader, FiAlertCircle } from "react-icons/fi";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export type DistribusiFormInputs = {
   inventory_id: string;
@@ -52,8 +52,9 @@ export function DistribusiContent({ token, onSuccess, onClose }: DistribusiConte
   useEffect(() => {
     async function fetchInventory() {
       try {
-        const res = await fetch(`${API_BASE}/kebutuhan`, {
-          headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+        const res = await fetch(`${API_BASE}/api/kebutuhan`, {
+          credentials: 'include',
+          headers: { Authorization: `Bearer ${token}`, Accept: "application/json", "Content-Type": "application/json" }
         });
         if (!res.ok) throw new Error("Gagal memuat data inventaris");
         const json = await res.json();
@@ -73,8 +74,9 @@ export function DistribusiContent({ token, onSuccess, onClose }: DistribusiConte
     setIsSubmitting(true);
     setApiError(null);
     try {
-      const res = await fetch(`${API_BASE}/distribusi`, {
+      const res = await fetch(`${API_BASE}/api/distribusi`, {
         method: "POST",
+        credentials: 'include',
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",

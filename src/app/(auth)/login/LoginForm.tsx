@@ -31,8 +31,9 @@ export default function LoginForm() {
     setShowVerificationBanner(false);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login`, {
         method: "POST",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -100,9 +101,10 @@ export default function LoginForm() {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/resend-verification`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/resend-verification`,
         {
           method: "POST",
+          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
