@@ -95,11 +95,15 @@ interface ListResponse<T> {
    SWR Hooks — URL Query Param Driven
    ═══════════════════════════════════════════ */
 
-function buildQuery(params: Record<string, string | number | undefined>): string {
+function buildQuery(
+  params: Record<string, string | number | undefined>,
+): string {
   const parts: string[] = [];
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== "") {
-      parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+      parts.push(
+        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+      );
     }
   }
   return parts.length > 0 ? `?${parts.join("&")}` : "";
@@ -111,11 +115,12 @@ function buildQuery(params: Record<string, string | number | undefined>): string
  */
 export function useTransparencyDonations(page: number, type?: string) {
   const query = buildQuery({ page, type, per_page: 10 });
-  const { data, error, isLoading } = useSWR<PaginatedResponse<TransparencyDonation>>(
-    `/public/transparansi/donasi${query}`,
-    fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 30_000 }
-  );
+  const { data, error, isLoading } = useSWR<
+    PaginatedResponse<TransparencyDonation>
+  >(`/api/public/transparansi/donasi${query}`, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 30_000,
+  });
 
   return {
     donations: data?.data ?? [],
@@ -131,11 +136,12 @@ export function useTransparencyDonations(page: number, type?: string) {
  */
 export function useTransparencyDistributions(page: number, category?: string) {
   const query = buildQuery({ page, category, per_page: 10 });
-  const { data, error, isLoading } = useSWR<PaginatedResponse<TransparencyDistribution>>(
-    `/public/transparansi/distribusi${query}`,
-    fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 30_000 }
-  );
+  const { data, error, isLoading } = useSWR<
+    PaginatedResponse<TransparencyDistribution>
+  >(`/api/public/transparansi/distribusi${query}`, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 30_000,
+  });
 
   return {
     distributions: data?.data ?? [],
@@ -152,9 +158,9 @@ export function useTransparencyDistributions(page: number, category?: string) {
 export function useTransparencyNeeds(category?: string) {
   const query = buildQuery({ category });
   const { data, error, isLoading } = useSWR<ListResponse<TransparencyNeed>>(
-    `/public/transparansi/kebutuhan${query}`,
+    `/api/public/transparansi/kebutuhan${query}`,
     fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 60_000 }
+    { revalidateOnFocus: false, dedupingInterval: 60_000 },
   );
 
   return {
@@ -169,11 +175,12 @@ export function useTransparencyNeeds(category?: string) {
  */
 export function useTransparencyVisits(page: number) {
   const query = buildQuery({ page, per_page: 6 });
-  const { data, error, isLoading } = useSWR<PaginatedResponse<TransparencyVisit>>(
-    `/public/transparansi/kunjungan${query}`,
-    fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 30_000 }
-  );
+  const { data, error, isLoading } = useSWR<
+    PaginatedResponse<TransparencyVisit>
+  >(`/api/public/transparansi/kunjungan${query}`, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 30_000,
+  });
 
   return {
     visits: data?.data ?? [],
@@ -188,11 +195,12 @@ export function useTransparencyVisits(page: number) {
  */
 export function useTransparencyReports(page: number) {
   const query = buildQuery({ page, per_page: 6 });
-  const { data, error, isLoading } = useSWR<PaginatedResponse<TransparencyReport>>(
-    `/public/transparansi/laporan${query}`,
-    fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 30_000 }
-  );
+  const { data, error, isLoading } = useSWR<
+    PaginatedResponse<TransparencyReport>
+  >(`/api/public/transparansi/laporan${query}`, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 30_000,
+  });
 
   return {
     reports: data?.data ?? [],
