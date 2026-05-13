@@ -24,7 +24,7 @@ export default function AuthLayout({
           <img
             alt="Anak-anak belajar bersama"
             className="w-full h-full object-cover"
-            src="/example_img/unsplash4.png"
+            src="/example_img/kids-7.png"
           />
           <div className="absolute inset-0 bg-primary/10 mix-blend-multiply"></div>
         </div>
@@ -32,19 +32,19 @@ export default function AuthLayout({
         {/* Glassmorphism Card Overlay */}
         <div className="absolute bottom-8 left-8 right-8 z-10">
           <div className="bg-white/20 backdrop-blur-md p-8 rounded-xl shadow-ambient max-w-lg">
-            <MdFormatQuote className="text-white mb-4 text-4xl" />
-            <p className="text-white text-lg md:text-xl font-medium leading-relaxed italic mb-4 font-sans border-none shadow-sm">
+            <MdFormatQuote className="text-black/70 mb-4 text-4xl" />
+            <p className="text-black/60 text-lg md:text-xl font-medium leading-relaxed italic mb-4 font-sans border-none shadow-sm">
               {quoteText}
             </p>
             <div className="flex items-center gap-3 mt-8">
               <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
-                <MdAccountBalance className="text-primary text-xl" />
+                <MdAccountBalance className="text-secondary text-xl" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white font-public-sans">
-                  Yayasan Empanti
+                <p className="text-sm font-bold text-black/80 font-public-sans">
+                  Panti Asuhan Dr Lucas
                 </p>
-                <p className="text-xs text-white/80 font-public-sans">
+                <p className="text-xs text-black/80 font-public-sans">
                   Keluarga untuk setiap anak
                 </p>
               </div>
@@ -64,8 +64,8 @@ export default function AuthLayout({
           href="/"
           className="text-on-surface-variant hover:text-primary font-public-sans text-sm font-bold tracking-widest uppercase transition-colors flex items-center gap-2"
         >
-          <MdArrowBack className="text-lg" />
-          Kembali ke Beranda
+          <MdArrowBack className="text-lg font-light" />
+          Kembali
         </Link>
       </div>
     </div>

@@ -59,7 +59,7 @@ function formatRp(value: number): string {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
-type PaymentState = 'IDLE' | 'PROCESSING' | 'PENDING_PAYMENT' | 'SUCCESS';
+type PaymentState = "IDLE" | "PROCESSING" | "PENDING_PAYMENT" | "SUCCESS";
 
 /* ══════════════════════════════════════════
    COMPONENT
@@ -71,10 +71,12 @@ export default function DonasiFinansialPage() {
   const [customAmount, setCustomAmount] = useState("");
   const [privacyMode, setPrivacyMode] = useState("show");
   const [isLoading, setIsLoading] = useState(false);
-  const [paymentState, setPaymentState] = useState<PaymentState>('IDLE');
+  const [paymentState, setPaymentState] = useState<PaymentState>("IDLE");
   const [snapToken, setSnapToken] = useState<string | null>(null);
   const [donationId, setDonationId] = useState<string | null>(null);
-  const [paymentChannel, setPaymentChannel] = useState<'MIDTRANS' | 'MANUAL'>('MIDTRANS');
+  const [paymentChannel, setPaymentChannel] = useState<"MIDTRANS" | "MANUAL">(
+    "MIDTRANS",
+  );
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
 
   const effectiveAmount =
@@ -88,11 +90,11 @@ export default function DonasiFinansialPage() {
 
   useEffect(() => {
     if (user) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         donorName: prev.donorName || user.name || "",
         donorEmail: prev.donorEmail || user.email || "",
-        donorPhone: prev.donorPhone || user.phone || ""
+        donorPhone: prev.donorPhone || user.phone || "",
       }));
     }
   }, [user]);
@@ -132,7 +134,7 @@ export default function DonasiFinansialPage() {
       fd.append("donorPhone", formData.donorPhone);
       fd.append("amount", effectiveAmount.toString());
       fd.append("payment_channel", paymentChannel);
-      
+
       if (paymentChannel === "MANUAL" && paymentProof) {
         fd.append("payment_proof", paymentProof);
       }
@@ -141,7 +143,7 @@ export default function DonasiFinansialPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/donasi/finansial`,
         {
           method: "POST",
-          credentials: 'include',
+          credentials: "include",
           headers: {
             Accept: "application/json",
           },
@@ -157,7 +159,7 @@ export default function DonasiFinansialPage() {
       const result = await res.json();
 
       if (paymentChannel === "MANUAL") {
-        router.push('/donasi/menunggu-validasi');
+        router.push("/donasi/menunggu-validasi");
         return;
       }
 
@@ -184,14 +186,17 @@ export default function DonasiFinansialPage() {
   const handleCancelTransaction = async () => {
     if (donationId) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/public/donations/${donationId}/cancel`, {
-          method: "PATCH",
-          credentials: 'include',
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/public/donations/${donationId}/cancel`,
+          {
+            method: "PATCH",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
           },
-        });
+        );
       } catch (error) {
         console.error("Failed to cancel donation:", error);
       }
@@ -201,35 +206,33 @@ export default function DonasiFinansialPage() {
     setPaymentState("IDLE");
   };
 
-   const triggerSnap = (token: string, currentDonationId: string | null) => {
-     if (!(window as any).snap) {
-       alert("Sistem pembayaran belum siap. Silakan refresh halaman.");
-       return;
-     }
-     (window as any).snap.pay(token, {
-       onSuccess: () => {
-         setSnapToken(null);
-         if (currentDonationId) {
-           router.push(`/donasi/invoice/${currentDonationId}`);
-         } else {
-           setPaymentState("SUCCESS");
-         }
-       },
-       onPending: () => {
-         setPaymentState("PENDING_PAYMENT");
-       },
-       onError: () => {
-         alert("Transaksi gagal. Silakan coba lagi.");
-         setPaymentState("IDLE");
-         setSnapToken(null);
-       },
-       onClose: () => {
-         setPaymentState("PENDING_PAYMENT");
-       },
-     });
-   };
-
-   
+  const triggerSnap = (token: string, currentDonationId: string | null) => {
+    if (!(window as any).snap) {
+      alert("Sistem pembayaran belum siap. Silakan refresh halaman.");
+      return;
+    }
+    (window as any).snap.pay(token, {
+      onSuccess: () => {
+        setSnapToken(null);
+        if (currentDonationId) {
+          router.push(`/donasi/invoice/${currentDonationId}`);
+        } else {
+          setPaymentState("SUCCESS");
+        }
+      },
+      onPending: () => {
+        setPaymentState("PENDING_PAYMENT");
+      },
+      onError: () => {
+        alert("Transaksi gagal. Silakan coba lagi.");
+        setPaymentState("IDLE");
+        setSnapToken(null);
+      },
+      onClose: () => {
+        setPaymentState("PENDING_PAYMENT");
+      },
+    });
+  };
 
   return (
     <div className="bg-surface">
@@ -241,7 +244,7 @@ export default function DonasiFinansialPage() {
               {/* Image */}
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-ambient">
                 <Image
-                  src="/assets/donasi-finansial-hero.jpg"
+                  src="/example_img/unsplash5.png"
                   alt="Anak-anak Panti Asuhan"
                   fill
                   className="object-cover"
@@ -254,16 +257,16 @@ export default function DonasiFinansialPage() {
                 {/* Quote overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <GlassContainer className="p-5 bg-primary/80 backdrop-blur-lg border-none">
-                    <span className="block text-white/60 text-2xl font-black leading-none mb-2">
+                    <span className="block text-black/60 text-2xl font-black leading-none mb-2">
                       &ldquo;&rdquo;
                     </span>
-                    <p className="text-white text-sm font-sans italic leading-relaxed">
+                    <p className="text-black text-sm font-sans italic leading-relaxed">
                       &ldquo;Setiap kontribusi adalah benang yang merajut
                       harmoni dalam ekosistem transparansi kami.&rdquo;
                     </p>
                     <div className="flex items-center gap-2 mt-3">
-                      <span className="w-5 h-px bg-white/50" />
-                      <span className="font-public-sans text-[9px] font-bold uppercase tracking-[0.2em] text-white/70">
+                      <span className="w-5 h-px bg-black/50" />
+                      <span className="font-public-sans text-[9px] font-bold uppercase tracking-[0.2em] text-black/70">
                         Panti Asuhan Dr Lucas
                       </span>
                     </div>
@@ -275,306 +278,341 @@ export default function DonasiFinansialPage() {
 
           {/* ── Right Column: Form ── */}
           <div>
-            {(paymentState === 'IDLE' || paymentState === 'PROCESSING') && (
+            {(paymentState === "IDLE" || paymentState === "PROCESSING") && (
               <>
                 {/* Headline */}
                 <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-[1.08] text-on-surface mb-3 italic">
-              Wujudkan Kepedulian Anda
-            </h1>
-            <div className="flex items-center gap-2 mb-10">
-              <FiCheckCircle className="text-tertiary text-base" />
-              <span className="text-on-surface-variant font-sans text-sm">
-                Transaksi Anda 100% transparan dan dapat dilacak.
-              </span>
-            </div>
-
-            {/* ── Step 1: Pilih Nominal ── */}
-            <div className="mb-10">
-              <div className="flex items-center gap-3 mb-6">
-                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
-                  1
-                </span>
-                <h2 className="font-bold text-lg text-on-surface font-sans">
-                  Pilih Nominal
-                </h2>
-              </div>
-
-              {/* Preset grid */}
-              <div className="grid grid-cols-3 gap-3 mb-5">
-                {amountPresets.map((preset) => {
-                  const active = selectedAmount === preset.value;
-                  return (
-                    <button
-                      key={preset.value}
-                      onClick={() => {
-                        setSelectedAmount(preset.value);
-                        setCustomAmount("");
-                      }}
-                      className={`flex flex-col items-center gap-1.5 py-5 px-3 rounded-xl text-center transition-all duration-200 ${
-                        active
-                          ? "bg-gradient-to-br from-primary to-primary-container text-white shadow-ambient"
-                          : "bg-surface-container-lowest text-on-surface hover:bg-surface-container-low border border-outline-variant/10"
-                      }`}
-                    >
-                      <span
-                        className={`font-public-sans text-[9px] font-bold uppercase tracking-[0.14em] ${
-                          active ? "text-white/70" : "text-on-surface-variant"
-                        }`}
-                      >
-                        {preset.label}
-                      </span>
-                      <span className="font-sans font-black text-lg tracking-tight">
-                        Rp {formatRp(preset.value)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Custom amount */}
-              <div className="flex items-center gap-3 bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/15 focus-within:border-primary/40 transition-colors">
-                <span className="font-sans font-bold text-on-surface-variant text-sm">
-                  Rp
-                </span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Nominal Lainnya"
-                  value={customAmount}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, "");
-                    setCustomAmount(v);
-                    if (v) setSelectedAmount(null);
-                  }}
-                  className="flex-1 bg-transparent focus:outline-none text-sm font-sans text-on-surface placeholder:text-on-surface-variant/50"
-                />
-              </div>
-            </div>
-
-            {/* ── Step 2: Identitas Donatur ── */}
-            <div className="mb-10">
-              <div className="flex items-center gap-3 mb-6">
-                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
-                  2
-                </span>
-                <h2 className="font-bold text-lg text-on-surface font-sans">
-                  Identitas Donatur
-                </h2>
-              </div>
-
-              <div className="space-y-5">
-                {/* Name + Email row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <InputField
-                    id="donorName"
-                    label="Nama Lengkap"
-                    placeholder="Contoh: Ahmad Sulaiman"
-                    type="text"
-                    value={formData.donorName}
-                    onChange={handleInputChange}
-                  />
-                  <InputField
-                    id="donorEmail"
-                    label="Email"
-                    placeholder="nama@email.com"
-                    type="email"
-                    value={formData.donorEmail}
-                    onChange={handleInputChange}
-                  />
+                  Wujudkan Kepedulian Anda
+                </h1>
+                <div className="flex items-center gap-2 mb-10">
+                  <FiCheckCircle className="text-tertiary text-base" />
+                  <span className="text-on-surface-variant font-sans text-sm">
+                    Transaksi Anda 100% transparan dan dapat dilacak.
+                  </span>
                 </div>
 
-                {/* WhatsApp */}
-                <InputField
-                  id="donorPhone"
-                  label="Nomor WhatsApp"
-                  placeholder="+62 812-xxxx-xxxx"
-                  type="tel"
-                  value={formData.donorPhone}
-                  onChange={handleInputChange}
-                />
+                {/* ── Step 1: Pilih Nominal ── */}
+                <div className="mb-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
+                      1
+                    </span>
+                    <h2 className="font-bold text-lg text-on-surface font-sans">
+                      Pilih Nominal
+                    </h2>
+                  </div>
 
-                {/* Privacy radios */}
-                <div>
-                  <span className="block font-public-sans text-[11px] font-bold uppercase tracking-[0.16em] text-on-surface-variant mb-3">
-                    Privasi Nama
-                  </span>
-
-                  <div className="space-y-2">
-                    {privacyOptions.map((opt) => {
-                      const active = privacyMode === opt.id;
+                  {/* Preset grid */}
+                  <div className="grid grid-cols-3 gap-3 mb-5">
+                    {amountPresets.map((preset) => {
+                      const active = selectedAmount === preset.value;
                       return (
                         <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setPrivacyMode(opt.id)}
-                          className={`w-full flex items-start gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
+                          key={preset.value}
+                          onClick={() => {
+                            setSelectedAmount(preset.value);
+                            setCustomAmount("");
+                          }}
+                          className={`flex flex-col items-center gap-1.5 py-5 px-3 rounded-xl text-center transition-all duration-200 ${
                             active
-                              ? "bg-primary/5 ring-2 ring-primary/30"
-                              : "bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/10"
+                              ? "bg-gradient-to-br from-primary to-primary-container text-white shadow-ambient"
+                              : "bg-surface-container-lowest text-on-surface hover:bg-surface-container-low border border-outline-variant/10"
                           }`}
                         >
-                          {/* Custom radio circle */}
                           <span
-                            className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                            className={`font-public-sans text-[9px] font-bold uppercase tracking-[0.14em] ${
                               active
-                                ? "border-primary"
-                                : "border-outline-variant/40"
+                                ? "text-white/70"
+                                : "text-on-surface-variant"
                             }`}
                           >
-                            {active && (
-                              <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-                            )}
+                            {preset.label}
                           </span>
-
-                          <div>
-                            <span className="block font-sans font-bold text-sm text-on-surface">
-                              {opt.label}
-                            </span>
-                            <span className="block font-sans text-xs text-on-surface-variant mt-0.5">
-                              {opt.description}
-                            </span>
-                          </div>
+                          <span className="font-sans font-black text-lg tracking-tight">
+                            Rp {formatRp(preset.value)}
+                          </span>
                         </button>
                       );
                     })}
                   </div>
 
-                  {/* Anon alias dropdown — only when "anon" is selected */}
-                  {privacyMode === "anon" && (
-                    <div className="mt-3 relative">
-                      <div className="bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/15 flex items-center justify-between">
-                        <select className="w-full bg-transparent focus:outline-none text-sm font-sans text-on-surface appearance-none cursor-pointer">
-                          {anonAliases.map((alias) => (
-                            <option key={alias} value={alias}>
-                              {alias}
-                            </option>
-                          ))}
-                        </select>
-                        <FiChevronDown className="text-on-surface-variant text-sm flex-shrink-0 pointer-events-none" />
-                      </div>
-                    </div>
-                  )}
+                  {/* Custom amount */}
+                  <div className="flex items-center gap-3 bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/15 focus-within:border-primary/40 transition-colors">
+                    <span className="font-sans font-bold text-on-surface-variant text-sm">
+                      Rp
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Nominal Lainnya"
+                      value={customAmount}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, "");
+                        setCustomAmount(v);
+                        if (v) setSelectedAmount(null);
+                      }}
+                      className="flex-1 bg-transparent focus:outline-none text-sm font-sans text-on-surface placeholder:text-on-surface-variant/50"
+                    />
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* ── Step 3: Metode Pembayaran ── */}
-            <div className="mb-10">
-              <div className="flex items-center gap-3 mb-6">
-                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
-                  3
-                </span>
-                <h2 className="font-bold text-lg text-on-surface font-sans">
-                  Metode Pembayaran
-                </h2>
-              </div>
-              <div className="space-y-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPaymentChannel('MIDTRANS');
-                    setPaymentProof(null); // Hygiene Rule
-                  }}
-                  className={`w-full flex items-start gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
-                    paymentChannel === 'MIDTRANS'
-                      ? "bg-primary/5 ring-2 ring-primary/30"
-                      : "bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/10"
-                  }`}
-                >
-                  <span className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${paymentChannel === 'MIDTRANS' ? "border-primary" : "border-outline-variant/40"}`}>
-                    {paymentChannel === 'MIDTRANS' && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                  </span>
-                  <div>
-                    <span className="block font-sans font-bold text-sm text-on-surface">Pembayaran Otomatis (Midtrans)</span>
-                    <span className="block font-sans text-xs text-on-surface-variant mt-0.5">Bisa bayar pakai GoPay, OVO, Virtual Account, dll. Verifikasi instan.</span>
+                {/* ── Step 2: Identitas Donatur ── */}
+                <div className="mb-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
+                      2
+                    </span>
+                    <h2 className="font-bold text-lg text-on-surface font-sans">
+                      Identitas Donatur
+                    </h2>
                   </div>
-                </button>
 
-                <button
-                  type="button"
-                  onClick={() => setPaymentChannel('MANUAL')}
-                  className={`w-full flex items-start gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
-                    paymentChannel === 'MANUAL'
-                      ? "bg-primary/5 ring-2 ring-primary/30"
-                      : "bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/10"
-                  }`}
-                >
-                  <span className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${paymentChannel === 'MANUAL' ? "border-primary" : "border-outline-variant/40"}`}>
-                    {paymentChannel === 'MANUAL' && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                  </span>
-                  <div>
-                    <span className="block font-sans font-bold text-sm text-on-surface">Transfer Bank Manual (BCA)</span>
-                    <span className="block font-sans text-xs text-on-surface-variant mt-0.5">Transfer langsung ke rekening panti. Perlu proses verifikasi manual oleh pengurus.</span>
-                  </div>
-                </button>
-
-                {paymentChannel === 'MANUAL' && (
-                  <div className="bg-surface-container-low rounded-xl p-5 border border-outline-variant/10 animate-in fade-in slide-in-from-top-2">
-                    <div className="mb-4">
-                      <span className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Rekening Tujuan</span>
-                      <span className="block font-mono text-lg font-bold text-on-surface">Bank BCA: 1234567890</span>
-                      <span className="block text-sm text-on-surface-variant">a.n. Panti Asuhan Dr. Lucas</span>
-                    </div>
-                    <div>
-                      <span className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Unggah Bukti Transfer</span>
-                      <input 
-                        type="file" 
-                        accept="image/jpeg,image/png,image/jpg"
-                        onChange={(e) => setPaymentProof(e.target.files?.[0] || null)}
-                        className="block w-full text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors"
+                  <div className="space-y-5">
+                    {/* Name + Email row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <InputField
+                        id="donorName"
+                        label="Nama Lengkap"
+                        placeholder="Contoh: Ahmad Sulaiman"
+                        type="text"
+                        value={formData.donorName}
+                        onChange={handleInputChange}
+                      />
+                      <InputField
+                        id="donorEmail"
+                        label="Email"
+                        placeholder="nama@email.com"
+                        type="email"
+                        value={formData.donorEmail}
+                        onChange={handleInputChange}
                       />
                     </div>
+
+                    {/* WhatsApp */}
+                    <InputField
+                      id="donorPhone"
+                      label="Nomor WhatsApp"
+                      placeholder="+62 812-xxxx-xxxx"
+                      type="tel"
+                      value={formData.donorPhone}
+                      onChange={handleInputChange}
+                    />
+
+                    {/* Privacy radios */}
+                    <div>
+                      <span className="block font-public-sans text-[11px] font-bold uppercase tracking-[0.16em] text-on-surface-variant mb-3">
+                        Privasi Nama
+                      </span>
+
+                      <div className="space-y-2">
+                        {privacyOptions.map((opt) => {
+                          const active = privacyMode === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => setPrivacyMode(opt.id)}
+                              className={`w-full flex items-start gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
+                                active
+                                  ? "bg-primary/5 ring-2 ring-primary/30"
+                                  : "bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/10"
+                              }`}
+                            >
+                              {/* Custom radio circle */}
+                              <span
+                                className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                  active
+                                    ? "border-primary"
+                                    : "border-outline-variant/40"
+                                }`}
+                              >
+                                {active && (
+                                  <span className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                )}
+                              </span>
+
+                              <div>
+                                <span className="block font-sans font-bold text-sm text-on-surface">
+                                  {opt.label}
+                                </span>
+                                <span className="block font-sans text-xs text-on-surface-variant mt-0.5">
+                                  {opt.description}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Anon alias dropdown — only when "anon" is selected */}
+                      {privacyMode === "anon" && (
+                        <div className="mt-3 relative">
+                          <div className="bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/15 flex items-center justify-between">
+                            <select className="w-full bg-transparent focus:outline-none text-sm font-sans text-on-surface appearance-none cursor-pointer">
+                              {anonAliases.map((alias) => (
+                                <option key={alias} value={alias}>
+                                  {alias}
+                                </option>
+                              ))}
+                            </select>
+                            <FiChevronDown className="text-on-surface-variant text-sm flex-shrink-0 pointer-events-none" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            {/* ── Submit ── */}
-            <PrimaryButton
-              className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide"
-              onClick={handleSubmit}
-              disabled={isLoading}
-            >
-              {isLoading ? "Memproses..." : "Lanjutkan Pembayaran"}
-            </PrimaryButton>
+                {/* ── Step 3: Metode Pembayaran ── */}
+                <div className="mb-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
+                      3
+                    </span>
+                    <h2 className="font-bold text-lg text-on-surface font-sans">
+                      Metode Pembayaran
+                    </h2>
+                  </div>
+                  <div className="space-y-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaymentChannel("MIDTRANS");
+                        setPaymentProof(null); // Hygiene Rule
+                      }}
+                      className={`w-full flex items-start gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
+                        paymentChannel === "MIDTRANS"
+                          ? "bg-primary/5 ring-2 ring-primary/30"
+                          : "bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/10"
+                      }`}
+                    >
+                      <span
+                        className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${paymentChannel === "MIDTRANS" ? "border-primary" : "border-outline-variant/40"}`}
+                      >
+                        {paymentChannel === "MIDTRANS" && (
+                          <span className="w-2.5 h-2.5 rounded-full bg-primary" />
+                        )}
+                      </span>
+                      <div>
+                        <span className="block font-sans font-bold text-sm text-on-surface">
+                          Pembayaran Otomatis (Midtrans)
+                        </span>
+                        <span className="block font-sans text-xs text-on-surface-variant mt-0.5">
+                          Bisa bayar pakai GoPay, OVO, Virtual Account, dll.
+                          Verifikasi instan.
+                        </span>
+                      </div>
+                    </button>
 
-            {/* Trust badges */}
-            <div className="flex flex-wrap items-center justify-center gap-6 mt-6">
-              <div className="flex items-center gap-1.5 opacity-60">
-                <FiLock className="text-sm text-on-surface-variant" />
-                <span className="font-public-sans text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  256-bit Encryption
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 opacity-60">
-                <FiShield className="text-sm text-on-surface-variant" />
-                <span className="font-public-sans text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  Secure Payment
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 opacity-60">
-                <FiCheckCircle className="text-sm text-on-surface-variant" />
-                <span className="font-public-sans text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  Verified by Midtrans
-                </span>
-              </div>
-            </div>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentChannel("MANUAL")}
+                      className={`w-full flex items-start gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
+                        paymentChannel === "MANUAL"
+                          ? "bg-primary/5 ring-2 ring-primary/30"
+                          : "bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/10"
+                      }`}
+                    >
+                      <span
+                        className={`flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${paymentChannel === "MANUAL" ? "border-primary" : "border-outline-variant/40"}`}
+                      >
+                        {paymentChannel === "MANUAL" && (
+                          <span className="w-2.5 h-2.5 rounded-full bg-primary" />
+                        )}
+                      </span>
+                      <div>
+                        <span className="block font-sans font-bold text-sm text-on-surface">
+                          Transfer Bank Manual (BCA)
+                        </span>
+                        <span className="block font-sans text-xs text-on-surface-variant mt-0.5">
+                          Transfer langsung ke rekening panti. Perlu proses
+                          verifikasi manual oleh pengurus.
+                        </span>
+                      </div>
+                    </button>
+
+                    {paymentChannel === "MANUAL" && (
+                      <div className="bg-surface-container-low rounded-xl p-5 border border-outline-variant/10 animate-in fade-in slide-in-from-top-2">
+                        <div className="mb-4">
+                          <span className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">
+                            Rekening Tujuan
+                          </span>
+                          <span className="block font-mono text-lg font-bold text-on-surface">
+                            Bank BCA: 1234567890
+                          </span>
+                          <span className="block text-sm text-on-surface-variant">
+                            a.n. Panti Asuhan Dr. Lucas
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">
+                            Unggah Bukti Transfer
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/jpg"
+                            onChange={(e) =>
+                              setPaymentProof(e.target.files?.[0] || null)
+                            }
+                            className="block w-full text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── Submit ── */}
+                <PrimaryButton
+                  className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold shadow-md hover:shadow-lg transition-all tracking-wide"
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Memproses..." : "Lanjutkan Pembayaran"}
+                </PrimaryButton>
+
+                {/* Trust badges */}
+                <div className="flex flex-wrap items-center justify-center gap-6 mt-6">
+                  <div className="flex items-center gap-1.5 opacity-60">
+                    <FiLock className="text-sm text-on-surface-variant" />
+                    <span className="font-public-sans text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">
+                      256-bit Encryption
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 opacity-60">
+                    <FiShield className="text-sm text-on-surface-variant" />
+                    <span className="font-public-sans text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">
+                      Secure Payment
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 opacity-60">
+                    <FiCheckCircle className="text-sm text-on-surface-variant" />
+                    <span className="font-public-sans text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">
+                      Verified by Midtrans
+                    </span>
+                  </div>
+                </div>
               </>
             )}
 
             {/* STATE 2: PENDING PAYMENT (RESUME FLOW) */}
-            {paymentState === 'PENDING_PAYMENT' && snapToken && (
+            {paymentState === "PENDING_PAYMENT" && snapToken && (
               <div className="text-center p-8 rounded-2xl bg-surface-container-lowest border border-outline-variant/15 mt-10">
-                <h2 className="text-2xl font-bold text-yellow-600 mb-4">Menunggu Pembayaran</h2>
+                <h2 className="text-2xl font-bold text-yellow-600 mb-4">
+                  Menunggu Pembayaran
+                </h2>
                 <p className="mb-6 text-on-surface-variant">
-                  Anda belum menyelesaikan pembayaran. Silakan lanjutkan pembayaran Anda, 
-                  atau batalkan jika ingin membuat nominal donasi baru.
+                  Anda belum menyelesaikan pembayaran. Silakan lanjutkan
+                  pembayaran Anda, atau batalkan jika ingin membuat nominal
+                  donasi baru.
                 </p>
                 <div className="flex justify-center gap-4">
-                  <PrimaryButton onClick={() => triggerSnap(snapToken!, donationId)}>
+                  <PrimaryButton
+                    onClick={() => triggerSnap(snapToken!, donationId)}
+                  >
                     Lanjutkan Pembayaran
                   </PrimaryButton>
-                  <button 
+                  <button
                     onClick={handleCancelTransaction}
                     className="bg-error/10 text-error px-6 py-2 rounded-xl font-semibold transition-colors hover:bg-error/20"
                   >
@@ -585,11 +623,15 @@ export default function DonasiFinansialPage() {
             )}
 
             {/* STATE 3: SUCCESS */}
-            {paymentState === 'SUCCESS' && (
+            {paymentState === "SUCCESS" && (
               <div className="text-center p-8 rounded-2xl bg-surface-container-lowest border border-outline-variant/15 mt-10">
-                <h2 className="text-2xl font-bold text-primary mb-2">Terima Kasih!</h2>
-                <p className="text-on-surface-variant">Donasi Anda telah berhasil kami terima.</p>
-                <button 
+                <h2 className="text-2xl font-bold text-primary mb-2">
+                  Terima Kasih!
+                </h2>
+                <p className="text-on-surface-variant">
+                  Donasi Anda telah berhasil kami terima.
+                </p>
+                <button
                   onClick={handleCancelTransaction}
                   className="mt-6 text-primary font-bold underline underline-offset-4"
                 >

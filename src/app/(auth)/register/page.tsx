@@ -12,7 +12,7 @@ export default function RegisterPage() {
       <header className="mb-10">
         <div className="inline-flex items-center gap-2 mb-8">
           <MdOutlineSecurity className="text-3xl text-primary" />
-          <span className="text-2xl font-black tracking-tight text-primary uppercase font-sans">
+          <span className="text-base font-black tracking-tight text-primary uppercase font-sans">
             Panti Asuhan Dr Lucas
           </span>
         </div>

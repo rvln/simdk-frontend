@@ -57,16 +57,16 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="max-w-screen-2xl mx-auto px-8 md:px-12 grid grid-cols-1 md:grid-cols-[1.8fr_1fr] gap-12 items-center">
           <div className="space-y-8">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-surface-container-low text-gray-600 font-public-sans text-sm font-bold uppercase tracking-widest shadow-sm border-none">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-surface-container-low text-gray-600 font-public-sans text-xs font-bold uppercase tracking-widest shadow-sm border-none">
               BERBAGI KEBAIKAN
             </span>
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-gray-900 leading-[0.9] font-sans">
-              <span className="text-teal-700 text-[6rem] tracking-tight block">
+            <h1 className="text-4xl md:text-8xl font-black tracking-tighter text-gray-900 leading-[0.9] font-sans">
+              <span className="text-teal-700 text-5xl md:text-[6rem] tracking-tight block">
                 Pelita Kebaikan
               </span>
               untuk Langkah Kecil Mereka.
             </h1>
-            <p className="text-xl text-gray-500 max-w-lg leading-relaxed font-light font-sans">
+            <p className="text-base md:text-xl text-gray-500 max-w-lg leading-relaxed font-normal font-sans">
               Membangun ekosistem terbuka dengan pelaporan transparan demi
               memastikan setiap anak terlindungi dan dihargai.
             </p>
@@ -91,7 +91,7 @@ export default function LandingPage() {
             <img
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               alt="Two young children playing"
-              src="https://images.unsplash.com/photo-1594608661623-aa0bd3a01d44?w=800&q=80"
+              src="/example_img/kids-7.png"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-teal-900/30 to-transparent"></div>
           </div>
@@ -100,11 +100,11 @@ export default function LandingPage() {
         {/* Current Needs Section */}
         <section className="max-w-screen-2xl mx-auto px-8 md:px-12 space-y-12">
           <div className="space-y-4 text-center md:text-left">
-            <h2 className="text-4xl font-black font-sans tracking-tighter text-gray-900">
+            <h2 className="text-2xl md:text-4xl font-black font-sans tracking-tighter text-gray-900">
               Transparansi Kebutuhan{" "}
               <span className="text-teal-700">Panti Asuhan.</span>
             </h2>
-            <p className="text-2xl text-gray-500 font-light italic font-sans">
+            <p className="text-base md:text-lg text-gray-500 font-normal italic font-sans">
               Bawa Harapan dalam Keseharian Mereka.
             </p>
           </div>
@@ -116,7 +116,7 @@ export default function LandingPage() {
                   <MdOutlineChildCare className="text-3xl" />
                 </div>
                 <div className="space-y-3">
-                  <h3 className="text-2xl font-bold font-sans tracking-tight text-gray-900">
+                  <h3 className="text-lg md:text-lg font-bold font-sans tracking-tight text-gray-900">
                     Nutrisi &amp; Kesejahteraan
                   </h3>
                   <p className="text-gray-500 leading-relaxed font-sans">
@@ -133,7 +133,7 @@ export default function LandingPage() {
                   <MdMenuBook className="text-3xl" />
                 </div>
                 <div className="space-y-3">
-                  <h3 className="text-2xl font-bold font-sans tracking-tight text-gray-900">
+                  <h3 className="text-lg md:text-lg font-bold font-sans tracking-tight text-gray-900">
                     Perjalanan Pendidikan
                   </h3>
                   <p className="text-gray-500 leading-relaxed font-sans">
@@ -151,7 +151,7 @@ export default function LandingPage() {
                   <MdHome className="text-3xl" />
                 </div>
                 <div className="space-y-3">
-                  <h3 className="text-2xl font-bold font-sans tracking-tight text-gray-900">
+                  <h3 className="text-lg md:text-lg font-bold font-sans tracking-tight text-gray-900">
                     Kenyamanan Harian
                   </h3>
                   <p className="text-gray-500 leading-relaxed font-sans">
@@ -172,11 +172,11 @@ export default function LandingPage() {
               <div className="relative z-10 space-y-6">
                 <div className="flex items-center gap-4">
                   <MdCalendarMonth className="text-4xl" />
-                  <h2 className="text-3xl font-black font-sans leading-tight tracking-tight">
+                  <h2 className="text-xl md:text-3xl font-black font-sans leading-tight tracking-tight">
                     Jadwalkan Kunjungan
                   </h2>
                 </div>
-                <p className="text-white/90 text-lg leading-relaxed max-w-sm font-sans">
+                <p className="text-white/90 text-base md:text-lg leading-relaxed max-w-sm font-sans">
                   Jadwalkan kunjungan untuk melihat langsung kegiatan kami. Kami
                   percaya transparansi adalah kunci kepercayaan.
                 </p>
@@ -199,10 +199,10 @@ export default function LandingPage() {
               <div className="space-y-8">
                 <div className="flex justify-between items-start">
                   <div className="space-y-2">
-                    <h2 className="text-3xl font-bold font-sans tracking-tight text-gray-900">
+                    <h2 className="text-xl md:text-3xl font-bold font-sans tracking-tight text-gray-900">
                       Lacak Resi Donasi
                     </h2>
-                    <p className="text-gray-500 font-sans">
+                    <p className="text-sm md:text-base text-gray-500 font-sans">
                       Lihat dampak nyata dari kontribusi Anda secara langsung.
                     </p>
                   </div>
@@ -238,10 +238,10 @@ export default function LandingPage() {
         {/* New Section: Dokumentasi Kegiatan (Bento Grid) */}
         <section className="max-w-screen-2xl mx-auto px-8 md:px-12 space-y-12">
           <div className="space-y-2">
-            <h2 className="text-3xl font-black font-sans tracking-tighter text-gray-900">
+            <h2 className="text-xl md:text-3xl font-bold font-sans tracking-tighter text-gray-900">
               Dokumentasi Kegiatan
             </h2>
-            <p className="text-gray-500 font-sans text-lg">
+            <p className="text-gray-500 font-sans text-base md:text-lg">
               Momen bahagia dan edukatif bersama anak-anak panti.
             </p>
           </div>
@@ -294,10 +294,10 @@ export default function LandingPage() {
         {/* New Section: Jejak Kebaikan Real-Time */}
         <section className="max-w-screen-2xl mx-auto px-8 md:px-12 space-y-12">
           <div className="space-y-2 text-center">
-            <h2 className="text-3xl font-black font-sans tracking-tighter text-gray-900">
+            <h2 className="text-xl md:text-3xl font-bold font-sans tracking-tighter text-gray-900">
               Jejak Kebaikan
             </h2>
-            <p className="text-gray-500 font-sans text-lg">
+            <p className="text-gray-500 font-sans text-base md:text-lg">
               Pesan dan dukungan mengalir secara real-time dari donatur kami.
             </p>
           </div>

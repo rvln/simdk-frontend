@@ -111,7 +111,7 @@ export default function ProfilPage() {
           {/* Image placeholder */}
           <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-surface-container-lowest shadow-ambient">
             <Image
-              src="/assets/profil-hero.jpg"
+              src="/example_img/background-1.png"
               alt="Sejarah Panti Asuhan Dr. J. Lucas"
               fill
               className="object-cover"
@@ -278,8 +278,8 @@ export default function ProfilPage() {
               Struktur Organisasi
             </h2>
             <p className="text-on-surface-variant text-sm leading-relaxed max-w-xl mx-auto font-sans">
-              Susunan pengurus Panti Asuhan Dr. J. Lucas Manado yang
-              berdedikasi dalam melayani dan membimbing anak-anak dengan kasih sayang.
+              Susunan pengurus Panti Asuhan Dr. J. Lucas Manado yang berdedikasi
+              dalam melayani dan membimbing anak-anak dengan kasih sayang.
             </p>
           </div>
 
@@ -292,7 +292,10 @@ export default function ProfilPage() {
               { role: "BENDAHARA", name: "Ibu Ny. A. Lucas-P." },
               { role: "SEKSI USAHA", name: "Bpk. J. Kereh." },
               { role: "SEKSI PEMELIHARAAN", name: "Ibu Ny. S. Lucas-K." },
-              { role: "SEKSI PENDIDIKAN / ROHANI", name: "Pdt. J. Sumampouw, S.Th." },
+              {
+                role: "SEKSI PENDIDIKAN / ROHANI",
+                name: "Pdt. J. Sumampouw, S.Th.",
+              },
             ].map((member, i) => (
               <GlassContainer
                 key={i}

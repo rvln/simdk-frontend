@@ -33,7 +33,7 @@ export default function LoginForm() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login`, {
         method: "POST",
-        credentials: 'include',
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -104,7 +104,7 @@ export default function LoginForm() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/resend-verification`,
         {
           method: "POST",
-          credentials: 'include',
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -134,8 +134,8 @@ export default function LoginForm() {
       <header className="mb-10">
         <div className="inline-flex items-center gap-2 mb-8">
           <MdOutlineSecurity className="text-3xl text-primary" />
-          <span className="text-2xl font-black tracking-tight text-primary uppercase font-sans">
-            Empanti
+          <span className="text-base font-black tracking-tight text-primary uppercase font-sans">
+            Panti Asuhan Dr Lucas
           </span>
         </div>
         <h1 className="text-4xl font-black text-on-surface tracking-tight mb-2 font-sans">

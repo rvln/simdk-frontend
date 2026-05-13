@@ -61,7 +61,7 @@ export default function KontakPage() {
         <div className="max-w-7xl mx-auto">
           <div className="relative w-full aspect-[16/7] md:aspect-[16/6] rounded-2xl overflow-hidden shadow-ambient">
             <Image
-              src="/example_img/unsplash5.png"
+              src="/example_img/background-1.png"
               alt="Lokasi Panti Asuhan Dr. J. Lucas"
               fill
               className="object-cover"
@@ -120,7 +120,7 @@ export default function KontakPage() {
             {/* Bottom illustration */}
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-ambient max-w-sm">
               <Image
-                src="/assets/kontak-illustration.jpg"
+                src="/example_img/kids-3.png"
                 alt="Ilustrasi Panti Asuhan"
                 fill
                 className="object-cover"
@@ -180,7 +180,7 @@ export default function KontakPage() {
                   />
                 </div>
 
-                <a 
+                <a
                   href="mailto:panti.asuhan.drlucas@gmail.com?subject=Pesan dari Website SIMDK"
                   className="w-full flex items-center justify-center gap-2.5 py-4 px-6 text-sm font-bold font-public-sans rounded-md bg-gradient-to-r from-primary to-primary-container text-white shadow-md hover:shadow-lg hover:scale-[1.02] hover:text-on-primary-fixed-variant hover:shadow-ambient transition-all duration-300 tracking-wide uppercase"
                 >

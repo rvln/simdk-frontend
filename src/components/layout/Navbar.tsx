@@ -100,7 +100,7 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="font-sans font-black text-2xl text-primary tracking-tighter">
+          <span className="font-sans font-black text-base text-primary tracking-tighter">
             Panti Asuhan Dr Lucas
           </span>
         </Link>
@@ -259,13 +259,13 @@ export const Navbar = () => {
             <>
               <Link
                 href="/login"
-                className="font-sans font-medium text-on-surface-variant hover:text-primary transition-colors text-base px-4 py-2"
+                className="font-sans text-sm font-medium text-on-surface-variant hover:text-primary transition-colors text-base px-4 py-2"
               >
                 Masuk
               </Link>
               <Link
                 href="/register"
-                className="font-sans font-bold bg-primary text-white hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-lg px-6 py-2 text-base shadow-sm"
+                className="font-sans text-sm font-bold bg-primary text-white hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-lg px-6 py-2 text-base shadow-sm"
               >
                 Daftar
               </Link>
