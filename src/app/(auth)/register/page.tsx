@@ -1,12 +1,35 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   MdOutlineSecurity,
   MdArrowForward,
   MdInfoOutline,
 } from "react-icons/md";
+import { useAuth } from "@/hooks/useAuth"; // Injeksi Hook Autentikasi
 
 export default function RegisterPage() {
+  // 1. Deklarasi Entitas State dan Hook
+  const { register, loading, errors } = useAuth();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "", // Penambahan parameter wajib
+  });
+
+  // 2. Definisi Handler Mutasi Data
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // 3. Definisi Handler Transmisi
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await register(formData);
+  };
+
   return (
     <>
       <header className="mb-10">
@@ -24,8 +47,18 @@ export default function RegisterPage() {
         </p>
       </header>
 
-      {/* Registration Form */}
-      <form action="#" className="space-y-8">
+      {/* Tangkapan Error Global (Status 500) */}
+      {errors?.general && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-xl flex items-start gap-3">
+          <MdInfoOutline className="text-red-500 mt-0.5 text-lg shrink-0" />
+          <p className="text-sm text-red-500 font-sans leading-relaxed">
+            {errors.general[0]}
+          </p>
+        </div>
+      )}
+
+      {/* Pengikatan Form ke Handler Transmisi */}
+      <form onSubmit={handleSubmit} className="space-y-8">
         <div className="space-y-6">
           {/* Name Input */}
           <div className="flex flex-col gap-1">
@@ -37,10 +70,19 @@ export default function RegisterPage() {
             </label>
             <input
               id="name"
+              name="name" // Identitas parameter wajib
               type="text"
+              value={formData.name}
+              onChange={handleChange}
               placeholder="John Doe"
-              className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 text-on-surface transition-colors outline-none"
+              className={`w-full py-3 bg-transparent border-0 border-b ${errors?.name ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-primary"} focus:ring-0 focus:border-b-2 px-0 text-on-surface transition-colors outline-none`}
+              required
             />
+            {errors?.name && (
+              <span className="text-xs text-red-500 mt-1">
+                {errors.name[0]}
+              </span>
+            )}
           </div>
 
           {/* Email Input */}
@@ -53,10 +95,19 @@ export default function RegisterPage() {
             </label>
             <input
               id="email"
+              name="email"
               type="email"
+              value={formData.email}
+              onChange={handleChange}
               placeholder="nama@email.com"
-              className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 text-on-surface transition-colors outline-none"
+              className={`w-full py-3 bg-transparent border-0 border-b ${errors?.email ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-primary"} focus:ring-0 focus:border-b-2 px-0 text-on-surface transition-colors outline-none`}
+              required
             />
+            {errors?.email && (
+              <span className="text-xs text-red-500 mt-1">
+                {errors.email[0]}
+              </span>
+            )}
           </div>
 
           {/* Password Input */}
@@ -65,18 +116,47 @@ export default function RegisterPage() {
               htmlFor="password"
               className="text-[11px] font-public-sans font-bold text-on-surface-variant uppercase tracking-widest"
             >
-              Kata Sandi
+              Kata Sandi Baru
             </label>
             <input
               id="password"
+              name="password"
               type="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+              className={`w-full py-3 bg-transparent border-0 border-b ${errors?.password ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-primary"} focus:ring-0 focus:border-b-2 px-0 text-on-surface transition-colors outline-none`}
+              required
+            />
+            {errors?.password && (
+              <span className="text-xs text-red-500 mt-1">
+                {errors.password[0]}
+              </span>
+            )}
+          </div>
+
+          {/* Password Confirmation Input (Arsitektur Baru) */}
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="password_confirmation"
+              className="text-[11px] font-public-sans font-bold text-on-surface-variant uppercase tracking-widest"
+            >
+              Konfirmasi Kata Sandi
+            </label>
+            <input
+              id="password_confirmation"
+              name="password_confirmation"
+              type="password"
+              value={formData.password_confirmation}
+              onChange={handleChange}
               placeholder="••••••••"
               className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 text-on-surface transition-colors outline-none"
+              required
             />
           </div>
         </div>
 
-        {/* Info Box Replacing Checkbox */}
+        {/* Info Box */}
         <div className="flex items-start gap-3 py-2">
           <MdInfoOutline className="text-primary mt-0.5 text-lg shrink-0" />
           <p className="text-sm text-on-surface-variant font-sans leading-relaxed opacity-80">
@@ -86,12 +166,14 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-4 pt-2">
+          {/* Modifikasi State Loading pada Tombol */}
           <button
             type="submit"
-            className="w-full py-4 bg-primary hover:bg-primary-container text-white hover:text-on-primary-container rounded-xl font-bold flex justify-center items-center gap-2 text-lg transition-colors shadow-sm"
+            disabled={loading}
+            className={`w-full py-4 bg-primary hover:bg-primary-container text-white hover:text-on-primary-container rounded-xl font-bold flex justify-center items-center gap-2 text-lg transition-colors shadow-sm ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
           >
-            Daftar Akun
-            <MdArrowForward className="text-xl" />
+            {loading ? "Memvalidasi..." : "Daftar Akun"}
+            {!loading && <MdArrowForward className="text-xl" />}
           </button>
 
           {/* Divider */}
@@ -111,9 +193,11 @@ export default function RegisterPage() {
 
           {/* Secondary Button / SSO */}
           <button
-            className="w-full py-4 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-pointer"
+            className="w-full py-4 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-not-allowed opacity-50"
             type="button"
+            disabled
           >
+            {/* SVG Google Anda tetap di sini */}
             <svg
               className="w-5 h-5"
               viewBox="0 0 24 24"
@@ -136,7 +220,7 @@ export default function RegisterPage() {
                 fill="#EA4335"
               ></path>
             </svg>
-            Daftar dengan Google
+            Daftar dengan Google (Segera)
           </button>
         </div>
       </form>

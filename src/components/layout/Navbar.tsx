@@ -215,7 +215,7 @@ export const Navbar = () => {
                   <div className="px-4 py-2.5 border-b border-outline-variant/10">
                     <span className="font-public-sans text-[9px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">
                       {user.role === "PENGUNJUNG"
-                        ? "DONATUR"
+                        ? "PENGUNJUNG"
                         : user.role === "PENGURUS_PANTI"
                           ? "PENGURUS PANTI"
                           : "KEPALA PANTI"}
