@@ -23,19 +23,19 @@ const MOCK_TESTIMONI = [
     id: 1,
     name: "Bapak Budi (Donasi Finansial)",
     message:
-      "Semoga bantuan kecil ini bisa memberikan senyuman untuk anak-anak panti. Terus semangat belajar!",
+      "Kebaikan hati Anda hari ini menghadirkan senyum baru bagi anak-anak kami.",
   },
   {
     id: 2,
     name: "Hamba Allah (Donasi Barang)",
     message:
-      "Titipan doa dan sedikit rezeki untuk keberlangsungan fasilitas pendidikan adik-adik.",
+      "Terima kasih telah memastikan bahwa anak-anak asuh ini tidak pernah melangkah sendirian.",
   },
   {
     id: 3,
-    name: "Ibu Siti (Donasi Finansial)",
+    name: "Ibu Mawar (Donasi Finansial)",
     message:
-      "Sangat mudah berdonasi lewat sistem ini, transparan dan jelas laporannya. Sehat selalu semuanya.",
+      "Langkah kepedulian Anda menciptakan jejak kebahagiaan besar bagi masa depan mereka.",
   },
 ];
 
