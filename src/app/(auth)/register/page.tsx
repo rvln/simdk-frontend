@@ -193,11 +193,10 @@ export default function RegisterPage() {
 
           {/* Secondary Button / SSO */}
           <button
-            className="w-full py-4 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-not-allowed opacity-50"
+            onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/redirect`}
+            className="w-full py-4 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-pointer"
             type="button"
-            disabled
           >
-            {/* SVG Google Anda tetap di sini */}
             <svg
               className="w-5 h-5"
               viewBox="0 0 24 24"
@@ -220,7 +219,7 @@ export default function RegisterPage() {
                 fill="#EA4335"
               ></path>
             </svg>
-            Daftar dengan Google (Segera)
+            Masuk dengan Google
           </button>
         </div>
       </form>

@@ -21,6 +21,7 @@ import {
   MdTimelapse,
   MdLocalShipping,
   MdEventBusy,
+  MdDeleteForever,
 } from "react-icons/md";
 import {
   FiImage,
@@ -31,7 +32,6 @@ import {
   FiSend,
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
-import LogoutButton from "@/components/layout/LogoutButton";
 import { useAuth } from "@/hooks/useAuth";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -284,6 +284,11 @@ export default function ProfilPublikPage() {
   const [reportSubmitError, setReportSubmitError] = useState("");
   const [reportSubmitSuccess, setReportSubmitSuccess] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  /* ── Delete Account State ── */
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState("");
 
   const fetchProfileData = () => {
     const token = localStorage.getItem("auth_token");
@@ -542,6 +547,35 @@ export default function ProfilPublikPage() {
 
   const onSubmit = (data: ProfileFormData) => {
     alert("Data berhasil disimpan:\n" + JSON.stringify(data, null, 2));
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    setDeleteAccountError("");
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch(`${API_BASE}/api/user/account`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Gagal menghapus akun.");
+      }
+
+      // Clear local auth state and redirect to landing page.
+      localStorage.removeItem("auth_token");
+      router.push("/");
+    } catch (err: unknown) {
+      setDeleteAccountError(
+        err instanceof Error ? err.message : "Terjadi kesalahan. Coba lagi.",
+      );
+      setIsDeletingAccount(false);
+    }
   };
 
   /* ── Helpers ── */
@@ -1341,14 +1375,114 @@ export default function ProfilPublikPage() {
               <h3 className="text-lg font-semibold text-red-600 mb-2">
                 Zona Berbahaya
               </h3>
-              <div className="w-48">
-                {/* Panggil komponen yang sama */}
-                <LogoutButton />
+              <div className="w-full">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-all shadow-sm"
+                >
+                  <MdDeleteForever className="text-xl" />
+                  Hapus Akun
+                </button>
+                <p className="text-[11px] text-gray-400 mt-2 px-1">
+                  Menghapus akun akan menghilangkan semua riwayat kontribusi
+                  Anda secara permanen.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ── Delete Account Confirmation Modal ── */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeletingAccount)
+              setShowDeleteModal(false);
+          }}
+        >
+          <div
+            className="relative w-full max-w-md bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl"
+            style={{ boxShadow: "0 24px 64px -12px rgba(220,38,38,0.18), 0 8px 24px rgba(0,0,0,0.12)" }}
+          >
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-6">
+              <MdDeleteForever className="text-4xl text-red-600" />
+            </div>
+
+            <h2 className="text-xl font-extrabold text-gray-900 text-center mb-2 tracking-tight">
+              Hapus Akun Secara Permanen
+            </h2>
+            <p className="text-sm text-gray-500 text-center leading-relaxed mb-2">
+              Tindakan ini akan menghapus akun Anda beserta:
+            </p>
+            <ul className="text-sm text-gray-600 space-y-1.5 mb-6 text-left bg-red-50/60 rounded-2xl p-4">
+              <li className="flex items-center gap-2">
+                <MdAttachMoney className="text-red-500 flex-shrink-0" />
+                Seluruh riwayat donasi dana
+              </li>
+              <li className="flex items-center gap-2">
+                <MdOutlineCardGiftcard className="text-red-500 flex-shrink-0" />
+                Seluruh riwayat donasi barang
+              </li>
+              <li className="flex items-center gap-2">
+                <MdGroups className="text-red-500 flex-shrink-0" />
+                Seluruh riwayat kunjungan
+              </li>
+              <li className="flex items-center gap-2">
+                <MdHistory className="text-red-500 flex-shrink-0" />
+                Seluruh laporan kunjungan
+              </li>
+            </ul>
+
+            {deleteAccountError && (
+              <div className="flex items-start gap-2 bg-red-50 rounded-xl px-4 py-3 mb-4">
+                <MdErrorOutline className="text-red-500 text-base flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-700">{deleteAccountError}</p>
+              </div>
+            )}
+
+            <p className="text-[11px] text-gray-400 text-center mb-6 font-medium tracking-wide">
+              ⚠️ Tindakan ini tidak dapat dibatalkan.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteAccountError("");
+                }}
+                disabled={isDeletingAccount}
+                className="flex-1 py-3 rounded-xl font-bold text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={isDeletingAccount}
+                className="flex-1 py-3 rounded-xl font-bold text-sm text-white bg-red-600 hover:bg-red-700 transition-colors shadow-md shadow-red-600/30 disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {isDeletingAccount ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Menghapus...
+                  </>
+                ) : (
+                  <>
+                    <MdDeleteForever className="text-lg" />
+                    Ya, Hapus Akun Saya
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

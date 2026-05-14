@@ -295,6 +295,7 @@ export default function LoginForm() {
 
           {/* Secondary Button / SSO */}
           <button
+            onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/redirect`}
             className="w-full py-4 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-pointer"
             type="button"
           >
