@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const navLinks = [
   { href: "/", label: "Beranda" },
-  { href: "/profil", label: "Profil" },
+  { href: "/profil", label: "Profil Panti" },
   { href: "/transparansi", label: "Transparansi" },
   { href: "/jadwal-kunjungan", label: "Jadwal Kunjungan" },
   { href: "/kontak", label: "Kontak" },
@@ -222,7 +222,11 @@ export const Navbar = () => {
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary overflow-hidden">
                     {profilePhotoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={profilePhotoUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <FiUser className="text-lg" />
                     )}
@@ -424,7 +428,11 @@ export const Navbar = () => {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary overflow-hidden">
                   {profilePhotoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={profilePhotoUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <FiUser className="text-lg" />
                   )}
