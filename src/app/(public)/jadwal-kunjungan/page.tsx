@@ -221,7 +221,7 @@ export default function JadwalKunjunganPage() {
       {/* ═══════════════════════════════════════════
           SECTION 1 — HERO
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 pt-20 pb-16">
+      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 pt-14 pb-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-[1.08] text-on-surface mb-6 italic">
             Agenda Kunjungan &amp; <br className="hidden sm:block" />
@@ -238,7 +238,7 @@ export default function JadwalKunjunganPage() {
       {/* ═══════════════════════════════════════════
           SECTION 2 — CALENDAR + KEGIATAN MENDATANG (SIDE BY SIDE)
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface px-6 md:px-12 lg:px-20 py-16 lg:py-24">
+      <section className="bg-surface px-6 md:px-12 lg:px-20 py-16 lg:py-24 pt-4 pb-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10 items-start">
             {/* ── LEFT: Calendar ── */}
@@ -422,7 +422,7 @@ export default function JadwalKunjunganPage() {
       {/* ═══════════════════════════════════════════
           SECTION 4 — CTA BANNER
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface px-6 md:px-12 lg:px-20 py-16 lg:py-24">
+      <section className="bg-surface px-6 md:px-12 lg:px-20 py-16 lg:py-24 pt-4 pb-14">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left: Text + CTAs */}
           <div>
@@ -457,7 +457,7 @@ export default function JadwalKunjunganPage() {
           </div>
 
           {/* Right: Image */}
-          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-ambient">
+          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-ambient max-md:hidden">
             <Image
               src="/example_img/kids-8.png"
               alt="Kunjungan ke Panti Asuhan"

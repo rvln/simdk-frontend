@@ -7,6 +7,7 @@ import {
   MdArrowForward,
   MdInfoOutline,
 } from "react-icons/md";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useAuth } from "@/hooks/useAuth"; // Injeksi Hook Autentikasi
 
 export default function RegisterPage() {
@@ -18,6 +19,8 @@ export default function RegisterPage() {
     password: "",
     password_confirmation: "", // Penambahan parameter wajib
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // 2. Definisi Handler Mutasi Data
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,13 +36,13 @@ export default function RegisterPage() {
   return (
     <>
       <header className="mb-10">
-        <div className="inline-flex items-center gap-2 mb-8">
+        <div className="inline-flex items-center gap-2 mb-6">
           <MdOutlineSecurity className="text-3xl text-primary" />
           <span className="text-base font-black tracking-tight text-primary uppercase font-sans">
             Panti Asuhan Dr Lucas
           </span>
         </div>
-        <h1 className="text-4xl font-black text-on-surface tracking-tight mb-2 font-sans">
+        <h1 className="text-3xl font-black text-on-surface tracking-tight mb-2 font-sans">
           Bergabung Bersama Kami
         </h1>
         <p className="text-on-surface-variant leading-relaxed font-sans">
@@ -74,7 +77,7 @@ export default function RegisterPage() {
               type="text"
               value={formData.name}
               onChange={handleChange}
-              placeholder="John Doe"
+              placeholder="Cth: Tan Malaka"
               className={`w-full py-3 bg-transparent border-0 border-b ${errors?.name ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-primary"} focus:ring-0 focus:border-b-2 px-0 text-on-surface transition-colors outline-none`}
               required
             />
@@ -118,16 +121,34 @@ export default function RegisterPage() {
             >
               Kata Sandi Baru
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              className={`w-full py-3 bg-transparent border-0 border-b ${errors?.password ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-primary"} focus:ring-0 focus:border-b-2 px-0 text-on-surface transition-colors outline-none`}
-              required
-            />
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                className={`w-full py-3 bg-transparent border-0 border-b ${errors?.password ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-primary"} focus:ring-0 focus:border-b-2 px-0 pr-10 text-on-surface transition-colors outline-none`}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-on-surface-variant hover:text-primary transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label={
+                  showPassword
+                    ? "Sembunyikan kata sandi"
+                    : "Tampilkan kata sandi"
+                }
+              >
+                {showPassword ? (
+                  <FiEyeOff className="text-lg" />
+                ) : (
+                  <FiEye className="text-lg" />
+                )}
+              </button>
+            </div>
             {errors?.password && (
               <span className="text-xs text-red-500 mt-1">
                 {errors.password[0]}
@@ -143,16 +164,34 @@ export default function RegisterPage() {
             >
               Konfirmasi Kata Sandi
             </label>
-            <input
-              id="password_confirmation"
-              name="password_confirmation"
-              type="password"
-              value={formData.password_confirmation}
-              onChange={handleChange}
-              placeholder="••••••••"
-              className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 text-on-surface transition-colors outline-none"
-              required
-            />
+            <div className="relative">
+              <input
+                id="password_confirmation"
+                name="password_confirmation"
+                type={showConfirmPassword ? "text" : "password"}
+                value={formData.password_confirmation}
+                onChange={handleChange}
+                placeholder="••••••••"
+                className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 pr-10 text-on-surface transition-colors outline-none"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-on-surface-variant hover:text-primary transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label={
+                  showConfirmPassword
+                    ? "Sembunyikan konfirmasi sandi"
+                    : "Tampilkan konfirmasi sandi"
+                }
+              >
+                {showConfirmPassword ? (
+                  <FiEyeOff className="text-lg" />
+                ) : (
+                  <FiEye className="text-lg" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -193,7 +232,9 @@ export default function RegisterPage() {
 
           {/* Secondary Button / SSO */}
           <button
-            onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/redirect`}
+            onClick={() =>
+              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/redirect`)
+            }
             className="w-full py-4 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-pointer"
             type="button"
           >

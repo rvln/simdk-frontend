@@ -4,7 +4,7 @@ import React, { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MdOutlineSecurity, MdArrowForward } from "react-icons/md";
-import { FiAlertCircle } from "react-icons/fi";
+import { FiAlertCircle, FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -20,6 +20,7 @@ export default function LoginForm() {
   // API integration state
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Track whether user needs email verification (HTTP 403)
   const [showVerificationBanner, setShowVerificationBanner] = useState(false);
@@ -132,17 +133,18 @@ export default function LoginForm() {
   return (
     <>
       <header className="mb-10">
-        <div className="inline-flex items-center gap-2 mb-8">
+        <div className="inline-flex items-center gap-2 mb-6">
           <MdOutlineSecurity className="text-3xl text-primary" />
           <span className="text-base font-black tracking-tight text-primary uppercase font-sans">
             Panti Asuhan Dr Lucas
           </span>
         </div>
-        <h1 className="text-4xl font-black text-on-surface tracking-tight mb-2 font-sans">
-          Selamat Datang Kembali
+        <h1 className="text-3xl font-black text-on-surface tracking-tight mb-2 font-sans">
+          Selamat Datang
         </h1>
         <p className="text-on-surface-variant leading-relaxed font-sans">
-          Silakan masuk untuk melanjutkan akses ke sistem manajemen panti.
+          Silakan masuk untuk melanjutkan akses dan bergabung terlibat bersama
+          panti.
         </p>
       </header>
 
@@ -210,15 +212,33 @@ export default function LoginForm() {
                 Lupa Sandi?
               </Link>
             </div>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 text-on-surface transition-colors outline-none"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full py-3 bg-transparent border-0 border-b border-gray-300 focus:ring-0 focus:border-b-2 focus:border-primary px-0 pr-10 text-on-surface transition-colors outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-on-surface-variant hover:text-primary transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label={
+                  showPassword
+                    ? "Sembunyikan kata sandi"
+                    : "Tampilkan kata sandi"
+                }
+              >
+                {showPassword ? (
+                  <FiEyeOff className="text-lg" />
+                ) : (
+                  <FiEye className="text-lg" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -295,7 +315,9 @@ export default function LoginForm() {
 
           {/* Secondary Button / SSO */}
           <button
-            onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/redirect`}
+            onClick={() =>
+              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/redirect`)
+            }
             className="w-full py-4 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/20 shadow-sm hover:bg-surface-container-highest transition-all duration-200 flex items-center justify-center gap-3 font-sans cursor-pointer"
             type="button"
           >

@@ -14,7 +14,9 @@ export default function AuthLayout({
   const quoteText =
     pathname === "/register"
       ? '"Membangun masa depan yang transparan bersama-sama."'
-      : '"Memberikan masa depan yang lebih baik..."';
+      : pathname === "/forgot-password" || pathname === "/reset-password"
+        ? '"Keamanan adalah pondasi kepercayaan."'
+        : '"Memberikan masa depan yang lebih baik..."';
   return (
     <div className="min-h-screen flex flex-col md:flex-row overflow-x-hidden bg-surface">
       {/* Left Column: Visual & Trust Section */}
@@ -54,12 +56,12 @@ export default function AuthLayout({
       </section>
 
       {/* Right Column: Authentication Form Container */}
-      <section className="w-full md:w-1/2 flex items-center justify-center px-6 py-16 md:px-20 lg:px-32">
+      <section className="w-full md:w-1/2 flex items-center justify-center pt-24 px-6 py-16 md:px-20 lg:px-32">
         <div className="w-full max-w-md">{children}</div>
       </section>
 
       {/* Footer Return Route Standard Header */}
-      <div className="absolute top-8 right-8 z-20 hidden md:block">
+      <div className="absolute top-4 left-4 md:top-8 md:right-8 md:left-auto z-20 pt-8 pl-2">
         <Link
           href="/"
           className="text-on-surface-variant hover:text-primary font-public-sans text-sm font-bold tracking-widest uppercase transition-colors flex items-center gap-2"

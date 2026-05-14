@@ -9,6 +9,8 @@ import {
   FiPackage,
   FiUser,
   FiGrid,
+  FiMenu,
+  FiX,
 } from "react-icons/fi";
 import LogoutButton from "@/components/layout/LogoutButton";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,11 +42,26 @@ export const Navbar = () => {
   const pathname = usePathname();
   const [donasiOpen, setDonasiOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileDonasiOpen, setMobileDonasiOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   // Server-authoritative auth state (replaces the old isLoggedIn mock)
   const { user, isLoading, isAuthenticated } = useAuth();
+
+  // Profile photo from localStorage
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadPhoto = () => {
+      const saved = localStorage.getItem("profile_photo");
+      setProfilePhotoUrl(saved);
+    };
+    loadPhoto();
+    window.addEventListener("storage", loadPhoto);
+    return () => window.removeEventListener("storage", loadPhoto);
+  }, []);
 
   // Close on outside click
   useEffect(() => {
@@ -70,7 +87,21 @@ export const Navbar = () => {
   useEffect(() => {
     setDonasiOpen(false);
     setProfileOpen(false);
+    setMobileMenuOpen(false);
+    setMobileDonasiOpen(false);
   }, [pathname]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   const isActive = (href: string) => pathname === href;
   const isDonasiActive = pathname.startsWith("/donasi");
@@ -176,100 +207,277 @@ export const Navbar = () => {
           ))}
         </div>
 
-        {/* Auth CTA */}
+        {/* Auth CTA (Desktop) + Mobile Hamburger */}
         <div className="flex items-center gap-4">
-          {isLoading ? (
-            /* Skeleton loader — prevents layout shift while fetching user */
-            <div className="w-32 h-10 rounded-full bg-surface-container-low animate-pulse" />
-          ) : isAuthenticated && user ? (
-            // DROPDOWN PROFIL (ROLE-AWARE)
-            <div ref={profileDropdownRef} className="relative">
-              <button
-                onClick={() => setProfileOpen((v) => !v)}
-                className="flex items-center gap-2 font-sans font-bold text-on-surface hover:text-primary transition-colors text-sm px-3 py-1.5 bg-surface-container-low rounded-full shadow-sm hover:shadow-md"
-              >
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <FiUser className="text-lg" />
-                </div>
-                <span className="hidden md:block">
-                  {user.name?.split(" ")[0] || "Profil Saya"}
-                </span>
-                {/* Ikon panah berputar menyesuaikan state */}
-                <FiChevronDown
-                  className={`text-sm transition-transform duration-200 hidden md:block ${
-                    profileOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {/* Panel Dropdown Profil */}
-              <div
-                className={`absolute top-full right-0 mt-3 w-52 bg-surface/95 backdrop-blur-xl rounded-xl shadow-ambient border border-outline-variant/10 overflow-hidden transition-all duration-200 origin-top-right ${
-                  profileOpen
-                    ? "opacity-100 scale-100 pointer-events-auto"
-                    : "opacity-0 scale-95 pointer-events-none"
-                }`}
-              >
-                <div className="py-1">
-                  {/* Role badge */}
-                  <div className="px-4 py-2.5 border-b border-outline-variant/10">
-                    <span className="font-public-sans text-[9px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">
-                      {user.role === "PENGUNJUNG"
-                        ? "PENGUNJUNG"
-                        : user.role === "PENGURUS_PANTI"
-                          ? "PENGURUS PANTI"
-                          : "KEPALA PANTI"}
-                    </span>
+          {/* Desktop Auth CTA */}
+          <div className="hidden md:flex items-center gap-4">
+            {isLoading ? (
+              <div className="w-32 h-10 rounded-full bg-surface-container-low animate-pulse" />
+            ) : isAuthenticated && user ? (
+              <div ref={profileDropdownRef} className="relative">
+                <button
+                  onClick={() => setProfileOpen((v) => !v)}
+                  className="flex items-center gap-2 font-sans font-bold text-on-surface hover:text-primary transition-colors text-sm px-3 py-1.5 bg-surface-container-low rounded-full shadow-sm hover:shadow-md"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary overflow-hidden">
+                    {profilePhotoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <FiUser className="text-lg" />
+                    )}
                   </div>
+                  <span className="hidden md:block">
+                    {user.name?.split(" ")[0] || "Profil Saya"}
+                  </span>
+                  <FiChevronDown
+                    className={`text-sm transition-transform duration-200 hidden md:block ${
+                      profileOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-                  {/* Halaman Profil — ALL roles */}
-                  <Link
-                    href="/profil-saya"
-                    onClick={() => setProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-low hover:text-primary transition-colors"
-                  >
-                    <FiUser className="text-base" />
-                    Halaman Profil
-                  </Link>
+                <div
+                  className={`absolute top-full right-0 mt-3 w-52 bg-surface/95 backdrop-blur-xl rounded-xl shadow-ambient border border-outline-variant/10 overflow-hidden transition-all duration-200 origin-top-right ${
+                    profileOpen
+                      ? "opacity-100 scale-100 pointer-events-auto"
+                      : "opacity-0 scale-95 pointer-events-none"
+                  }`}
+                >
+                  <div className="py-1">
+                    <div className="px-4 py-2.5 border-b border-outline-variant/10">
+                      <span className="font-public-sans text-[9px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">
+                        {user.role === "PENGUNJUNG"
+                          ? "PENGUNJUNG"
+                          : user.role === "PENGURUS_PANTI"
+                            ? "PENGURUS PANTI"
+                            : "KEPALA PANTI"}
+                      </span>
+                    </div>
 
-                  {/* Dashboard Panti — PENGURUS_PANTI & KEPALA_PANTI only */}
-                  {dashboardLink && (
                     <Link
-                      href={dashboardLink.href}
+                      href="/profil-saya"
                       onClick={() => setProfileOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-low hover:text-primary transition-colors"
                     >
-                      <FiGrid className="text-base" />
-                      {dashboardLink.label}
+                      <FiUser className="text-base" />
+                      Halaman Profil
                     </Link>
-                  )}
 
-                  {/* Garis Pembatas (Separator) */}
-                  <div className="border-t border-outline-variant/20 my-1 mx-2"></div>
+                    {dashboardLink && (
+                      <Link
+                        href={dashboardLink.href}
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-low hover:text-primary transition-colors"
+                      >
+                        <FiGrid className="text-base" />
+                        {dashboardLink.label}
+                      </Link>
+                    )}
 
-                  {/* INJEKSI KOMPONEN LOGOUT DI SINI */}
-                  <div className="px-1">
-                    <LogoutButton />
+                    <div className="border-t border-outline-variant/20 my-1 mx-2"></div>
+
+                    <div className="px-1">
+                      <LogoutButton />
+                    </div>
                   </div>
                 </div>
               </div>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="font-sans text-sm font-medium text-on-surface-variant hover:text-primary transition-colors text-base px-4 py-2"
+                >
+                  Masuk
+                </Link>
+                <Link
+                  href="/register"
+                  className="font-sans text-sm font-bold bg-primary text-white hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-lg px-6 py-2 text-base shadow-sm"
+                >
+                  Daftar
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Hamburger Button */}
+          <button
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl bg-surface-container-low text-on-surface hover:text-primary transition-colors"
+            aria-label="Toggle mobile menu"
+          >
+            {mobileMenuOpen ? (
+              <FiX className="text-xl" />
+            ) : (
+              <FiMenu className="text-xl" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Mobile Menu Overlay ── */}
+      <div
+        className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${
+          mobileMenuOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-on-surface/20 backdrop-blur-sm" />
+      </div>
+
+      {/* ── Mobile Menu Drawer ── */}
+      <div
+        className={`fixed top-0 right-0 z-50 w-[85vw] max-w-sm h-dvh bg-surface/95 backdrop-blur-xl shadow-ambient md:hidden flex flex-col transition-transform duration-300 ease-out ${
+          mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between px-6 h-20 flex-shrink-0">
+          <span className="font-sans font-black text-sm text-primary tracking-tighter">
+            Menu
+          </span>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface hover:text-primary transition-colors"
+            aria-label="Close mobile menu"
+          >
+            <FiX className="text-xl" />
+          </button>
+        </div>
+
+        {/* Drawer Links */}
+        <nav className="flex-1 overflow-y-auto px-6 pb-8 space-y-1">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`block py-3.5 px-4 rounded-xl font-sans text-base transition-colors ${
+                isActive(link.href)
+                  ? "font-bold text-primary bg-primary/8"
+                  : "font-medium text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+
+          {/* Donasi Expandable */}
+          <div>
+            <button
+              onClick={() => setMobileDonasiOpen((v) => !v)}
+              className={`w-full flex items-center justify-between py-3.5 px-4 rounded-xl font-sans text-base transition-colors ${
+                isDonasiActive
+                  ? "font-bold text-primary bg-primary/8"
+                  : "font-medium text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+              }`}
+            >
+              Donasi
+              <FiChevronDown
+                className={`text-sm transition-transform duration-200 ${
+                  mobileDonasiOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            <div
+              className={`overflow-hidden transition-all duration-300 ${
+                mobileDonasiOpen ? "max-h-48 opacity-100" : "max-h-0 opacity-0"
+              }`}
+            >
+              <div className="pl-4 py-2 space-y-1">
+                {donasiSubmenus.map((sub) => (
+                  <Link
+                    key={sub.href}
+                    href={sub.href}
+                    className="flex items-center gap-3 py-3 px-4 rounded-xl hover:bg-surface-container-low transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                      {sub.icon}
+                    </div>
+                    <div>
+                      <span className="block font-sans font-semibold text-sm text-on-surface group-hover:text-primary transition-colors">
+                        {sub.label}
+                      </span>
+                      <span className="block font-public-sans text-xs text-on-surface-variant">
+                        {sub.desc}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* Drawer Footer — Auth */}
+        <div className="flex-shrink-0 px-6 py-6 bg-surface-container-low/50">
+          {isLoading ? (
+            <div className="w-full h-12 rounded-xl bg-surface-container-low animate-pulse" />
+          ) : isAuthenticated && user ? (
+            <div className="space-y-3">
+              {/* User Info */}
+              <div className="flex items-center gap-3 pb-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary overflow-hidden">
+                  {profilePhotoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <FiUser className="text-lg" />
+                  )}
+                </div>
+                <div>
+                  <span className="block font-sans font-bold text-sm text-on-surface">
+                    {user.name || "Profil Saya"}
+                  </span>
+                  <span className="block font-public-sans text-[10px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">
+                    {user.role === "PENGUNJUNG"
+                      ? "PENGUNJUNG"
+                      : user.role === "PENGURUS_PANTI"
+                        ? "PENGURUS PANTI"
+                        : "KEPALA PANTI"}
+                  </span>
+                </div>
+              </div>
+
+              <Link
+                href="/profil-saya"
+                className="block w-full py-3 px-4 rounded-xl text-center font-sans font-semibold text-sm text-primary bg-primary/8 hover:bg-primary/15 transition-colors"
+              >
+                Halaman Profil
+              </Link>
+
+              {dashboardLink && (
+                <Link
+                  href={dashboardLink.href}
+                  className="block w-full py-3 px-4 rounded-xl text-center font-sans font-semibold text-sm text-on-surface bg-surface-container-low hover:bg-surface-container-lowest transition-colors"
+                >
+                  {dashboardLink.label}
+                </Link>
+              )}
+
+              <div className="pt-2">
+                <LogoutButton />
+              </div>
             </div>
           ) : (
-            // BLOK GUEST (KODE ANDA SEBELUMNYA TETAP SAMA)
-            <>
-              <Link
-                href="/login"
-                className="font-sans text-sm font-medium text-on-surface-variant hover:text-primary transition-colors text-base px-4 py-2"
-              >
-                Masuk
-              </Link>
+            <div className="flex flex-col gap-3">
               <Link
                 href="/register"
-                className="font-sans text-sm font-bold bg-primary text-white hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-lg px-6 py-2 text-base shadow-sm"
+                className="block w-full py-3 rounded-xl text-center font-sans font-bold text-sm bg-gradient-to-r from-primary to-primary-container text-white shadow-sm"
               >
                 Daftar
               </Link>
-            </>
+              <Link
+                href="/login"
+                className="block w-full py-3 rounded-xl text-center font-sans font-medium text-sm text-on-surface-variant hover:text-primary transition-colors bg-surface-container-low"
+              >
+                Masuk
+              </Link>
+            </div>
           )}
         </div>
       </div>

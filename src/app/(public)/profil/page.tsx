@@ -73,7 +73,7 @@ export default function ProfilPage() {
       {/* ═══════════════════════════════════════════
           SECTION 1 — HERO
       ═══════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-surface px-6 md:px-12 lg:px-20 pt-20 pb-24">
+      <section className="relative overflow-hidden bg-surface px-6 md:px-12 lg:pb-12 lg:px-20 pt-20 pb-8 md:pb-24">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-12 items-end">
           {/* Left */}
           <div>
@@ -106,7 +106,7 @@ export default function ProfilPage() {
       {/* ═══════════════════════════════════════════
           SECTION 2 — AKAR PENGABDIAN (Origin Story)
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 py-20 lg:py-28">
+      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 lg:pt-12 pb-8 lg:pb-12 py-12 lg:py-28">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Image placeholder */}
           <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-surface-container-lowest shadow-ambient">
@@ -164,7 +164,7 @@ export default function ProfilPage() {
       {/* ═══════════════════════════════════════════
           SECTION 3 — VISI & MISI
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface px-6 md:px-12 lg:px-20 py-20 lg:py-28">
+      <section className="bg-surface lg:pt-12 lg:pb-12 px-6 md:px-12 lg:px-20 py-12 lg:py-28">
         <div className="max-w-5xl mx-auto text-center">
           {/* Section title */}
           <h2 className="text-3xl md:text-4xl font-black tracking-tight text-primary mb-2">
@@ -202,7 +202,7 @@ export default function ProfilPage() {
       {/* ═══════════════════════════════════════════
           SECTION 4 — SISTEM PENGASUHAN BERBASIS KELUARGA
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 py-20 lg:py-28">
+      <section className="bg-surface-container-low px-6 md:px-12 lg:pt-12 lg:pb-12 lg:px-20 py-20 lg:py-28">
         <div className="max-w-6xl mx-auto">
           {/* Header row */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-14">
@@ -270,7 +270,7 @@ export default function ProfilPage() {
       {/* ═══════════════════════════════════════════
           SECTION 4.5 — STRUKTUR ORGANISASI
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface px-6 md:px-12 lg:px-20 py-20 lg:py-28">
+      <section className="bg-surface px-6 md:px-12 lg:pb-12 pb-8 lg:px-20 py-20 lg:py-28">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-14">
@@ -319,7 +319,7 @@ export default function ProfilPage() {
       {/* ═══════════════════════════════════════════
           SECTION 5 — FOUNDER QUOTE
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface px-6 md:px-12 lg:px-20 py-16 lg:py-20">
+      <section className="bg-surface px-6 md:px-12 lg:pt-12 lg:pb-12 pt-8 pb-8 lg:px-20 py-16 lg:py-20">
         <div className="max-w-4xl mx-auto">
           <GlassContainer className="px-8 md:px-12 py-10 md:py-12 flex flex-col md:flex-row items-start gap-8 bg-surface-container-low/60">
             {/* Avatar */}
@@ -351,7 +351,7 @@ export default function ProfilPage() {
       {/* ═══════════════════════════════════════════
           SECTION 6 — TRANSPARENCY PLEDGE
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 py-20 lg:py-24">
+      <section className="bg-surface-container-low px-6 md:px-12 lg:pt-12 lg:pb-12 lg:px-20 py-20 lg:py-24">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-black tracking-tight text-on-surface mb-8">
             Keterbukaan adalah <span className="text-primary">Janji Kami.</span>

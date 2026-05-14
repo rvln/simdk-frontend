@@ -64,7 +64,8 @@ function getPriorityStyle(priority: string) {
       };
     case "OPSIONAL":
       return {
-        badge: "bg-surface-container-low text-on-surface-variant border border-outline-variant/15",
+        badge:
+          "bg-surface-container-low text-on-surface-variant border border-outline-variant/15",
         bar: "bg-primary",
         label: "Opsional",
       };
@@ -78,9 +79,11 @@ function getPriorityStyle(priority: string) {
 }
 
 function getDonationIcon(type: string) {
-  return type === "DANA"
-    ? <FiDollarSign className="text-primary" />
-    : <FiPackage className="text-primary" />;
+  return type === "DANA" ? (
+    <FiDollarSign className="text-primary" />
+  ) : (
+    <FiPackage className="text-primary" />
+  );
 }
 
 function getStatusStyle(type: string) {
@@ -98,15 +101,27 @@ function formatRelativeTime(dateStr: string): string {
   if (diffHours < 24) return `${diffHours} Jam Lalu`;
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays < 7) return `${diffDays} Hari Lalu`;
-  return date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  return date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function formatCurrency(amount: string | number): string {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(Number(amount));
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(Number(amount));
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(dateStr).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 /* ═══════════════════════════════════════════
@@ -203,7 +218,9 @@ function FilterChips({
       {options.map((opt) => (
         <button
           key={opt.value}
-          onClick={() => onSelect(paramKey, opt.value === activeValue ? "" : opt.value)}
+          onClick={() =>
+            onSelect(paramKey, opt.value === activeValue ? "" : opt.value)
+          }
           className={`font-public-sans text-[11px] font-semibold uppercase tracking-wider px-4 py-1.5 rounded-full transition-all duration-200 ${
             opt.value === activeValue
               ? "bg-primary text-white shadow-sm"
@@ -255,12 +272,18 @@ function HorizontalScroller({
   }, [updateScrollState, children]);
 
   if (!shouldScroll) {
-    return <div className="grid grid-cols-1 md:grid-cols-3 gap-6">{children}</div>;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">{children}</div>
+    );
   }
 
   // Build CSS mask-image based on scroll position
-  const maskLeft = canScrollLeft ? "transparent, black 64px" : "black, black 0px";
-  const maskRight = canScrollRight ? "black calc(100% - 64px), transparent" : "black 100%, black 100%";
+  const maskLeft = canScrollLeft
+    ? "transparent, black 64px"
+    : "black, black 0px";
+  const maskRight = canScrollRight
+    ? "black calc(100% - 64px), transparent"
+    : "black 100%, black 100%";
   const maskImage = `linear-gradient(to right, ${maskLeft}, ${maskRight})`;
 
   return (
@@ -283,7 +306,9 @@ function HorizontalScroller({
       {/* Scroll hint arrows */}
       {canScrollLeft && (
         <button
-          onClick={() => scrollRef.current?.scrollBy({ left: -320, behavior: "smooth" })}
+          onClick={() =>
+            scrollRef.current?.scrollBy({ left: -320, behavior: "smooth" })
+          }
           className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-9 h-9 rounded-full bg-surface/90 shadow-md flex items-center justify-center text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors border-none"
           aria-label="Scroll kiri"
         >
@@ -292,7 +317,9 @@ function HorizontalScroller({
       )}
       {canScrollRight && (
         <button
-          onClick={() => scrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
+          onClick={() =>
+            scrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })
+          }
           className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-9 h-9 rounded-full bg-surface/90 shadow-md flex items-center justify-center text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors border-none"
           aria-label="Scroll kanan"
         >
@@ -355,7 +382,8 @@ function VerticalScrollFade({
       <div
         className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none transition-opacity duration-300"
         style={{
-          background: "linear-gradient(to bottom, transparent, var(--color-surface, #fff))",
+          background:
+            "linear-gradient(to bottom, transparent, var(--color-surface, #fff))",
           opacity: isAtBottom ? 0 : 1,
         }}
       />
@@ -381,11 +409,29 @@ export default function TransparansiContent() {
   const reportPage = Number(searchParams.get("report_page") || "1");
 
   /* ── SWR hooks ── */
-  const { needs, isLoading: needsLoading } = useTransparencyNeeds(needCategory || undefined);
-  const { donations, meta: donMeta, isLoading: donLoading } = useTransparencyDonations(donationPage, donationType || undefined);
-  const { distributions, meta: distMeta, isLoading: distLoading } = useTransparencyDistributions(distPage, distCategory || undefined);
-  const { visits, meta: visitMeta, isLoading: visitLoading } = useTransparencyVisits(visitPage);
-  const { reports, meta: reportMeta, isLoading: reportLoading } = useTransparencyReports(reportPage);
+  const { needs, isLoading: needsLoading } = useTransparencyNeeds(
+    needCategory || undefined,
+  );
+  const {
+    donations,
+    meta: donMeta,
+    isLoading: donLoading,
+  } = useTransparencyDonations(donationPage, donationType || undefined);
+  const {
+    distributions,
+    meta: distMeta,
+    isLoading: distLoading,
+  } = useTransparencyDistributions(distPage, distCategory || undefined);
+  const {
+    visits,
+    meta: visitMeta,
+    isLoading: visitLoading,
+  } = useTransparencyVisits(visitPage);
+  const {
+    reports,
+    meta: reportMeta,
+    isLoading: reportLoading,
+  } = useTransparencyReports(reportPage);
 
   /* ── URL param setter (shareable) ── */
   const setParam = useCallback(
@@ -398,17 +444,19 @@ export default function TransparansiContent() {
       }
       // Reset page when filter changes (non-page params)
       if (!key.endsWith("_page")) {
-        const pageKey = key.replace(/_type|_cat/, "_page").replace(/need_cat/, "");
+        const pageKey = key
+          .replace(/_type|_cat/, "_page")
+          .replace(/need_cat/, "");
         if (pageKey && params.has(pageKey)) params.delete(pageKey);
       }
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
     },
-    [searchParams, router, pathname]
+    [searchParams, router, pathname],
   );
 
   const handlePageChange = useCallback(
     (key: string, page: number) => setParam(key, page),
-    [setParam]
+    [setParam],
   );
 
   /* ── Filter chip configs ── */
@@ -435,14 +483,14 @@ export default function TransparansiContent() {
       {/* ═══════════════════════════════════════════
           SECTION 2 — KEBUTUHAN OPERASIONAL
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 py-16 lg:py-24">
+      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 pt-8 pb-12 py-16 lg:py-24">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
             <div>
               <span className="font-public-sans text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant block mb-2">
                 Kebutuhan Operasional
               </span>
-              <h2 className="text-2xl md:text-3xl font-black tracking-tight text-on-surface">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-on-surface">
                 Transparansi Kebutuhan Panti
               </h2>
             </div>
@@ -462,7 +510,9 @@ export default function TransparansiContent() {
 
           {needsLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
             </div>
           ) : filteredNeeds.length === 0 ? (
             <GlassContainer className="p-8 text-center">
@@ -475,10 +525,16 @@ export default function TransparansiContent() {
             <HorizontalScroller threshold={3}>
               {filteredNeeds.map((item: TransparencyNeed) => {
                 const style = getPriorityStyle(item.priority);
-                const pct = item.target_qty > 0 ? Math.round((item.stock / item.target_qty) * 100) : 0;
+                const pct =
+                  item.target_qty > 0
+                    ? Math.round((item.stock / item.target_qty) * 100)
+                    : 0;
                 const isFulfilled = pct >= 100;
                 return (
-                  <GlassContainer key={item.id} className="p-6 flex flex-col gap-5 h-full">
+                  <GlassContainer
+                    key={item.id}
+                    className="p-6 flex flex-col gap-5 h-full"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center">
                         {getCategoryIcon(item.category)}
@@ -506,7 +562,9 @@ export default function TransparansiContent() {
                         <span className="text-on-surface">
                           {item.stock} / {item.target_qty} {item.unit}
                         </span>
-                        <span className="text-on-surface-variant">{Math.min(pct, 100)}%</span>
+                        <span className="text-on-surface-variant">
+                          {Math.min(pct, 100)}%
+                        </span>
                       </div>
                       <div className="w-full h-2 rounded-full bg-surface-container-lowest overflow-hidden">
                         <div
@@ -526,13 +584,13 @@ export default function TransparansiContent() {
       {/* ═══════════════════════════════════════════
           SECTION 3 — LOG TRANSPARANSI DONASI
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface px-6 md:px-12 lg:px-20 py-16 lg:py-24">
+      <section className="bg-surface px-6 md:px-12 lg:px-20 pt-8 pb-12 py-16 lg:py-24">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-12 lg:gap-20">
           <div>
             <span className="font-public-sans text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant block mb-2">
               Arus Dana &amp; Barang
             </span>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-on-surface mb-5">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-on-surface mb-5">
               Log Transparansi Donasi Terkini
             </h2>
             <p className="text-on-surface-variant font-sans text-sm leading-relaxed max-w-md mb-8">
@@ -559,7 +617,9 @@ export default function TransparansiContent() {
           <div>
             {donLoading ? (
               <div className="space-y-4">
-                {Array.from({ length: 4 }).map((_, i) => <SkeletonLogRow key={i} />)}
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <SkeletonLogRow key={i} />
+                ))}
               </div>
             ) : donations.length === 0 ? (
               <GlassContainer className="p-8 text-center">
@@ -571,7 +631,10 @@ export default function TransparansiContent() {
             ) : (
               <VerticalScrollFade threshold={4} maxHeight="420px">
                 {donations.map((log: TransparencyDonation) => (
-                  <GlassContainer key={log.id} className="px-5 py-4 flex items-center gap-4">
+                  <GlassContainer
+                    key={log.id}
+                    className="px-5 py-4 flex items-center gap-4"
+                  >
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/8 flex items-center justify-center">
                       {getDonationIcon(log.type)}
                     </div>
@@ -589,7 +652,9 @@ export default function TransparansiContent() {
                       <span className="block text-xs font-sans font-semibold text-on-surface">
                         {formatRelativeTime(log.updated_at)}
                       </span>
-                      <span className={`font-public-sans text-[9px] font-bold uppercase tracking-widest ${getStatusStyle(log.type)}`}>
+                      <span
+                        className={`font-public-sans text-[9px] font-bold uppercase tracking-widest ${getStatusStyle(log.type)}`}
+                      >
                         TERVALIDASI SISTEM
                       </span>
                     </div>
@@ -598,7 +663,11 @@ export default function TransparansiContent() {
               </VerticalScrollFade>
             )}
             {donMeta && (
-              <Pagination meta={donMeta} paramKey="don_page" onPageChange={handlePageChange} />
+              <Pagination
+                meta={donMeta}
+                paramKey="don_page"
+                onPageChange={handlePageChange}
+              />
             )}
           </div>
         </div>
@@ -607,14 +676,14 @@ export default function TransparansiContent() {
       {/* ═══════════════════════════════════════════
           SECTION 4 — DISTRIBUSI BANTUAN
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 py-16 lg:py-24">
+      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 pt-8 pb-12 py-16 lg:py-24">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
             <div>
               <span className="font-public-sans text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant block mb-2">
                 Distribusi &amp; Penyaluran
               </span>
-              <h2 className="text-2xl md:text-3xl font-black tracking-tight text-on-surface">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-on-surface">
                 Jejak Distribusi Bantuan
               </h2>
             </div>
@@ -664,7 +733,10 @@ export default function TransparansiContent() {
                     </div>
                   </div>
                   <p className="text-xs text-on-surface-variant font-sans mb-1">
-                    <span className="font-semibold text-on-surface">{dist.qty} {dist.unit}</span> — {dist.target_recipient}
+                    <span className="font-semibold text-on-surface">
+                      {dist.qty} {dist.unit}
+                    </span>{" "}
+                    — {dist.target_recipient}
                   </p>
                   <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-sans">
                     <FiCalendar className="text-primary text-[11px]" />
@@ -675,7 +747,11 @@ export default function TransparansiContent() {
             </HorizontalScroller>
           )}
           {distMeta && (
-            <Pagination meta={distMeta} paramKey="dist_page" onPageChange={handlePageChange} />
+            <Pagination
+              meta={distMeta}
+              paramKey="dist_page"
+              onPageChange={handlePageChange}
+            />
           )}
         </div>
       </section>
@@ -683,13 +759,13 @@ export default function TransparansiContent() {
       {/* ═══════════════════════════════════════════
           SECTION 5 — KUNJUNGAN TERKINI
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface px-6 md:px-12 lg:px-20 py-16 lg:py-24">
+      <section className="bg-surface px-6 md:px-12 lg:px-20 pt-8 pb-12 py-16 lg:py-24">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12">
             <span className="font-public-sans text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant block mb-2">
               Interaksi Sosial
             </span>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-on-surface">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-on-surface">
               Agenda &amp; Kunjungan Terkini
             </h2>
           </div>
@@ -757,7 +833,11 @@ export default function TransparansiContent() {
             </HorizontalScroller>
           )}
           {visitMeta && (
-            <Pagination meta={visitMeta} paramKey="visit_page" onPageChange={handlePageChange} />
+            <Pagination
+              meta={visitMeta}
+              paramKey="visit_page"
+              onPageChange={handlePageChange}
+            />
           )}
         </div>
       </section>
@@ -765,82 +845,88 @@ export default function TransparansiContent() {
       {/* ═══════════════════════════════════════════
           SECTION 6 — LAPORAN PENGUNJUNG (UGC)
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 py-16 lg:py-24">
+      <section className="bg-surface-container-low px-6 md:px-12 lg:px-20 pt-8 pb-12 py-16 lg:py-24">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12">
             <span className="font-public-sans text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant block mb-2">
               Jejak Pengalaman
             </span>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-on-surface">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-on-surface">
               Cerita Dari Pengunjung Kami
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {reportLoading
-              ? Array.from({ length: 3 }).map((_, i) => (
-                  <GlassContainer key={i} className="p-6 animate-pulse">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-surface-container-low" />
-                      <div className="h-4 w-24 rounded bg-surface-container-low" />
-                    </div>
-                    <div className="h-3 w-full rounded bg-surface-container-low mb-2" />
-                    <div className="h-3 w-3/4 rounded bg-surface-container-low mb-2" />
-                    <div className="h-3 w-1/2 rounded bg-surface-container-low" />
-                  </GlassContainer>
-                ))
-              : reports.length === 0
-              ? (
-                <GlassContainer className="p-8 col-span-full text-center">
-                  <FiUser className="text-3xl text-on-surface-variant/40 mx-auto mb-3" />
-                  <p className="text-sm text-on-surface-variant font-sans">
-                    Belum ada laporan pengunjung yang dipublikasikan.
-                  </p>
+            {reportLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <GlassContainer key={i} className="p-6 animate-pulse">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-surface-container-low" />
+                    <div className="h-4 w-24 rounded bg-surface-container-low" />
+                  </div>
+                  <div className="h-3 w-full rounded bg-surface-container-low mb-2" />
+                  <div className="h-3 w-3/4 rounded bg-surface-container-low mb-2" />
+                  <div className="h-3 w-1/2 rounded bg-surface-container-low" />
                 </GlassContainer>
-              )
-              : reports.map((report: TransparencyReport) => (
-                  <GlassContainer key={report.id} className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/8 flex items-center justify-center">
-                        <FiUser className="text-primary text-sm" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm text-on-surface font-sans">
-                          {report.visitor_name}
-                        </h4>
-                        <div className="flex items-center gap-1 text-xs text-on-surface-variant">
-                          <FiCalendar className="text-[10px] text-primary" />
-                          {report.visit_date ? formatDate(report.visit_date) : "—"}
-                        </div>
+              ))
+            ) : reports.length === 0 ? (
+              <GlassContainer className="p-8 col-span-full text-center">
+                <FiUser className="text-3xl text-on-surface-variant/40 mx-auto mb-3" />
+                <p className="text-sm text-on-surface-variant font-sans">
+                  Belum ada laporan pengunjung yang dipublikasikan.
+                </p>
+              </GlassContainer>
+            ) : (
+              reports.map((report: TransparencyReport) => (
+                <GlassContainer key={report.id} className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/8 flex items-center justify-center">
+                      <FiUser className="text-primary text-sm" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-on-surface font-sans">
+                        {report.visitor_name}
+                      </h4>
+                      <div className="flex items-center gap-1 text-xs text-on-surface-variant">
+                        <FiCalendar className="text-[10px] text-primary" />
+                        {report.visit_date
+                          ? formatDate(report.visit_date)
+                          : "—"}
                       </div>
                     </div>
-                    <p className="text-sm text-on-surface-variant leading-relaxed font-sans mb-4 line-clamp-4">
-                      {report.content}
-                    </p>
-                    {report.image_path && report.image_path.length > 0 && (
-                      <div className="flex gap-2 overflow-x-auto">
-                        {report.image_path.slice(0, 3).map((path, idx) => (
-                          <img
-                            key={idx}
-                            src={`${process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://localhost:8000/storage"}/${path}`}
-                            alt={`Foto ${idx + 1}`}
-                            className="w-16 h-16 rounded-xl object-cover flex-shrink-0 bg-surface-container-low"
-                          />
-                        ))}
-                        {report.image_path.length > 3 && (
-                          <div className="w-16 h-16 rounded-xl bg-surface-container-low flex items-center justify-center flex-shrink-0">
-                            <span className="font-public-sans text-xs font-bold text-on-surface-variant">
-                              +{report.image_path.length - 3}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </GlassContainer>
-                ))}
+                  </div>
+                  <p className="text-sm text-on-surface-variant leading-relaxed font-sans mb-4 line-clamp-4">
+                    {report.content}
+                  </p>
+                  {report.image_path && report.image_path.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto">
+                      {report.image_path.slice(0, 3).map((path, idx) => (
+                        <img
+                          key={idx}
+                          src={`${process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://localhost:8000/storage"}/${path}`}
+                          alt={`Foto ${idx + 1}`}
+                          className="w-16 h-16 rounded-xl object-cover flex-shrink-0 bg-surface-container-low"
+                        />
+                      ))}
+                      {report.image_path.length > 3 && (
+                        <div className="w-16 h-16 rounded-xl bg-surface-container-low flex items-center justify-center flex-shrink-0">
+                          <span className="font-public-sans text-xs font-bold text-on-surface-variant">
+                            +{report.image_path.length - 3}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </GlassContainer>
+              ))
+            )}
           </div>
           {reportMeta && (
-            <Pagination meta={reportMeta} paramKey="report_page" onPageChange={handlePageChange} />
+            <Pagination
+              meta={reportMeta}
+              paramKey="report_page"
+              onPageChange={handlePageChange}
+            />
           )}
         </div>
       </section>

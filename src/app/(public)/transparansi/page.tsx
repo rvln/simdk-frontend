@@ -24,7 +24,10 @@ function TransparansiSkeleton() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Array.from({ length: 3 }).map((_, i) => (
-              <GlassContainer key={i} className="p-6 flex flex-col gap-5 animate-pulse">
+              <GlassContainer
+                key={i}
+                className="p-6 flex flex-col gap-5 animate-pulse"
+              >
                 <div className="flex items-center justify-between">
                   <div className="w-12 h-12 rounded-xl bg-surface-container-low" />
                   <div className="w-24 h-5 rounded-full bg-surface-container-low" />
@@ -52,7 +55,10 @@ function TransparansiSkeleton() {
           </div>
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <GlassContainer key={i} className="px-5 py-4 flex items-center gap-4 animate-pulse">
+              <GlassContainer
+                key={i}
+                className="px-5 py-4 flex items-center gap-4 animate-pulse"
+              >
                 <div className="w-10 h-10 rounded-full bg-surface-container-low flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="h-4 w-1/2 rounded bg-surface-container-low mb-1" />
@@ -80,9 +86,9 @@ export default function TransparansiPage() {
       {/* ═══════════════════════════════════════════
           SECTION 1 — HERO (Static, Server-Rendered)
       ═══════════════════════════════════════════ */}
-      <section className="bg-surface px-6 md:px-12 lg:px-20 pt-20 pb-16 text-center">
+      <section className="bg-surface px-6 md:px-12 lg:px-20 pt-14 pb-8 text-center">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-[1.08] text-on-surface mb-6 italic">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-[1.08] text-on-surface mb-6 italic">
             Jejak Kebaikan Real-Time
           </h1>
           <p className="text-on-surface-variant font-sans text-base md:text-lg leading-relaxed max-w-2xl mx-auto">

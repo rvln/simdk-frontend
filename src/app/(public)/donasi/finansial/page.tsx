@@ -236,7 +236,7 @@ export default function DonasiFinansialPage() {
 
   return (
     <div className="bg-surface">
-      <section className="px-6 md:px-12 lg:px-20 py-16 lg:py-24">
+      <section className="px-6 md:px-12 lg:px-20 py-16 lg:py-24 pt-14 pb-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-10 lg:gap-16 items-start">
           {/* ── Left Column: Hero image + quote ── */}
           <div className="relative hidden lg:block">

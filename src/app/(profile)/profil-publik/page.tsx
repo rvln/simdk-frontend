@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef as useReactRef } from "react";
 import { useForm } from "react-hook-form";
 import {
   MdOutlineEmail,
@@ -30,6 +30,7 @@ import {
   FiAlertCircle,
   FiChevronDown,
   FiSend,
+  FiCamera,
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
@@ -290,6 +291,11 @@ export default function ProfilPublikPage() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteAccountError, setDeleteAccountError] = useState("");
 
+  /* ── Profile Photo State ── */
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
+  const profilePhotoInputRef = useReactRef<HTMLInputElement>(null);
+
   const fetchProfileData = () => {
     const token = localStorage.getItem("auth_token");
     if (!token) return;
@@ -320,6 +326,12 @@ export default function ProfilPublikPage() {
 
   useEffect(() => {
     fetchProfileData();
+
+    // Load saved profile photo from localStorage
+    const savedPhoto = localStorage.getItem("profile_photo");
+    if (savedPhoto) {
+      setProfilePhotoUrl(savedPhoto);
+    }
   }, []);
 
   /* ── Derived metrics ── */
@@ -536,6 +548,7 @@ export default function ProfilPublikPage() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<ProfileFormData>({
     defaultValues: {
@@ -544,6 +557,39 @@ export default function ProfilPublikPage() {
       phone: "",
     },
   });
+
+  // Sync form values when user data loads asynchronously
+  useEffect(() => {
+    if (user) {
+      reset({
+        fullName: user.name ?? "",
+        email: user.email ?? "",
+        phone: "",
+      });
+    }
+  }, [user, reset]);
+
+  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const error = validateFile(file);
+    if (error) {
+      alert(error);
+      return;
+    }
+
+    setProfilePhotoFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      setProfilePhotoUrl(dataUrl);
+      localStorage.setItem("profile_photo", dataUrl);
+      // Dispatch storage event so Navbar can pick up the change in real-time
+      window.dispatchEvent(new Event("storage"));
+    };
+    reader.readAsDataURL(file);
+  };
 
   const onSubmit = (data: ProfileFormData) => {
     alert("Data berhasil disimpan:\n" + JSON.stringify(data, null, 2));
@@ -676,17 +722,44 @@ export default function ProfilPublikPage() {
 
         {/* Header Profil */}
         <div className="bg-white/80 backdrop-blur-xl shadow-sm rounded-3xl p-8 flex flex-col md:flex-row items-center md:items-start gap-8">
-          <div className="w-28 h-28 rounded-full overflow-hidden shadow-sm flex-shrink-0 bg-teal-100 flex items-center justify-center">
-            <span className="text-4xl font-bold text-teal-700">
-              {user?.name
-                ? user.name
-                    .split(" ")
-                    .map((w: string) => w[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()
-                : "?"}
-            </span>
+          <div className="relative group">
+            <div className="w-28 h-28 rounded-full overflow-hidden shadow-sm flex-shrink-0 bg-teal-100 flex items-center justify-center">
+              {profilePhotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profilePhotoUrl}
+                  alt="Foto profil"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-4xl font-bold text-teal-700">
+                  {user?.name
+                    ? user.name
+                        .split(" ")
+                        .map((w: string) => w[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()
+                    : "?"}
+                </span>
+              )}
+            </div>
+            {/* Camera overlay button */}
+            <button
+              type="button"
+              onClick={() => profilePhotoInputRef.current?.click()}
+              className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-teal-700 text-white flex items-center justify-center shadow-md hover:bg-teal-800 transition-colors cursor-pointer"
+              aria-label="Ubah foto profil"
+            >
+              <FiCamera className="text-sm" />
+            </button>
+            <input
+              ref={profilePhotoInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/jpg"
+              className="hidden"
+              onChange={handleProfilePhotoChange}
+            />
           </div>
 
           <div className="flex-1 text-center md:text-left">

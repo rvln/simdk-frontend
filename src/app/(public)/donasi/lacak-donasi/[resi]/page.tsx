@@ -22,7 +22,11 @@ import {
 } from "react-icons/md";
 import { FiInfo } from "react-icons/fi";
 
-export default function LacakDonasiPage({ params }: { params: Promise<{ resi: string }> }) {
+export default function LacakDonasiPage({
+  params,
+}: {
+  params: Promise<{ resi: string }>;
+}) {
   const router = useRouter();
   const resolvedParams = use(params);
   const resi = resolvedParams.resi;
@@ -40,9 +44,12 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
   useEffect(() => {
     const fetchDonation = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/public/donasi-barang/${resi}`, {
-          credentials: 'include'
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/public/donasi-barang/${resi}`,
+          {
+            credentials: "include",
+          },
+        );
         if (!response.ok) {
           throw new Error("Resi tidak ditemukan");
         }
@@ -57,7 +64,7 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
     fetchDonation();
   }, [resi]);
 
-  const status: string = donationData?.status || 'PENDING_DELIVERY';
+  const status: string = donationData?.status || "PENDING_DELIVERY";
 
   // Relational Lifecycle Binding: donations created via a visit should NOT
   // show courier/logistics UI — the visitor brings the items in person.
@@ -82,7 +89,11 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
   useEffect(() => {
     // Visit-bound donations have session-bounded TTLs, not courier deadlines.
     // The expiry countdown is irrelevant and misleading for in-person handovers.
-    if (isVisitBound || !donationData?.expires_at || status !== 'PENDING_DELIVERY') {
+    if (
+      isVisitBound ||
+      !donationData?.expires_at ||
+      status !== "PENDING_DELIVERY"
+    ) {
       setCountdown(null);
       setIsExpired(false);
       return;
@@ -110,7 +121,6 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
     return () => clearInterval(interval);
   }, [isVisitBound, donationData?.expires_at, status]);
 
-
   const handleCopyResi = () => {
     navigator.clipboard.writeText(resi);
     setCopied(true);
@@ -118,10 +128,13 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
   };
 
   const steps = [
-    { 
-      label: "Menunggu Pengiriman", 
-      status: (status === "PENDING_DELIVERY" || status === "SUCCESS") ? "active" : "pending", 
-      icon: <MdLocalShipping /> 
+    {
+      label: "Menunggu Pengiriman",
+      status:
+        status === "PENDING_DELIVERY" || status === "SUCCESS"
+          ? "active"
+          : "pending",
+      icon: <MdLocalShipping />,
     },
     {
       label: "Tervalidasi & Diterima",
@@ -134,7 +147,9 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
     return (
       <div className="min-h-screen bg-surface flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <span className="text-on-surface-variant font-bold tracking-widest uppercase text-sm">Memuat Data...</span>
+        <span className="text-on-surface-variant font-bold tracking-widest uppercase text-sm">
+          Memuat Data...
+        </span>
       </div>
     );
   }
@@ -147,12 +162,22 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
             <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-8">
               <MdInfoOutline className="text-5xl" />
             </div>
-            <h1 className="text-8xl font-black text-gray-200 tracking-tighter mb-2 font-sans">404</h1>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 font-sans tracking-tight">Resi Tidak Ditemukan</h2>
+            <h1 className="text-8xl font-black text-gray-200 tracking-tighter mb-2 font-sans">
+              404
+            </h1>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4 font-sans tracking-tight">
+              Resi Tidak Ditemukan
+            </h2>
             <p className="text-gray-500 mb-8 font-sans leading-relaxed">
-              Maaf, kode resi <span className="font-bold text-teal-700">{resi}</span> tidak ditemukan dalam sistem kami. Pastikan kode yang Anda masukkan sudah benar.
+              Maaf, kode resi{" "}
+              <span className="font-bold text-teal-700">{resi}</span> tidak
+              ditemukan dalam sistem kami. Pastikan kode yang Anda masukkan
+              sudah benar.
             </p>
-            <PrimaryButton onClick={() => router.back()} className="w-full flex items-center justify-center gap-2 py-4 shadow-md">
+            <PrimaryButton
+              onClick={() => router.back()}
+              className="w-full flex items-center justify-center gap-2 py-4 shadow-md"
+            >
               <MdArrowBack className="text-xl" />
               Kembali
             </PrimaryButton>
@@ -164,9 +189,14 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
     return (
       <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-6 text-center">
         <MdInfoOutline className="text-6xl text-red-500 mb-4" />
-        <h1 className="text-2xl font-black text-on-surface mb-2">Terjadi Kesalahan</h1>
+        <h1 className="text-2xl font-black text-on-surface mb-2">
+          Terjadi Kesalahan
+        </h1>
         <p className="text-on-surface-variant max-w-md mb-8">{error}</p>
-        <PrimaryButton onClick={() => router.back()} className="flex items-center justify-center gap-2 px-8 py-3 shadow-sm">
+        <PrimaryButton
+          onClick={() => router.back()}
+          className="flex items-center justify-center gap-2 px-8 py-3 shadow-sm"
+        >
           <MdArrowBack className="text-xl" />
           Kembali
         </PrimaryButton>
@@ -205,7 +235,9 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
             <div className="relative flex items-center justify-between max-w-5xl mx-auto">
               {/* Background Line */}
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-surface-container-high z-0" />
-              <div className={`absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-emerald-500 z-0 transition-all duration-1000 ${status === "SUCCESS" ? "w-full" : "w-0"}`} />
+              <div
+                className={`absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-emerald-500 z-0 transition-all duration-1000 ${status === "SUCCESS" ? "w-full" : "w-0"}`}
+              />
 
               {steps.map((step, idx) => {
                 const isActive = step.status === "active";
@@ -243,11 +275,14 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
             <div className="p-6 rounded-2xl bg-blue-50 flex items-start gap-4">
               <MdCalendarMonth className="text-blue-500 mt-1 shrink-0 text-2xl" />
               <div>
-                <h3 className="text-blue-900 font-bold mb-2">Informasi: Barang Bawaan Kunjungan</h3>
+                <h3 className="text-blue-900 font-bold mb-2">
+                  Informasi: Barang Bawaan Kunjungan
+                </h3>
                 <p className="text-sm text-blue-800 leading-relaxed">
-                  Daftar barang ini adalah rincian bawaan untuk jadwal kunjungan Anda.
-                  Penerimaan barang akan divalidasi langsung oleh pengurus saat Anda tiba di panti.
-                  Silakan pantau status persetujuan kunjungan Anda melalui tautan yang dikirimkan ke email.
+                  Daftar barang ini adalah rincian bawaan untuk jadwal kunjungan
+                  Anda. Penerimaan barang akan divalidasi langsung oleh pengurus
+                  saat Anda tiba di panti. Silakan pantau status persetujuan
+                  kunjungan Anda melalui tautan yang dikirimkan ke email.
                 </p>
               </div>
             </div>
@@ -255,46 +290,58 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
         )}
 
         {/* ── Expiry Warning Banner — standalone public donations only ── */}
-        {!isVisitBound && status === "PENDING_DELIVERY" && donationData?.expires_at && (
-          <div className="max-w-5xl mx-auto mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
-            {isExpired ? (
-              <div className="p-6 rounded-2xl bg-red-50 flex items-start gap-4">
-                <MdTimer className="text-red-500 mt-1 shrink-0 text-xl" />
-                <div>
-                  <h3 className="text-red-900 font-bold mb-2">Resi Telah Kedaluwarsa</h3>
-                  <p className="text-sm text-red-800 leading-relaxed">
-                    Batas waktu 30 jam untuk penyerahan barang telah berakhir. Reservasi kapasitas gudang telah dibatalkan secara otomatis. Silakan ajukan donasi baru jika Anda masih ingin menyumbangkan barang.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="p-6 rounded-2xl bg-amber-50 flex items-start gap-4">
-                <MdTimer className="text-amber-500 mt-1 shrink-0 text-xl" />
-                <div>
-                  <h3 className="text-amber-900 font-bold mb-2">Batas Waktu Penyerahan</h3>
-                  <p className="text-sm text-amber-800 leading-relaxed">
-                    Resi donasi ini akan kedaluwarsa pada{" "}
-                    <span className="font-bold">
-                      {new Date(donationData.expires_at).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>.
-                    Silakan serahkan barang ke panti sebelum batas waktu.
-                  </p>
-                  {countdown && (
-                    <p className="mt-2 text-xs font-bold text-amber-700 tracking-wider uppercase">
-                      Sisa waktu: {countdown}
+        {!isVisitBound &&
+          status === "PENDING_DELIVERY" &&
+          donationData?.expires_at && (
+            <div className="max-w-5xl mx-auto mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
+              {isExpired ? (
+                <div className="p-6 rounded-2xl bg-red-50 flex items-start gap-4">
+                  <MdTimer className="text-red-500 mt-1 shrink-0 text-xl" />
+                  <div>
+                    <h3 className="text-red-900 font-bold mb-2">
+                      Resi Telah Kedaluwarsa
+                    </h3>
+                    <p className="text-sm text-red-800 leading-relaxed">
+                      Batas waktu 30 jam untuk penyerahan barang telah berakhir.
+                      Reservasi kapasitas gudang telah dibatalkan secara
+                      otomatis. Silakan ajukan donasi baru jika Anda masih ingin
+                      menyumbangkan barang.
                     </p>
-                  )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              ) : (
+                <div className="p-6 rounded-2xl bg-amber-50 flex items-start gap-4">
+                  <MdTimer className="text-amber-500 mt-1 shrink-0 text-xl" />
+                  <div>
+                    <h3 className="text-amber-900 font-bold mb-2">
+                      Batas Waktu Penyerahan
+                    </h3>
+                    <p className="text-sm text-amber-800 leading-relaxed">
+                      Resi donasi ini akan kedaluwarsa pada{" "}
+                      <span className="font-bold">
+                        {new Date(donationData.expires_at).toLocaleDateString(
+                          "id-ID",
+                          {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
+                      </span>
+                      . Silakan serahkan barang ke panti sebelum batas waktu.
+                    </p>
+                    {countdown && (
+                      <p className="mt-2 text-xs font-bold text-amber-700 tracking-wider uppercase">
+                        Sisa waktu: {countdown}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
         {/* ── Transparency & Handover Banner ── */}
         {status === "SUCCESS" && (
@@ -302,9 +349,14 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
             <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-start gap-4">
               <FiInfo className="text-emerald-500 mt-1 shrink-0 text-xl" />
               <div>
-                <h3 className="text-emerald-900 font-bold mb-2">Amanah Telah Disalurkan</h3>
+                <h3 className="text-emerald-900 font-bold mb-2">
+                  Amanah Telah Disalurkan
+                </h3>
                 <p className="text-sm text-emerald-800 leading-relaxed">
-                  Barang donasi Anda telah divalidasi dan secara resmi tercatat dalam inventaris Panti Asuhan. Seluruh barang kini sepenuhnya dikelola oleh pihak panti untuk memenuhi kebutuhan harian anak-anak. Terima kasih atas kepedulian Anda.
+                  Barang donasi Anda telah divalidasi dan secara resmi tercatat
+                  dalam inventaris Panti Asuhan. Seluruh barang kini sepenuhnya
+                  dikelola oleh pihak panti untuk memenuhi kebutuhan harian
+                  anak-anak. Terima kasih atas kepedulian Anda.
                 </p>
               </div>
             </div>
@@ -316,7 +368,6 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
           {/* LEFT COLUMN: Dokumentasi Donatur */}
           <div className="relative group flex flex-col">
             <div className="aspect-square w-full relative rounded-2xl overflow-hidden bg-surface-container-low shadow-sm transition-all duration-700">
-              
               {/* Slideshow Images */}
               {slideshowImages.map((src, index) => {
                 const isActive = index === currentImageIndex;
@@ -383,10 +434,15 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
                   {donationData?.item_donations?.map((item: any) => {
                     const isExpanded = expandedItemId === item.id;
                     return (
-                      <div key={item.id} className="border-b border-gray-100 last:border-none pb-4 mb-4 last:mb-0 last:pb-0">
+                      <div
+                        key={item.id}
+                        className="border-b border-gray-100 last:border-none pb-4 mb-4 last:mb-0 last:pb-0"
+                      >
                         {/* Header */}
                         <button
-                          onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
+                          onClick={() =>
+                            setExpandedItemId(isExpanded ? null : item.id)
+                          }
                           className="w-full flex items-center justify-between text-left group"
                         >
                           <div className="flex flex-col pr-4">
@@ -409,7 +465,9 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
                         {/* Body (Expanded Content) */}
                         <div
                           className={`grid transition-all duration-300 ease-in-out ${
-                            isExpanded ? "grid-rows-[1fr] opacity-100 mt-5" : "grid-rows-[0fr] opacity-0"
+                            isExpanded
+                              ? "grid-rows-[1fr] opacity-100 mt-5"
+                              : "grid-rows-[0fr] opacity-0"
                           }`}
                         >
                           <div className="overflow-hidden">
@@ -419,7 +477,9 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
                                   Status Barang
                                 </span>
                                 <p className="font-bold text-on-surface text-xs md:text-sm">
-                                  {status === "SUCCESS" ? "Diterima" : "Menunggu Check-in"}
+                                  {status === "SUCCESS"
+                                    ? "Diterima"
+                                    : "Menunggu Check-in"}
                                 </p>
                               </div>
                             </div>
@@ -443,9 +503,9 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
                     Catatan Kunjungan
                   </span>
                   <p className="text-xs text-blue-700 leading-relaxed">
-                    Barang ini akan diterima dan divalidasi secara langsung oleh pengurus
-                    saat Anda tiba di panti sesuai jadwal kunjungan yang disetujui.
-                    Tidak diperlukan pengiriman via kurir.
+                    Barang ini akan diterima dan divalidasi secara langsung oleh
+                    pengurus saat Anda tiba di panti sesuai jadwal kunjungan
+                    yang disetujui. Tidak diperlukan pengiriman via kurir.
                   </p>
                 </div>
               </div>
@@ -457,7 +517,7 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
                     Catatan Pengiriman
                   </span>
                   <p className="text-xs text-on-surface-variant leading-relaxed">
-                    Paket saat ini sedang menunggu kurir logistik untuk dijemput.
+                    Paket saat ini sedang dalam tahap pengiriman ke logistik.
                     Harap pastikan nomor resi terlihat jelas pada kemasan luar.
                   </p>
                 </div>
@@ -477,7 +537,9 @@ export default function LacakDonasiPage({ params }: { params: Promise<{ resi: st
                 onClick={handleCopyResi}
                 className="flex items-center gap-3 px-8 py-4 rounded-xl shadow-ambient hover:shadow-lg transition-all w-full md:w-auto justify-center"
               >
-                <MdContentCopy className={`text-lg ${copied ? "text-tertiary" : ""}`} />
+                <MdContentCopy
+                  className={`text-lg ${copied ? "text-tertiary" : ""}`}
+                />
                 <span>{copied ? "Tersalin" : "Salin Nomor Resi"}</span>
               </PrimaryButton>
             </div>

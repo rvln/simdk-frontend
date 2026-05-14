@@ -70,11 +70,11 @@ export default function DonasiBarangCheckoutPage() {
 
   useEffect(() => {
     if (user) {
-      setIdentity(prev => ({
+      setIdentity((prev) => ({
         ...prev,
         donor_name: prev.donor_name || user.name || "",
         donor_email: prev.donor_email || user.email || "",
-        donor_phone: prev.donor_phone || user.phone || ""
+        donor_phone: prev.donor_phone || user.phone || "",
       }));
     }
   }, [user]);
@@ -125,7 +125,7 @@ export default function DonasiBarangCheckoutPage() {
       setIsLoadingCatalog(true);
       fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/public/katalog-kebutuhan`,
-        { credentials: 'include' }
+        { credentials: "include" },
       )
         .then((res) => res.json())
         .then((json) => {
@@ -158,6 +158,12 @@ export default function DonasiBarangCheckoutPage() {
       !manualForm.item_qty
     ) {
       alert("Nama Barang, Kategori, dan Jumlah wajib diisi.");
+      return;
+    }
+
+    const parsedQty = parseInt(manualForm.item_qty);
+    if (isNaN(parsedQty) || parsedQty < 1) {
+      alert("Jumlah barang harus minimal 1.");
       return;
     }
 
@@ -195,6 +201,12 @@ export default function DonasiBarangCheckoutPage() {
   const handleAddCatalog = async () => {
     if (!selectedNeed || !catalogQty) {
       alert("Silakan pilih barang dari katalog dan masukkan jumlahnya.");
+      return;
+    }
+
+    const parsedQty = parseInt(catalogQty);
+    if (isNaN(parsedQty) || parsedQty < 1) {
+      alert("Jumlah donasi harus minimal 1.");
       return;
     }
 
@@ -289,7 +301,7 @@ export default function DonasiBarangCheckoutPage() {
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/public/donasi-barang`,
         {
           method: "POST",
-          credentials: 'include',
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -320,7 +332,7 @@ export default function DonasiBarangCheckoutPage() {
   };
 
   return (
-    <div className="bg-[#F9FAFB] min-h-screen pb-32">
+    <div className="bg-[#F9FAFB] min-h-screen">
       <section className="px-6 md:px-12 lg:px-20 py-16 lg:py-24">
         <div className="max-w-3xl mx-auto space-y-8">
           {/* Header */}
@@ -443,7 +455,9 @@ export default function DonasiBarangCheckoutPage() {
                   <InputField
                     id="item_qty"
                     label="Jumlah / Satuan *"
-                    placeholder="Contoh: 3 Dus"
+                    placeholder="Contoh: 3"
+                    type="number"
+                    min={1}
                     value={manualForm.item_qty}
                     onChange={handleManualFormChange}
                   />
@@ -627,7 +641,9 @@ export default function DonasiBarangCheckoutPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <InputField
                         label="Jumlah Donasi Anda *"
-                        placeholder="Contoh: 10 Kg"
+                        placeholder="Contoh: 10"
+                        type="number"
+                        min={1}
                         value={catalogQty}
                         onChange={(e) => setCatalogQty(e.target.value)}
                       />

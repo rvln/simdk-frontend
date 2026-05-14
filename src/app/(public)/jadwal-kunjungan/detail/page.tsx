@@ -222,6 +222,11 @@ function DetailPengunjungContent() {
 
   const handleAddToCart = () => {
     if (selectedInventoryId && itemQty) {
+      const parsedQty = parseInt(itemQty);
+      if (isNaN(parsedQty) || parsedQty < 1) {
+        alert("Jumlah barang harus minimal 1.");
+        return;
+      }
       const inv = inventoryList.find((i) => i.id === selectedInventoryId);
       if (!inv) return;
       setCartItems([
@@ -229,7 +234,7 @@ function DetailPengunjungContent() {
         {
           id: `${Date.now()}`,
           name: `${inv.itemName} (${inv.unit})`,
-          qty: parseInt(itemQty),
+          qty: parsedQty,
           inventory_id: inv.id,
         },
       ]);
@@ -607,7 +612,8 @@ function DetailPengunjungContent() {
                       type="number"
                       value={itemQty}
                       onChange={(e) => setItemQty(e.target.value)}
-                      placeholder="0"
+                      min={1}
+                      placeholder="1"
                       className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/15 focus:border-primary/40 focus:ring-0 font-sans text-sm text-on-surface text-center outline-none"
                     />
                   </div>
