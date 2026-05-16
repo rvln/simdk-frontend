@@ -71,15 +71,22 @@ export function KebutuhanContent({
     setSubmitSuccess(false);
     if (editingItem) {
       reset({
-        itemName:    editingItem.itemName,
-        category:    editingItem.category,
-        priority:    editingItem.priority ?? "OPSIONAL",
-        target_qty:  editingItem.target_qty,
-        unit:        editingItem.unit,
+        itemName: editingItem.itemName,
+        category: editingItem.category,
+        priority: editingItem.priority ?? "OPSIONAL",
+        target_qty: editingItem.target_qty,
+        unit: editingItem.unit,
         description: editingItem.description,
       });
     } else {
-      reset({ itemName: "", category: "", priority: "OPSIONAL", target_qty: 0, unit: "", description: "" });
+      reset({
+        itemName: "",
+        category: "",
+        priority: "OPSIONAL",
+        target_qty: 0,
+        unit: "",
+        description: "",
+      });
     }
   }, [editingItem, reset]);
 
@@ -111,7 +118,6 @@ export function KebutuhanContent({
     >
       {/* ── Scrollable fields ── */}
       <div className="flex-1 overflow-y-auto p-6 pt-2 flex flex-col gap-6">
-
         {/* Inline error banner */}
         {submitError && (
           <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm animate-in fade-in slide-in-from-top-2">
@@ -140,7 +146,9 @@ export function KebutuhanContent({
             disabled={isSubmitting}
           />
           {errors.itemName && (
-            <p className="text-red-500 text-xs mt-1">{errors.itemName.message}</p>
+            <p className="text-red-500 text-xs mt-1">
+              {errors.itemName.message}
+            </p>
           )}
         </div>
 
@@ -163,7 +171,9 @@ export function KebutuhanContent({
             <option value="LAINNYA">Lainnya</option>
           </select>
           {errors.category && (
-            <p className="text-red-500 text-xs mt-1">{errors.category.message}</p>
+            <p className="text-red-500 text-xs mt-1">
+              {errors.category.message}
+            </p>
           )}
         </div>
 
@@ -177,12 +187,20 @@ export function KebutuhanContent({
             className={`${inputBase} appearance-none font-bold`}
             disabled={isSubmitting}
           >
-            <option value="MENDESAK" className="text-red-600">🔴 Mendesak (Urgent)</option>
-            <option value="PENTING" className="text-blue-600">🔵 Penting (High Priority)</option>
-            <option value="OPSIONAL" className="text-slate-600">⚪ Opsional (Routine)</option>
+            <option value="MENDESAK" className="text-red-600">
+              🔴 Mendesak
+            </option>
+            <option value="PENTING" className="text-blue-600">
+              🔵 Penting
+            </option>
+            <option value="OPSIONAL" className="text-slate-600">
+              ⚪ Opsional
+            </option>
           </select>
           {errors.priority && (
-            <p className="text-red-500 text-xs mt-1">{errors.priority.message}</p>
+            <p className="text-red-500 text-xs mt-1">
+              {errors.priority.message}
+            </p>
           )}
         </div>
 

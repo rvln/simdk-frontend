@@ -235,27 +235,32 @@ export default function ValidasiDonasiPage() {
           </div>
 
           {/* Tab Toggle */}
-          <div className="flex items-center bg-white/60 backdrop-blur-md p-1.5 rounded-full shadow-sm w-fit mb-8">
-            {(["BARANG", "DANA"] as DonationType[]).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => handleTabSwitch(tab)}
-                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border-none ${
-                  activeTab === tab
-                    ? "bg-teal-700 text-white shadow-md"
-                    : "bg-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {tab === "BARANG"
-                  ? "Validasi Donasi Barang"
-                  : "Riwayat Transaksi Dana"}
-              </button>
-            ))}
+          <div className="flex border-b border-gray-200 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
+            <button
+              onClick={() => handleTabSwitch("BARANG")}
+              className={`pb-4 px-6 text-sm font-bold border-b-2 transition-colors ${
+                activeTab === "BARANG"
+                  ? "border-teal-600 text-teal-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Validasi Donasi Barang
+            </button>
+            <button
+              onClick={() => handleTabSwitch("DANA")}
+              className={`pb-4 px-6 text-sm font-bold border-b-2 transition-colors ${
+                activeTab === "DANA"
+                  ? "border-teal-600 text-teal-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Riwayat Transaksi Dana
+            </button>
           </div>
 
           {/* Filters */}
           <div className="bg-teal-50/30 backdrop-blur-md rounded-2xl p-4 mb-8 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-            <div className="flex gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <FiSearch className="text-gray-400 text-lg" />
@@ -351,59 +356,68 @@ export default function ValidasiDonasiPage() {
                   <div
                     key={item.id}
                     onClick={() => handleSelect(item)}
-                    className={`group flex items-center p-5 rounded-2xl cursor-pointer transition-all duration-300 ${
+                    className={`group flex flex-col sm:flex-row sm:items-center p-5 rounded-2xl cursor-pointer transition-all duration-300 ${
                       isSelected
                         ? "bg-white ring-2 ring-teal-600 shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
                         : "bg-slate-50/70 backdrop-blur-md border-none hover:bg-white hover:shadow-[0_4px_20px_rgb(0,0,0,0.04)] hover:-translate-y-0.5"
                     }`}
                   >
-                    <div
-                      className={`w-14 h-14 rounded-xl flex items-center justify-center mr-5 transition-colors ${
-                        isSelected
-                          ? "bg-blue-100 text-blue-600"
-                          : isExpired
-                            ? "bg-red-50 text-red-400"
-                            : isBarang
-                              ? "bg-teal-50 text-teal-600"
-                              : "bg-green-50 text-green-600"
-                      }`}
-                    >
-                      {isBarang ? (
-                        <FiBox className="text-2xl" />
-                      ) : (
-                        <FaMoneyBillWave className="text-2xl" />
-                      )}
-                    </div>
-
-                    <div className="flex-1">
-                      <p className="text-[10px] font-bold tracking-wider text-teal-600 uppercase mb-1">
-                        RESI: {item.resi}
-                      </p>
-                      <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                        {item.name}
-                        {!isBarang && (
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[9px] uppercase rounded-md tracking-wider">
-                            DANA
-                          </span>
+                    <div className="flex w-full sm:w-auto items-center mb-4 sm:mb-0">
+                      <div
+                        className={`w-14 h-14 rounded-xl flex items-center justify-center mr-4 transition-colors flex-shrink-0 ${
+                          isSelected
+                            ? "bg-blue-100 text-blue-600"
+                            : isExpired
+                              ? "bg-red-50 text-red-400"
+                              : isBarang
+                                ? "bg-teal-50 text-teal-600"
+                                : "bg-green-50 text-green-600"
+                        }`}
+                      >
+                        {isBarang ? (
+                          <FiBox className="text-2xl" />
+                        ) : (
+                          <FaMoneyBillWave className="text-2xl" />
                         )}
-                      </h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <span className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] text-gray-600">
-                            👤
-                          </span>
-                          {item.donor}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FaClock className="text-gray-400 text-xs" />
-                          {item.timeInfo}
-                        </span>
                       </div>
+
+                      <div className="flex-1">
+                        <p className="text-[10px] font-bold tracking-wider text-teal-600 uppercase mb-1">
+                          RESI: {item.resi}
+                        </p>
+                        <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center flex-wrap gap-2">
+                          {item.name}
+                          {!isBarang && (
+                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[9px] uppercase rounded-md tracking-wider">
+                              DANA
+                            </span>
+                          )}
+                        </h3>
+                        <div className="flex items-center flex-wrap gap-4 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <span className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] text-gray-600">
+                              👤
+                            </span>
+                            {item.donor}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <FaClock className="text-gray-400 text-xs" />
+                            {item.timeInfo}
+                          </span>
+                        </div>
+                      </div>
+                      <FiChevronRight
+                        className={`sm:hidden ml-auto text-xl transition-transform duration-300 ${
+                          isSelected
+                            ? "text-teal-600 translate-x-1"
+                            : "text-gray-300 group-hover:text-teal-400 group-hover:translate-x-1"
+                        }`}
+                      />
                     </div>
 
-                    <div className="flex flex-col items-end justify-center gap-2">
+                    <div className="flex flex-col sm:items-end justify-center gap-2 w-full sm:w-auto sm:ml-auto">
                       <span
-                        className={`px-3 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${
+                        className={`px-3 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase w-fit ${
                           item.status === "SUCCESS"
                             ? "bg-green-100 text-green-700"
                             : item.status === "REJECTED" || item.status === "FAILED" || item.status === "CANCELLED" || item.status === "EXPIRED" || isExpired
@@ -425,7 +439,7 @@ export default function ValidasiDonasiPage() {
                         })()}
                       </span>
                       <FiChevronRight
-                        className={`text-xl transition-transform duration-300 ${
+                        className={`hidden sm:block text-xl transition-transform duration-300 ${
                           isSelected
                             ? "text-teal-600 translate-x-1"
                             : "text-gray-300 group-hover:text-teal-400 group-hover:translate-x-1"

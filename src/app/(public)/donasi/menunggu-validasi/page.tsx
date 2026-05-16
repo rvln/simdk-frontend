@@ -14,14 +14,20 @@ export default function MenungguValidasiPage() {
             <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mx-auto mb-6">
               <FiCheckCircle className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-3xl font-black tracking-tight mb-2">Terima Kasih!</h1>
-            <p className="text-white/80 font-medium text-lg">Bukti Transfer Berhasil Diunggah</p>
+            <h1 className="text-3xl font-black tracking-tight mb-2">
+              Terima Kasih!
+            </h1>
+            <p className="text-white/80 font-medium text-lg">
+              Bukti Transfer Berhasil Diunggah
+            </p>
           </div>
 
           {/* Body */}
           <div className="p-10 space-y-8">
             <p className="text-on-surface-variant leading-relaxed text-lg">
-              Bukti transfer Anda telah diterima dan sedang dalam proses verifikasi oleh Pengurus Panti. Mohon cek halaman ini atau hubungi pengurus jika membutuhkan konfirmasi lebih lanjut.
+              Bukti transfer Anda telah diterima dan sedang dalam proses
+              verifikasi oleh Pengurus Panti. Hubungi pengurus jika membutuhkan
+              konfirmasi lebih lanjut.
             </p>
           </div>
 

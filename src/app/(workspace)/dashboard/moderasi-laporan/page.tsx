@@ -258,8 +258,10 @@ export default function ModerasiLaporanPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto w-full">
-      {/* Header */}
+    <div className="flex h-full w-full relative overflow-hidden">
+      <div className="flex-1 p-6 lg:p-8 overflow-y-auto">
+        <div className="max-w-5xl mx-auto w-full">
+          {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">
           Moderasi Laporan Kunjungan
@@ -431,6 +433,8 @@ export default function ModerasiLaporanPage() {
           isSubmitting={isSubmitting}
         />
       )}
+        </div>
+      </div>
     </div>
   );
 }

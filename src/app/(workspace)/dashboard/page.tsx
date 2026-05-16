@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { id } from "date-fns/locale";
 import { GlassContainer } from "@/components/ui/GlassContainer";
 import {
   MdOutlineCalendarToday,
@@ -56,6 +57,48 @@ interface OverviewResponse {
   logistics_audit: LogisticsAudit[];
 }
 
+const getSessionTime = (session: string) => {
+  const mapping: Record<string, string> = {
+    MORNING: "08:00",
+    AFTERNOON: "13:00",
+    EVENING: "15:30",
+    NIGHT: "19:00",
+  };
+  return mapping[session] || "--:--";
+};
+
+const translateSession = (session: string) => {
+  const mapping: Record<string, string> = {
+    MORNING: "PAGI",
+    AFTERNOON: "SIANG",
+    EVENING: "SORE",
+    NIGHT: "MALAM",
+  };
+  return mapping[session] || session;
+};
+
+const translateSubtitle = (subtitle: string) => {
+  if (!subtitle) return subtitle;
+  return subtitle
+    .replace(/PENDING_DELIVERY/g, "MENUNGGU PENGIRIMAN")
+    .replace(/PENDING/g, "MENUNGGU PERSETUJUAN");
+};
+
+const translateTimeDiff = (timeDiff: string) => {
+  if (!timeDiff) return timeDiff;
+  return timeDiff
+    .replace(/just now/i, "baru saja")
+    .replace(/ago/i, "yang lalu")
+    .replace(/seconds?/i, "detik")
+    .replace(/minutes?/i, "menit")
+    .replace(/hours?/i, "jam")
+    .replace(/days?/i, "hari")
+    .replace(/weeks?/i, "minggu")
+    .replace(/months?/i, "bulan")
+    .replace(/years?/i, "tahun")
+    .replace(/from now/i, "dari sekarang");
+};
+
 export default function DashboardPage() {
   const { user } = useAuth();
 
@@ -68,7 +111,7 @@ export default function DashboardPage() {
       const token = localStorage.getItem("auth_token");
       try {
         const res = await fetch(`${API_BASE}/api/dashboard/overview`, {
-          credentials: 'include',
+          credentials: "include",
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
@@ -94,11 +137,11 @@ export default function DashboardPage() {
           {/* Header Section */}
           <header className="mb-10">
             <h1 className="text-4xl font-headline font-extrabold text-primary tracking-tight mb-2 font-sans">
-              Dashboard Operasional
+              Dasbor Operasional
             </h1>
             <p className="text-on-surface-variant font-public-sans text-lg">
               Selamat datang kembali{user ? `, ${user.name}` : ""}. Pantau
-              aktivitas panti hari ini secara real-time.
+              aktivitas panti hari ini pada waktu nyata.
             </p>
           </header>
 
@@ -122,7 +165,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="font-public-sans text-sm font-semibold text-on-surface-variant uppercase tracking-widest mb-1">
-                      Menunggu Approval
+                      Menunggu Persetujuan
                     </p>
                     <h2 className="text-5xl font-black text-primary mb-2 font-sans">
                       {data.metrics.pending_visits}
@@ -140,13 +183,13 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="font-public-sans text-sm font-semibold opacity-80 uppercase tracking-widest mb-1">
-                      Menunggu Check-in
+                      Menunggu Penerimaan
                     </p>
                     <h2 className="text-5xl font-black mb-2 font-sans text-white">
                       {data.metrics.pending_donations}
                     </h2>
                     <p className="opacity-90 text-sm font-sans font-light">
-                      Resi donasi fisik pending.
+                      Resi donasi fisik yang tertunda.
                     </p>
                   </div>
                 </div>
@@ -200,12 +243,12 @@ export default function DashboardPage() {
                           >
                             <div className="flex flex-col items-center justify-center bg-surface-container-lowest rounded-lg px-4 py-2 shadow-sm min-w-[80px]">
                               <span className="text-primary font-black text-xl font-sans">
-                                {agenda.time === "TBA"
-                                  ? "--:--"
-                                  : agenda.time.slice(0, 5)}
+                                {agenda.time && agenda.time !== "TBA"
+                                  ? agenda.time.slice(0, 5)
+                                  : getSessionTime(agenda.session)}
                               </span>
                               <span className="text-[10px] font-public-sans font-bold text-on-surface-variant uppercase">
-                                {agenda.session}
+                                {translateSession(agenda.session)}
                               </span>
                             </div>
                             <div className="flex-1">
@@ -249,28 +292,28 @@ export default function DashboardPage() {
                                 key={`${log.id}-${idx}`}
                                 className="flex gap-6 items-start relative"
                               >
-                                <div
-                                  className={`w-7 h-7 rounded-full flex items-center justify-center text-white ring-4 ring-surface-container-lowest z-10 flex-shrink-0 ${isDonation ? "bg-tertiary-container text-tertiary" : "bg-primary"}`}
-                                >
-                                  {isDonation ? (
-                                    <MdOutlineVolunteerActivism className="text-[14px]" />
-                                  ) : (
-                                    <MdOutlineGroup className="text-[14px]" />
-                                  )}
-                                </div>
-                                <div className="flex-1 pt-1">
-                                  <p className="font-bold text-sm text-on-surface font-sans">
-                                    {log.title}
-                                  </p>
-                                  <p
-                                    className={`font-public-sans text-xs font-bold uppercase tracking-widest mt-1 ${isDonation ? "text-tertiary" : "text-primary"}`}
+                                  <div
+                                    className={`w-7 h-7 rounded-full flex items-center justify-center text-white ring-4 ring-surface-container-lowest z-10 flex-shrink-0 ${isDonation ? "bg-tertiary" : "bg-primary"}`}
                                   >
-                                    {log.subtitle}
-                                  </p>
-                                  <span className="text-[10px] text-on-surface-variant uppercase font-public-sans mt-2 block">
-                                    {log.time_diff}
-                                  </span>
-                                </div>
+                                    {isDonation ? (
+                                      <MdOutlineVolunteerActivism className="text-[14px]" />
+                                    ) : (
+                                      <MdOutlineGroup className="text-[14px]" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 pt-1">
+                                    <p className="font-bold text-sm text-on-surface font-sans">
+                                      {log.title}
+                                    </p>
+                                    <p
+                                      className={`font-public-sans text-xs font-bold uppercase tracking-widest mt-1 ${isDonation ? "text-tertiary" : "text-primary"}`}
+                                    >
+                                      {translateSubtitle(log.subtitle)}
+                                    </p>
+                                    <span className="text-[10px] text-on-surface-variant uppercase font-public-sans mt-2 block">
+                                      {translateTimeDiff(log.time_diff)}
+                                    </span>
+                                  </div>
                               </div>
                             );
                           })
@@ -288,11 +331,11 @@ export default function DashboardPage() {
                 <GlassContainer className="p-8 shadow-ambient flex flex-col md:flex-row gap-8">
                   <div className="md:w-1/3">
                     <h3 className="text-xl font-bold text-primary mb-2 font-sans">
-                      Audit Trail Logistik
+                      Jejak Audit Logistik
                     </h3>
                     <p className="text-sm text-on-surface-variant font-public-sans mb-6">
-                      Lacak histori status dan pergerakan inventaris secara
-                      real-time. Memastikan transparansi dari penerimaan hingga
+                      Lacak histori status dan pergerakan inventaris pada waktu
+                      nyata. Memastikan transparansi dari penerimaan hingga
                       distribusi.
                     </p>
                   </div>
@@ -308,9 +351,9 @@ export default function DashboardPage() {
                     ) : (
                       data.logistics_audit.map((audit, index) => {
                         const colors = [
-                          "bg-primary",
-                          "bg-tertiary",
-                          "bg-surface-variant text-outline",
+                          "bg-primary text-white",
+                          "bg-tertiary text-white",
+                          "bg-gray-200 text-gray-500",
                         ];
                         const textColors = [
                           "text-primary",
@@ -331,7 +374,7 @@ export default function DashboardPage() {
                             className={`flex gap-6 items-start relative ${index !== data.logistics_audit.length - 1 ? "mb-8" : ""}`}
                           >
                             <div
-                              className={`w-10 h-10 rounded-full flex items-center justify-center text-white ring-8 ring-surface-container-lowest z-10 flex-shrink-0 shadow-sm ${colors[colorIdx]}`}
+                              className={`w-10 h-10 rounded-full flex items-center justify-center ring-8 ring-surface-container-lowest z-10 flex-shrink-0 shadow-sm ${colors[colorIdx]}`}
                             >
                               {index === 0 ? (
                                 <MdOutlineInventory2 className="text-lg" />
@@ -361,6 +404,7 @@ export default function DashboardPage() {
                                 {format(
                                   new Date(audit.time_formatted),
                                   "dd MMM yyyy, HH:mm",
+                                  { locale: id }
                                 )}
                               </p>
                               <p
@@ -384,7 +428,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2 px-6 py-3 bg-secondary-container/50 rounded-full border border-secondary/10">
               <MdOutlineCheckCircle className="text-secondary text-2xl" />
               <span className="font-public-sans text-xs font-bold uppercase tracking-[0.2em] text-secondary">
-                Sistem Terverifikasi Empanti v2.4.0
+                Sistem Donasi dan Kunjungan v1.0.0
               </span>
             </div>
           </div>

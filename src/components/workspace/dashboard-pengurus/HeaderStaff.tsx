@@ -12,19 +12,19 @@ export function HeaderStaff() {
       <div className="flex items-center gap-3">
         <MobileMenuToggle />
         <h1 className="text-lg md:text-xl font-bold text-teal-700 tracking-tight uppercase">
-          Panti Asuhan Workspace
+          Ruang Kerja Panti Asuhan
         </h1>
       </div>
 
       {/* Right side: notification, help, profile */}
-      <div className="flex items-center gap-6">
-        <button className="relative text-gray-500 hover:text-teal-600 transition-colors">
+      <div className="flex items-center gap-6 pr-2 lg:pr-6">
+        {/* <button className="relative text-gray-500 hover:text-teal-600 transition-colors">
           <FiBell className="text-xl" />
           <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
         </button>
         <button className="text-gray-500 hover:text-teal-600 transition-colors">
           <FiHelpCircle className="text-xl" />
-        </button>
+        </button> */}
 
         {/* Separator using gradient instead of solid border */}
         <div className="w-[1px] h-8 bg-gradient-to-b from-transparent via-black/10 to-transparent mx-2"></div>
@@ -42,7 +42,7 @@ export function HeaderStaff() {
           <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center overflow-hidden shadow-sm">
             <img
               src="https://api.dicebear.com/7.x/notionists/svg?seed=Budi"
-              alt="User Profile"
+              alt="Profil Pengguna"
               className="w-full h-full object-cover"
             />
           </div>

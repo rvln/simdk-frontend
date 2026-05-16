@@ -119,6 +119,10 @@ export default function KelolaKebutuhanPage() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<KebutuhanData | null>(null);
 
+  // ── Delete state ─────────────────────────────────────────────────────────────
+  const [itemToDelete, setItemToDelete] = useState<KebutuhanData | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // ── Fetch list ───────────────────────────────────────────────────────────────
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
@@ -131,7 +135,7 @@ export default function KelolaKebutuhanPage() {
       if (priorityFilter) params.append("priority", priorityFilter);
 
       const res = await fetch(`${ENDPOINT}?${params.toString()}`, {
-        credentials: 'include',
+        credentials: "include",
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -181,7 +185,7 @@ export default function KelolaKebutuhanPage() {
 
       const res = await fetch(url, {
         method,
-        credentials: 'include',
+        credentials: "include",
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -201,6 +205,33 @@ export default function KelolaKebutuhanPage() {
     },
     [editingItem, token, fetchItems],
   );
+
+  // ── Delete handler ───────────────────────────────────────────────────────────
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`${ENDPOINT}/${itemToDelete.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Gagal menghapus data");
+      }
+
+      await fetchItems();
+      setItemToDelete(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Terjadi kesalahan";
+      alert(msg || "Terjadi kesalahan saat menghapus data.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // ─────────────────────────────────────────────────────────────────────────────
 
@@ -225,18 +256,19 @@ export default function KelolaKebutuhanPage() {
               Kelola Kebutuhan &amp; Inventaris
             </h1>
             <p className="text-gray-500 text-lg">
-              Monitor and manage the essential supplies needed for children's
-              well-being. Transparently track donations and distribution cycles.
+              Pantau dan kelola persediaan penting yang dibutuhkan untuk
+              kesejahteraan anak-anak. Lacak sumbangan dan siklus distribusi
+              secara transparan.
             </p>
           </div>
 
           {/* ── Tabs ── */}
-          <div className="flex border-b border-gray-200 mb-6">
+          <div className="flex border-b border-gray-200 mb-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
             <button
               onClick={() => setActiveTab("KATALOG")}
               className={`pb-4 px-6 text-sm font-bold border-b-2 transition-colors ${
                 activeTab === "KATALOG"
-                  ? "border-[#0B648C] text-[#0B648C]"
+                  ? "border-teal-600 text-teal-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -246,7 +278,7 @@ export default function KelolaKebutuhanPage() {
               onClick={() => setActiveTab("ASET")}
               className={`pb-4 px-6 text-sm font-bold border-b-2 transition-colors ${
                 activeTab === "ASET"
-                  ? "border-[#0B648C] text-[#0B648C]"
+                  ? "border-teal-600 text-teal-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -255,8 +287,8 @@ export default function KelolaKebutuhanPage() {
           </div>
 
           {/* Action Bar */}
-          <div className="flex gap-4 mb-8">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-col lg:flex-row gap-4 mb-8">
+            <div className="relative w-full lg:flex-1 lg:max-w-xs">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <FiSearch className="text-gray-400 text-lg" />
               </div>
@@ -268,42 +300,45 @@ export default function KelolaKebutuhanPage() {
                 className="w-full pl-11 pr-4 py-3 bg-white rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0B648C]/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-shadow border-none"
               />
             </div>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="px-4 py-3 bg-white rounded-xl text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-sm font-medium border-none focus:outline-none"
-            >
-              <option value="">Semua Kategori</option>
-              <option value="MAKANAN">Makanan</option>
-              <option value="PAKAIAN">Pakaian</option>
-              <option value="PENDIDIKAN">Pendidikan</option>
-              <option value="KESEHATAN">Kesehatan</option>
-              <option value="KEBERSIHAN">Kebersihan</option>
-              <option value="LAINNYA">Lainnya</option>
-            </select>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-3 bg-white rounded-xl text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-sm font-medium border-none focus:outline-none"
-            >
-              <option value="">Semua Status</option>
-              <option value="SEDANG BERLANGSUNG">Sedang Berlangsung</option>
-              <option value="TERPENUHI">Terpenuhi</option>
-            </select>
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-4 py-3 bg-white rounded-xl text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-sm font-medium border-none focus:outline-none"
-            >
-              <option value="">Semua Prioritas</option>
-              <option value="MENDESAK">Mendesak</option>
-              <option value="PENTING">Penting</option>
-              <option value="OPSIONAL">Opsional</option>
-            </select>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:flex gap-3 w-full lg:w-auto">
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-3 py-3 bg-white rounded-xl text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-xs sm:text-sm font-medium border-none focus:outline-none truncate"
+              >
+                <option value="">Semua Kategori</option>
+                <option value="MAKANAN">Makanan</option>
+                <option value="PAKAIAN">Pakaian</option>
+                <option value="PENDIDIKAN">Pendidikan</option>
+                <option value="KESEHATAN">Kesehatan</option>
+                <option value="KEBERSIHAN">Kebersihan</option>
+                <option value="LAINNYA">Lainnya</option>
+              </select>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-3 bg-white rounded-xl text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-xs sm:text-sm font-medium border-none focus:outline-none truncate"
+              >
+                <option value="">Semua Status</option>
+                <option value="SEDANG BERLANGSUNG">Sedang Berlangsung</option>
+                <option value="TERPENUHI">Terpenuhi</option>
+              </select>
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="w-full col-span-2 md:col-span-1 px-3 py-3 bg-white rounded-xl text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-xs sm:text-sm font-medium border-none focus:outline-none truncate"
+              >
+                <option value="">Semua Prioritas</option>
+                <option value="MENDESAK">Mendesak</option>
+                <option value="PENTING">Penting</option>
+                <option value="OPSIONAL">Opsional</option>
+              </select>
+            </div>
             {activeTab === "KATALOG" ? (
               <button
                 onClick={openAddForm}
-                className="flex items-center gap-2 px-6 py-3 bg-[#0B648C] text-white rounded-xl text-sm font-bold shadow-[0_4px_14px_rgba(11,100,140,0.3)] hover:bg-[#095273] transition-all hover:-translate-y-0.5 ml-auto whitespace-nowrap"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#0B648C] text-white rounded-xl text-sm font-bold shadow-[0_4px_14px_rgba(11,100,140,0.3)] hover:bg-[#095273] transition-all hover:-translate-y-0.5 w-full lg:w-auto lg:ml-auto whitespace-nowrap"
               >
                 <FiPlus className="text-lg" /> Tambah Katalog
               </button>
@@ -364,61 +399,57 @@ export default function KelolaKebutuhanPage() {
                 return (
                   <div
                     key={item.id}
-                    className={`bg-white p-6 rounded-2xl flex gap-6 items-center transition-all duration-300 shadow-sm ${
+                    className={`bg-white p-5 sm:p-6 rounded-2xl flex flex-col lg:flex-row gap-4 sm:gap-6 lg:items-center transition-all duration-300 shadow-sm ${
                       activeTab !== "ASET" && isFulfilled
                         ? "opacity-60 grayscale-[30%] hover:grayscale-0 hover:opacity-100"
                         : "hover:shadow-md hover:-translate-y-0.5"
                     }`}
                   >
-                    {/* Thumbnail */}
-                    <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 relative shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-                      {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.itemName}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          <FaBoxOpen className="text-3xl" />
-                        </div>
-                      )}
-                    </div>
+                    <div className="flex flex-row gap-4 flex-1">
+                      {/* Thumbnail */}
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 relative shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.itemName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <FaBoxOpen className="text-2xl sm:text-3xl" />
+                          </div>
+                        )}
+                      </div>
 
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      {/* ── Badge hanya ditampilkan di tab KATALOG ── */}
-                        <div className="flex items-center gap-2 mb-2">
+                      {/* Details */}
+                      <div className="flex-1 min-w-0">
+                        {/* ── Badge hanya ditampilkan di tab KATALOG ── */}
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
                           <span
-                            className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getCategoryColor(item.category)}`}
+                            className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-wider rounded-full uppercase ${getCategoryColor(item.category)}`}
                           >
                             {item.category.toUpperCase()}
                           </span>
                           {item.priority && (
                             <span
-                              className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getPriorityBadge(item.priority)}`}
+                              className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-wider rounded-full uppercase ${getPriorityBadge(item.priority)}`}
                             >
                               {item.priority}
                             </span>
                           )}
-                          {item.status_kebutuhan && (
-                            <span
-                              className={`px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-full uppercase ${getStatusBadge(item.status_kebutuhan)}`}
-                            >
-                              {item.status_kebutuhan}
-                            </span>
-                          )}
                         </div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-1 truncate">
-                        {item.itemName}
-                      </h3>
-                      <p className="text-sm text-gray-500 line-clamp-1">
-                        {item.description}
-                      </p>
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 truncate">
+                          {item.itemName}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-gray-500 line-clamp-1">
+                          {item.description}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Progress */}
-                    <div className="w-64 flex-shrink-0 flex flex-col justify-center">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:gap-6 w-full lg:w-auto">
+                      {/* Progress */}
+                      <div className="w-full lg:w-64 flex-shrink-0 flex flex-col justify-center">
                       {/* Baris atas progress */}
                       <div className="flex justify-between items-end mb-2">
                         {/* ── Tampilan polos untuk tab ASET ── */}
@@ -488,21 +519,23 @@ export default function KelolaKebutuhanPage() {
                       )}
                     </div>
 
-                    {/* Actions – tetap muncul di kedua tab */}
-                    <div className="flex items-center gap-2 border-l border-gray-100 pl-6 ml-2">
-                      <button
-                        onClick={() => openEditForm(item)}
-                        className="p-2 text-gray-400 hover:text-[#0B648C] hover:bg-teal-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <FiEdit2 className="text-lg" />
-                      </button>
-                      <button
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Hapus"
-                      >
-                        <FiTrash2 className="text-lg" />
-                      </button>
+                      {/* Actions – tetap muncul di kedua tab */}
+                      <div className="flex items-center justify-end gap-2 lg:border-l border-gray-100 lg:pl-6 pt-4 sm:pt-0 border-t sm:border-t-0 lg:border-t-0 w-full sm:w-auto">
+                          <button
+                            onClick={() => openEditForm(item)}
+                            className="p-2 text-gray-400 hover:text-[#0B648C] hover:bg-teal-50 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <FiEdit2 className="text-lg" />
+                          </button>
+                          <button
+                            onClick={() => setItemToDelete(item)}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Hapus"
+                          >
+                            <FiTrash2 className="text-lg" />
+                          </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -520,6 +553,52 @@ export default function KelolaKebutuhanPage() {
         data={editingItem}
         onSubmit={handleMutationSuccess}
       />
+
+      {/* Delete Confirmation Modal */}
+      {itemToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm transition-all">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl scale-100 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-4 mb-4 text-red-600">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <FiAlertTriangle className="text-2xl" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Hapus Data</h3>
+            </div>
+
+            <p className="text-gray-600 mb-6 ml-2">
+              Apakah Anda yakin ingin menghapus katalog{" "}
+              <span className="font-bold text-gray-900">
+                "{itemToDelete.itemName}"
+              </span>
+              ? Tindakan ini tidak dapat dibatalkan dan akan mempengaruhi
+              riwayat distribusi jika barang tersebut sudah dialokasikan.
+            </p>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setItemToDelete(null)}
+                className="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-colors"
+                disabled={isDeleting}
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="px-5 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all shadow-[0_4px_14px_rgba(220,38,38,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <FiRefreshCw className="animate-spin" /> Menghapus...
+                  </>
+                ) : (
+                  <>Ya, Hapus</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

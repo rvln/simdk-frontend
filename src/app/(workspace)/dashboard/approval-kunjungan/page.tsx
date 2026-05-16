@@ -48,6 +48,10 @@ function mapVisit(raw: any) {
     month: "short",
     year: "numeric",
   });
+  const localYear = dateObj.getFullYear();
+  const localMonth = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const localDay = String(dateObj.getDate()).padStart(2, "0");
+  const localYMD = `${localYear}-${localMonth}-${localDay}`;
 
   const slotMap: Record<string, string> = {
     MORNING: "Sesi Pagi (08:00 - 10:00)",
@@ -66,6 +70,7 @@ function mapVisit(raw: any) {
     id: raw.id,
     name: raw.user?.name ?? "Pengunjung",
     date: formattedDate,
+    dateYMD: localYMD,
     session: sessionStr,
     timeRange: sessionStr,
     badge,
@@ -177,7 +182,7 @@ export default function ApprovalKunjunganPage() {
         <div className="max-w-5xl mx-auto w-full">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">
-              Validasi & Approval Kunjungan
+              Persetujuan Kunjungan
             </h1>
             <p className="text-gray-500 text-lg">
               Tinjau pengajuan jadwal untuk mencegah konflik dan memastikan
@@ -271,6 +276,7 @@ export default function ApprovalKunjunganPage() {
                 const isExpired = !!item.is_expired;
 
                 // Array Filtering
+                if (filterDate && item.dateYMD !== filterDate) return null;
                 if (filterStatus === "EXPIRED" && !isExpired) return null;
                 if (
                   filterStatus === "PENDING" &&
@@ -289,29 +295,34 @@ export default function ApprovalKunjunganPage() {
                   <div
                     key={item.id}
                     onClick={() => handleSelect(item)}
-                    className={`group flex items-center p-5 rounded-2xl cursor-pointer transition-all duration-300 ${
+                    className={`group flex flex-col sm:flex-row sm:items-center p-5 rounded-2xl cursor-pointer transition-all duration-300 ${
                       isSelected
                         ? "bg-white ring-2 ring-teal-600 shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
                         : "bg-slate-50 hover:bg-white hover:shadow-[0_4px_20px_rgb(0,0,0,0.04)] hover:-translate-y-0.5"
                     }`}
                   >
-                    <div
-                      className={`w-14 h-14 rounded-xl flex items-center justify-center mr-5 transition-colors ${isSelected ? "bg-blue-100 text-blue-600" : item.iconBg}`}
-                    >
-                      {item.icon}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-1">
-                        {item.name}
-                      </h3>
-                      <p
-                        className={`text-sm ${isSelected ? "text-teal-700 font-medium" : "text-gray-500"}`}
+                    <div className="flex items-center w-full sm:w-auto mb-4 sm:mb-0">
+                      <div
+                        className={`w-14 h-14 rounded-xl flex items-center justify-center mr-4 flex-shrink-0 transition-colors ${isSelected ? "bg-blue-100 text-blue-600" : item.iconBg}`}
                       >
-                        {item.date} | {item.session}
-                      </p>
+                        {item.icon}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">
+                          {item.name}
+                        </h3>
+                        <p
+                          className={`text-sm ${isSelected ? "text-teal-700 font-medium" : "text-gray-500"}`}
+                        >
+                          {item.date} | {item.session}
+                        </p>
+                      </div>
+                      <FiChevronRight
+                        className={`sm:hidden text-xl transition-transform duration-300 ml-auto ${isSelected ? "text-teal-600 translate-x-1" : "text-gray-300 group-hover:text-teal-400 group-hover:translate-x-1"}`}
+                      />
                     </div>
-                    <div className="flex flex-col items-end justify-center gap-2">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:items-end justify-center gap-2 w-full sm:w-auto sm:ml-auto">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="px-3 py-1 bg-gray-200/60 text-gray-600 text-[10px] font-bold tracking-wider rounded-full uppercase">
                           {item.badge}
                         </span>
@@ -346,7 +357,7 @@ export default function ApprovalKunjunganPage() {
                         </span>
                       </div>
                       <FiChevronRight
-                        className={`text-xl transition-transform duration-300 ${isSelected ? "text-teal-600 translate-x-1" : "text-gray-300 group-hover:text-teal-400 group-hover:translate-x-1"}`}
+                        className={`hidden sm:block text-xl transition-transform duration-300 ${isSelected ? "text-teal-600 translate-x-1" : "text-gray-300 group-hover:text-teal-400 group-hover:translate-x-1"}`}
                       />
                     </div>
                   </div>

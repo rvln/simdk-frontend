@@ -279,11 +279,14 @@ export const Navbar = () => {
                       </Link>
                     )}
 
-                    <div className="border-t border-outline-variant/20 my-1 mx-2"></div>
-
-                    <div className="px-1">
-                      <LogoutButton />
-                    </div>
+                    {user.role !== "PENGURUS_PANTI" && (
+                      <>
+                        <div className="border-t border-outline-variant/20 my-1 mx-2"></div>
+                        <div className="px-1">
+                          <LogoutButton />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -467,9 +470,11 @@ export const Navbar = () => {
                 </Link>
               )}
 
-              <div className="pt-2">
-                <LogoutButton />
-              </div>
+              {user.role !== "PENGURUS_PANTI" && (
+                <div className="pt-2">
+                  <LogoutButton />
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-3">
