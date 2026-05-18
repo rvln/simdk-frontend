@@ -12,6 +12,7 @@ import {
   FiTruck,
   FiUser,
   FiFileText,
+  FiBarChart2,
 } from "react-icons/fi";
 import LogoutButton from "@/components/layout/LogoutButton";
 
@@ -49,6 +50,11 @@ const MENU_ITEMS = [
     name: "Moderasi Laporan",
     href: "/dashboard/moderasi-laporan",
     icon: FiFileText,
+  },
+  {
+    name: "Laporan Resmi",
+    href: "/dashboard/laporan",
+    icon: FiBarChart2,
   },
 ];
 

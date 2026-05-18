@@ -29,22 +29,35 @@ export default function InvoicePage() {
   useEffect(() => {
     if (!id) return;
 
-    let timeoutId: NodeJS.Timeout;
+    // Use a ref-style flag so the recursive callback can always see the
+    // latest value — fixes the infinite loop when the component unmounts.
+    let cancelled = false;
+    let retries = 0;
+    const MAX_RETRIES = 20; // 20 × 3s = 60 seconds max wait
 
     const fetchInvoice = async () => {
+      if (cancelled) return;
+
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/public/donations/${id}/invoice`, {
           method: 'GET',
           credentials: 'include',
-          headers: {
-            'Accept': 'application/json'
-          }
+          headers: { 'Accept': 'application/json' }
         });
 
+        if (cancelled) return; // guard after await
+
         if (res.status === 202) {
+          retries++;
+          if (retries >= MAX_RETRIES) {
+            setError("Konfirmasi pembayaran memerlukan waktu lebih lama. Silakan cek riwayat donasi Anda.");
+            setIsProcessing(false);
+            setIsLoading(false);
+            return;
+          }
           setIsProcessing(true);
           setIsLoading(false);
-          timeoutId = setTimeout(fetchInvoice, 3000);
+          setTimeout(fetchInvoice, 3000);
           return;
         }
 
@@ -54,20 +67,24 @@ export default function InvoicePage() {
         }
 
         const result = await res.json();
-        setData(result.data);
-        setIsProcessing(false);
-        setIsLoading(false);
+        if (!cancelled) {
+          setData(result.data);
+          setIsProcessing(false);
+          setIsLoading(false);
+        }
       } catch (err: any) {
-        setError(err.message || "Terjadi kesalahan koneksi.");
-        setIsProcessing(false);
-        setIsLoading(false);
+        if (!cancelled) {
+          setError(err.message || "Terjadi kesalahan koneksi.");
+          setIsProcessing(false);
+          setIsLoading(false);
+        }
       }
     };
 
     fetchInvoice();
 
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      cancelled = true; // stops any in-flight recursive setTimeout
     };
   }, [id]);
 

@@ -24,6 +24,7 @@ interface ReportItem {
   image_path: string[] | null;
   status: string;
   admin_notes: string | null;
+  admin_title: string | null;
   visit_date: string | null;
   created_at: string;
 }
@@ -80,10 +81,11 @@ function ModerationModal({
   report: ReportItem;
   action: "PUBLISHED" | "REJECTED";
   onClose: () => void;
-  onConfirm: (notes: string) => void;
+  onConfirm: (notes: string, title: string) => void;
   isSubmitting: boolean;
 }) {
   const [notes, setNotes] = useState("");
+  const [title, setTitle] = useState("");
   const isApprove = action === "PUBLISHED";
 
   return (
@@ -113,6 +115,24 @@ function ModerationModal({
           </p>
         </div>
 
+        {/* Admin Title — only shown when publishing */}
+        {isApprove && (
+          <div className="mb-4">
+            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest block mb-2">
+              Judul Dokumentasi
+              <span className="ml-1 font-normal normal-case tracking-normal text-gray-400">(opsional — ditampilkan di halaman utama)</span>
+            </label>
+            <input
+              type="text"
+              value={title}
+              maxLength={120}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="mis: Kelas Menggambar Bersama Relawan"
+              className="w-full px-4 py-3 bg-white rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 shadow-sm border border-gray-100 text-sm"
+            />
+          </div>
+        )}
+
         <div className="mb-6">
           <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest block mb-2">
             Catatan Admin {!isApprove && "(Wajib)"}
@@ -139,7 +159,7 @@ function ModerationModal({
             Batal
           </button>
           <button
-            onClick={() => onConfirm(notes)}
+            onClick={() => onConfirm(notes, title)}
             disabled={isSubmitting || (!isApprove && !notes.trim())}
             className={`flex-1 py-3 rounded-xl font-bold text-sm text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
               isApprove
@@ -212,7 +232,7 @@ export default function ModerasiLaporanPage() {
   }, [fetchReports, token]);
 
   // ── Moderate ───────────────────────────────────────────────────────────────
-  const handleModerate = async (notes: string) => {
+  const handleModerate = async (notes: string, adminTitle: string) => {
     if (!modalReport) return;
     setIsSubmitting(true);
 
@@ -228,6 +248,7 @@ export default function ModerasiLaporanPage() {
         body: JSON.stringify({
           status: modalAction,
           admin_notes: notes || null,
+          admin_title: adminTitle.trim() || null,
         }),
       });
 
@@ -363,6 +384,14 @@ export default function ModerasiLaporanPage() {
                       className="w-20 h-20 rounded-xl object-cover flex-shrink-0 bg-slate-100"
                     />
                   ))}
+                </div>
+              )}
+
+              {/* Admin Title badge — shown if set */}
+              {report.admin_title && (
+                <div className="bg-teal-50 rounded-xl px-4 py-2 mb-4 flex items-center gap-2">
+                  <span className="text-[9px] font-bold text-teal-500 uppercase tracking-widest">Judul</span>
+                  <span className="text-xs text-teal-800 font-semibold">{report.admin_title}</span>
                 </div>
               )}
 

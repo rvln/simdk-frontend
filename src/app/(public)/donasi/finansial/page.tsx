@@ -70,6 +70,7 @@ export default function DonasiFinansialPage() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(100000);
   const [customAmount, setCustomAmount] = useState("");
   const [privacyMode, setPrivacyMode] = useState("show");
+  const [selectedAlias, setSelectedAlias] = useState(anonAliases[0]);
   const [isLoading, setIsLoading] = useState(false);
   const [paymentState, setPaymentState] = useState<PaymentState>("IDLE");
   const [snapToken, setSnapToken] = useState<string | null>(null);
@@ -90,11 +91,16 @@ export default function DonasiFinansialPage() {
 
   useEffect(() => {
     if (user) {
+      // user.phone is populated from /api/user after profile update;
+      // localStorage fallback ensures autofill works in the same session
+      const savedPhone = typeof window !== "undefined"
+        ? localStorage.getItem("user_phone") ?? ""
+        : "";
       setFormData((prev) => ({
         ...prev,
-        donorName: prev.donorName || user.name || "",
-        donorEmail: prev.donorEmail || user.email || "",
-        donorPhone: prev.donorPhone || user.phone || "",
+        donorName:  prev.donorName  || (user as any).name  || "",
+        donorEmail: prev.donorEmail || (user as any).email || "",
+        donorPhone: prev.donorPhone || (user as any).phone || savedPhone,
       }));
     }
   }, [user]);
@@ -129,11 +135,15 @@ export default function DonasiFinansialPage() {
 
     try {
       const fd = new FormData();
-      fd.append("donorName", formData.donorName);
+      // When anon mode, use the selected alias as the donor name
+      const effectiveDonorName =
+        privacyMode === "anon" ? selectedAlias : formData.donorName;
+      fd.append("donorName", effectiveDonorName);
       fd.append("donorEmail", formData.donorEmail);
       fd.append("donorPhone", formData.donorPhone);
       fd.append("amount", effectiveAmount.toString());
       fd.append("payment_channel", paymentChannel);
+      fd.append("donor_name_privacy", privacyMode);
 
       if (paymentChannel === "MANUAL" && paymentProof) {
         fd.append("payment_proof", paymentProof);
@@ -172,6 +182,10 @@ export default function DonasiFinansialPage() {
       }
 
       if (token) {
+        // Reset loading BEFORE opening Snap — the popup manages its own UX.
+        // If we don't reset here, the button stays "Memproses..." forever
+        // when the user closes or cancels the Snap popup.
+        setIsLoading(false);
         triggerSnap(token, newDonationId);
       } else {
         throw new Error("Token pembayaran Midtrans tidak ditemukan.");
@@ -448,7 +462,11 @@ export default function DonasiFinansialPage() {
                       {privacyMode === "anon" && (
                         <div className="mt-3 relative">
                           <div className="bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/15 flex items-center justify-between">
-                            <select className="w-full bg-transparent focus:outline-none text-sm font-sans text-on-surface appearance-none cursor-pointer">
+                            <select
+                              value={selectedAlias}
+                              onChange={(e) => setSelectedAlias(e.target.value)}
+                              className="w-full bg-transparent focus:outline-none text-sm font-sans text-on-surface appearance-none cursor-pointer"
+                            >
                               {anonAliases.map((alias) => (
                                 <option key={alias} value={alias}>
                                   {alias}

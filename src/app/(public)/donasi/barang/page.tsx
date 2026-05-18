@@ -70,11 +70,14 @@ export default function DonasiBarangCheckoutPage() {
 
   useEffect(() => {
     if (user) {
+      const savedPhone = typeof window !== "undefined"
+        ? localStorage.getItem("user_phone") ?? ""
+        : "";
       setIdentity((prev) => ({
         ...prev,
-        donor_name: prev.donor_name || user.name || "",
-        donor_email: prev.donor_email || user.email || "",
-        donor_phone: prev.donor_phone || user.phone || "",
+        donor_name:  prev.donor_name  || (user as any).name  || "",
+        donor_email: prev.donor_email || (user as any).email || "",
+        donor_phone: prev.donor_phone || (user as any).phone || savedPhone,
       }));
     }
   }, [user]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -17,31 +17,107 @@ import {
   MdFavoriteBorder,
 } from "react-icons/md";
 
-// Mock Data Jejak Kebaikan
-const MOCK_TESTIMONI = [
-  {
-    id: 1,
-    name: "Bapak Budi (Donasi Finansial)",
-    message:
-      "Kebaikan hati Anda hari ini menghadirkan senyum baru bagi anak-anak kami.",
-  },
-  {
-    id: 2,
-    name: "Hamba Allah (Donasi Barang)",
-    message:
-      "Terima kasih telah memastikan bahwa anak-anak asuh ini tidak pernah melangkah sendirian.",
-  },
-  {
-    id: 3,
-    name: "Ibu Mawar (Donasi Finansial)",
-    message:
-      "Langkah kepedulian Anda menciptakan jejak kebahagiaan besar bagi masa depan mereka.",
-  },
+// ── Published VisitReport for Dokumentasi Kegiatan ──────────────────────────
+interface PublishedReport {
+  id: string;
+  title: string;        // admin_title OR first-6-words fallback (derived by backend)
+  content: string;
+  visitor_name: string; // PII-masked
+  image_path: string[] | null;
+  visit_date: string | null;
+}
+
+const API_BASE_PUBLIC = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const STORAGE_BASE = process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://localhost:8000/storage";
+
+// ── Jejak Kebaikan: Thank-you message pools ─────────────────────────────────
+const THANK_YOU_DANA = [
+  "Setiap rupiah yang Anda berikan adalah pelita bagi masa depan anak-anak kami.",
+  "Kebaikan hati Anda mengalir menjadi senyum dan harapan di panti kami.",
+  "Kontribusi Anda membuktikan bahwa kemanusiaan tidak pernah pudar.",
+  "Terima kasih telah menjadi bagian dari perjalanan kami menuju masa depan cerah.",
+  "Donasi Anda adalah bukti nyata bahwa kepedulian ada di mana-mana.",
 ];
+
+const THANK_YOU_BARANG = [
+  "Sumbangan barang Anda langsung dirasakan oleh anak-anak yang membutuhkan.",
+  "Setiap barang yang Anda kirimkan membawa kehangatan nyata ke kehidupan mereka.",
+  "Bantuan Anda membuat panti kami semakin lengkap dalam melayani anak-anak.",
+  "Kepedulian Anda berbentuk nyata dan terasa hangat di sini.",
+  "Terima kasih telah berbagi dalam kebaikan yang sederhana namun bermakna.",
+];
+
+function getRandomMessage(type: string): string {
+  const pool = type === "DANA" ? THANK_YOU_DANA : THANK_YOU_BARANG;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+interface JejakDonatur {
+  masked_name: string;
+  type: string;
+  amount: number | null;
+  updated_at: string;
+}
+
+function formatTimeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return mins <= 1 ? "Baru saja" : `${mins} menit lalu`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} jam lalu`;
+  const days = Math.floor(hours / 24);
+  return `${days} hari lalu`;
+}
+
+function formatRpShort(amount: number): string {
+  if (amount >= 1_000_000) return `Rp ${(amount / 1_000_000).toFixed(0)} jt`;
+  if (amount >= 1_000) return `Rp ${(amount / 1_000).toFixed(0)} rb`;
+  return `Rp ${amount}`;
+}
 
 export default function LandingPage() {
   const router = useRouter();
   const [trackingCode, setTrackingCode] = useState("");
+
+  // ── Dokumentasi Kegiatan: fetch 3 latest published VisitReports ──────────
+  const [docReports, setDocReports] = useState<PublishedReport[]>([]);
+  const [docLoading, setDocLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE_PUBLIC}/api/public/transparansi/laporan?per_page=3`
+        );
+        if (!res.ok) throw new Error("fetch failed");
+        const json = await res.json();
+        setDocReports(json.data ?? []);
+      } catch {
+        // Silently fail — section will show placeholder cards
+      } finally {
+        setDocLoading(false);
+      }
+    };
+    fetchReports();
+  }, []);
+
+  // ── Jejak Kebaikan: fetch 3 latest donors ────────────────────────────────
+  const [donatur, setDonatur] = useState<JejakDonatur[]>([]);
+  const [donaturLoading, setDonaturLoading] = useState(true);
+  // Messages randomized once when data arrives
+  const [donaturMessages, setDonaturMessages] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch(`${API_BASE_PUBLIC}/api/public/jejak-kebaikan`)
+      .then((r) => r.json())
+      .then((json) => {
+        const data: JejakDonatur[] = json.data ?? [];
+        setDonatur(data);
+        setDonaturMessages(data.map((d) => getRandomMessage(d.type)));
+      })
+      .catch(() => {})
+      .finally(() => setDonaturLoading(false));
+  }, []);
 
   const handleTrack = () => {
     if (trackingCode.trim()) {
@@ -238,7 +314,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* New Section: Dokumentasi Kegiatan (Bento Grid) */}
+        {/* Dokumentasi Kegiatan — Dynamic from Published VisitReports */}
         <section className="max-w-screen-2xl mx-auto px-5 md:px-12 space-y-8 md:space-y-12">
           <div className="space-y-2">
             <h2 className="text-lg md:text-3xl font-bold font-sans tracking-tighter text-gray-900">
@@ -250,50 +326,122 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 h-auto md:h-[500px]">
-            {/* Kiri: Card Lanskap Panjang */}
-            <div className="md:col-span-2 relative rounded-2xl md:rounded-3xl overflow-hidden shadow-sm group bg-gray-200 min-h-[220px] md:min-h-[300px]">
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent z-10"></div>
-              <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400">
-                [Placeholder Gambar Lebar]
+            {/* Kiri: Card Lanskap Panjang — Report[0] */}
+            {docLoading ? (
+              <div className="md:col-span-2 relative rounded-2xl md:rounded-3xl overflow-hidden shadow-sm min-h-[220px] md:min-h-[300px] bg-slate-200 animate-pulse" />
+            ) : docReports[0] ? (
+              <div className="md:col-span-2 relative rounded-2xl md:rounded-3xl overflow-hidden shadow-sm group min-h-[220px] md:min-h-[300px]">
+                {/* Background */}
+                {docReports[0].image_path?.[0] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`${STORAGE_BASE}/${docReports[0].image_path[0]}`}
+                    alt={docReports[0].title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-teal-700 to-teal-900" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent z-10" />
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 p-5 md:p-8 z-20">
+                  <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-bold rounded-full uppercase tracking-widest mb-2 md:mb-3 inline-block">
+                    {docReports[0].visitor_name}
+                  </span>
+                  <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">
+                    {docReports[0].title}
+                  </h3>
+                  <p className="text-white/80 line-clamp-2 max-w-md text-sm md:text-base">
+                    {docReports[0].content}
+                  </p>
+                  {docReports[0].visit_date && (
+                    <p className="text-white/50 text-xs mt-2 font-sans">
+                      {new Date(docReports[0].visit_date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="absolute bottom-0 left-0 p-5 md:p-8 z-20">
-                <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-bold rounded-full uppercase tracking-widest mb-2 md:mb-3 inline-block">
-                  Pendidikan
-                </span>
-                <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">
-                  Kelas Menggambar Bersama Relawan
-                </h3>
-                <p className="text-white/80 line-clamp-2 max-w-md text-sm md:text-base">
-                  Anak-anak mengekspresikan imajinasi mereka melalui warna dan
-                  bentuk didampingi kakak relawan dari universitas setempat.
-                </p>
+            ) : (
+              /* Fallback jika tidak ada data */
+              <div className="md:col-span-2 relative rounded-2xl md:rounded-3xl overflow-hidden shadow-sm group min-h-[220px] md:min-h-[300px]">
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-700 to-teal-900" />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent z-10" />
+                <div className="absolute bottom-0 left-0 p-5 md:p-8 z-20">
+                  <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-bold rounded-full uppercase tracking-widest mb-2 md:mb-3 inline-block">
+                    Panti Asuhan Dr. Lucas
+                  </span>
+                  <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">
+                    Dokumentasi Kegiatan Bersama
+                  </h3>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Kanan: Kumpulan Card Kecil */}
+            {/* Kanan: Kumpulan Card Kecil — Report[1] & Report[2] */}
             <div className="grid grid-cols-2 md:flex md:flex-col gap-4 md:gap-6">
-              <div className="flex-1 min-h-[160px] md:min-h-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-sm relative group bg-gray-200">
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent z-10"></div>
-                <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400 text-sm">
-                  [Placeholder Gambar 1]
+              {/* Card Kecil Atas — Report[1] */}
+              {docLoading ? (
+                <div className="flex-1 min-h-[160px] md:min-h-0 rounded-2xl md:rounded-3xl bg-slate-200 animate-pulse" />
+              ) : docReports[1] ? (
+                <div className="flex-1 min-h-[160px] md:min-h-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-sm relative group">
+                  {docReports[1].image_path?.[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`${STORAGE_BASE}/${docReports[1].image_path[0]}`}
+                      alt={docReports[1].title}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-600 to-teal-800" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent z-10" />
+                  <div className="absolute bottom-0 left-0 p-4 md:p-6 z-20">
+                    <h4 className="text-white font-bold text-sm md:text-base line-clamp-2">
+                      {docReports[1].title}
+                    </h4>
+                  </div>
                 </div>
-                <div className="absolute bottom-0 left-0 p-4 md:p-6 z-20">
-                  <h4 className="text-white font-bold text-sm md:text-base">
-                    Kunjungan Sekolah
-                  </h4>
+              ) : (
+                <div className="flex-1 min-h-[160px] md:min-h-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-sm relative group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-teal-600 to-teal-800" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent z-10" />
+                  <div className="absolute bottom-0 left-0 p-4 md:p-6 z-20">
+                    <h4 className="text-white font-bold text-sm md:text-base">Kunjungan Bersama</h4>
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1 min-h-[160px] md:min-h-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-sm relative group bg-gray-200">
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent z-10"></div>
-                <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400 text-sm">
-                  [Placeholder Gambar 2]
+              )}
+
+              {/* Card Kecil Bawah — Report[2] */}
+              {docLoading ? (
+                <div className="flex-1 min-h-[160px] md:min-h-0 rounded-2xl md:rounded-3xl bg-slate-200 animate-pulse" />
+              ) : docReports[2] ? (
+                <div className="flex-1 min-h-[160px] md:min-h-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-sm relative group">
+                  {docReports[2].image_path?.[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`${STORAGE_BASE}/${docReports[2].image_path[0]}`}
+                      alt={docReports[2].title}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-500 to-teal-700" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent z-10" />
+                  <div className="absolute bottom-0 left-0 p-4 md:p-6 z-20">
+                    <h4 className="text-white font-bold text-sm md:text-base line-clamp-2">
+                      {docReports[2].title}
+                    </h4>
+                  </div>
                 </div>
-                <div className="absolute bottom-0 left-0 p-4 md:p-6 z-20">
-                  <h4 className="text-white font-bold text-sm md:text-base">
-                    Bantuan Logistik
-                  </h4>
+              ) : (
+                <div className="flex-1 min-h-[160px] md:min-h-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-sm relative group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-teal-500 to-teal-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent z-10" />
+                  <div className="absolute bottom-0 left-0 p-4 md:p-6 z-20">
+                    <h4 className="text-white font-bold text-sm md:text-base">Kegiatan Panti</h4>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>
@@ -310,32 +458,65 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col gap-3 md:gap-4 max-w-4xl mx-auto">
-            {MOCK_TESTIMONI.map((testimoni) => (
-              <div
-                key={testimoni.id}
-                className="bg-white/80 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm border-none flex items-start gap-3 md:gap-4 transition-all hover:shadow-md hover:-translate-y-0.5"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 font-bold flex-shrink-0 text-sm md:text-base">
-                  {testimoni.name.charAt(0)}
-                </div>
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-1">
-                    <h4 className="font-bold text-gray-900">
-                      {testimoni.name}
-                    </h4>
-                    <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold uppercase tracking-wider rounded-md">
-                      BARU SAJA
-                    </span>
+            {donaturLoading ? (
+              // Skeleton placeholders
+              Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white/80 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm flex items-start gap-3 md:gap-4 animate-pulse"
+                >
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-teal-100 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-32 bg-slate-200 rounded" />
+                    <div className="h-3 w-full bg-slate-100 rounded" />
+                    <div className="h-3 w-3/4 bg-slate-100 rounded" />
                   </div>
-                  <p className="text-gray-600 text-sm md:text-base leading-relaxed italic">
-                    "{testimoni.message}"
-                  </p>
                 </div>
-                <div className="flex-shrink-0 text-gray-300 hover:text-red-400 transition-colors cursor-pointer pt-1">
-                  <MdFavoriteBorder className="text-2xl" />
-                </div>
+              ))
+            ) : donatur.length === 0 ? (
+              <div className="bg-white/80 backdrop-blur-md rounded-xl md:rounded-2xl p-6 shadow-sm text-center text-gray-400 text-sm">
+                Belum ada donatur yang tercatat. Jadilah yang pertama!
               </div>
-            ))}
+            ) : (
+              donatur.map((d, i) => (
+                <div
+                  key={i}
+                  className="bg-white/80 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm border-none flex items-start gap-3 md:gap-4 transition-all hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 font-bold flex-shrink-0 text-sm md:text-base">
+                    {d.masked_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-1">
+                      <h4 className="font-bold text-gray-900">{d.masked_name}</h4>
+                      <span
+                        className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md ${
+                          d.type === "DANA"
+                            ? "bg-teal-50 text-teal-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {d.type === "DANA" ? "Donasi Dana" : "Donasi Barang"}
+                      </span>
+                      {d.type === "DANA" && d.amount !== null && (
+                        <span className="px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded-md">
+                          {formatRpShort(d.amount)}
+                        </span>
+                      )}
+                      <span className="text-[10px] text-gray-400">
+                        {formatTimeAgo(d.updated_at)}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 text-sm md:text-base leading-relaxed italic">
+                      &ldquo;{donaturMessages[i] ?? ""}&rdquo;
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 text-gray-300 hover:text-red-400 transition-colors cursor-pointer pt-1">
+                    <MdFavoriteBorder className="text-2xl" />
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
       </main>

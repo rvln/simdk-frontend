@@ -34,6 +34,7 @@ import {
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import Script from "next/script";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -83,6 +84,8 @@ interface ApiDonation {
   amount: string | null;
   status: string;
   tracking_code: string | null;
+  snap_token: string | null;
+  payment_channel: string | null;
   created_at: string;
   item_donations: ApiItemDonation[];
 }
@@ -266,6 +269,7 @@ export default function ProfilPublikPage() {
   const [groupedVisits, setGroupedVisits] = useState<GroupedVisits>({});
   const [capacities, setCapacities] = useState<ApiCapacity[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isResumingPayment, setIsResumingPayment] = useState<string | null>(null);
 
   /* ── Reschedule State ── */
   const [activeRescheduleVisit, setActiveRescheduleVisit] =
@@ -347,7 +351,16 @@ export default function ProfilPublikPage() {
 
   const totalDonasi = useMemo(() => {
     return donations
-      .filter((d) => d.type === "DANA" && d.status === "SUCCESS")
+      .filter((d) => {
+        // Normalize status: backend may return "SUCCESS" or { value: "SUCCESS" }
+        const status = typeof d.status === "object"
+          ? (d.status as any)?.value
+          : d.status;
+        const type = typeof d.type === "object"
+          ? (d.type as any)?.value
+          : d.type;
+        return type === "DANA" && status === "SUCCESS";
+      })
       .reduce((sum, d) => sum + parseFloat(d.amount || "0"), 0);
   }, [donations]);
 
@@ -558,13 +571,17 @@ export default function ProfilPublikPage() {
     },
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
   // Sync form values when user data loads asynchronously
   useEffect(() => {
     if (user) {
       reset({
         fullName: user.name ?? "",
         email: user.email ?? "",
-        phone: "",
+        phone: (user as any).phone ?? "",
       });
     }
   }, [user, reset]);
@@ -591,8 +608,68 @@ export default function ProfilPublikPage() {
     reader.readAsDataURL(file);
   };
 
-  const onSubmit = (data: ProfileFormData) => {
-    alert("Data berhasil disimpan:\n" + JSON.stringify(data, null, 2));
+  const onSubmit = async (data: ProfileFormData) => {
+    setIsSaving(true);
+    setSaveSuccess(false);
+    setSaveError("");
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch(`${API_BASE}/api/user/profile`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name:  data.fullName,
+          phone: data.phone || null,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message ?? `Error ${res.status}`);
+
+      // Persist phone in localStorage so donation/visit forms can autofill
+      if (json.data?.phone) {
+        localStorage.setItem("user_phone", json.data.phone);
+      } else {
+        localStorage.removeItem("user_phone");
+      }
+
+      // Notify useAuth hook to re-sync user name (triggers Navbar refresh)
+      window.dispatchEvent(new Event("storage"));
+
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : "Gagal menyimpan profil.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Resume a pending Midtrans payment from the donation history
+  const resumePayment = (donasi: ApiDonation) => {
+    if (!donasi.snap_token) return;
+    setIsResumingPayment(donasi.id);
+    (window as any).snap?.pay(donasi.snap_token, {
+      onSuccess: () => {
+        setIsResumingPayment(null);
+        router.push(`/donasi/invoice/${donasi.id}`);
+      },
+      onPending: () => {
+        setIsResumingPayment(null);
+      },
+      onError: () => {
+        setIsResumingPayment(null);
+        alert("Transaksi gagal. Silakan coba lagi.");
+      },
+      onClose: () => {
+        setIsResumingPayment(null);
+      },
+    });
   };
 
   const handleDeleteAccount = async () => {
@@ -921,9 +998,8 @@ export default function ProfilPublikPage() {
                         <MdOutlinePhone className="text-gray-400 text-lg" />
                       </div>
                       <input
-                        {...register("phone", {
-                          required: "Nomor WhatsApp wajib diisi",
-                        })}
+                        {...register("phone")}
+                        placeholder="+62 812-xxxx-xxxx"
                         className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
                       />
                     </div>
@@ -934,12 +1010,32 @@ export default function ProfilPublikPage() {
                     )}
                   </div>
 
+                  {/* Feedback messages */}
+                  {saveSuccess && (
+                    <div className="flex items-center gap-2 text-sm text-teal-700 font-medium">
+                      <FiCheck className="text-base" /> Profil berhasil diperbarui!
+                    </div>
+                  )}
+                  {saveError && (
+                    <div className="flex items-center gap-2 text-sm text-red-600">
+                      <FiAlertCircle className="text-base" /> {saveError}
+                    </div>
+                  )}
+
                   <div className="pt-4">
                     <button
                       type="submit"
-                      className="px-8 py-3.5 bg-teal-700 text-white font-bold rounded-xl shadow-[0_4px_14px_rgba(15,118,110,0.3)] hover:-translate-y-0.5 transition-all"
+                      disabled={isSaving}
+                      className="px-8 py-3.5 bg-teal-700 text-white font-bold rounded-xl shadow-[0_4px_14px_rgba(15,118,110,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                      Simpan Perubahan
+                      {isSaving ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Menyimpan...
+                        </>
+                      ) : (
+                        "Simpan Perubahan"
+                      )}
                     </button>
                   </div>
                 </form>
@@ -959,41 +1055,72 @@ export default function ProfilPublikPage() {
                       Belum ada riwayat donasi.
                     </p>
                   ) : (
-                    donations.map((donasi) => (
-                      <HistoryCard
-                        key={donasi.id}
-                        title={
-                          donasi.type === "DANA"
-                            ? `Rp ${parseFloat(donasi.amount || "0").toLocaleString("id-ID")}`
-                            : donasi.item_donations
-                                .map(
-                                  (it) => `${it.itemName_snapshot} (${it.qty})`,
-                                )
-                                .join(", ") || "Donasi Barang"
-                        }
-                        subtitleTop={`Donasi ${donasi.type === "DANA" ? "Dana" : "Barang"}`}
-                        date={formatDate(donasi.created_at)}
-                        statusBadge={renderStatusBadge(
-                          donasi.status,
-                          "donation",
-                        )}
-                        icon={
-                          donasi.type === "DANA"
-                            ? MdAttachMoney
-                            : MdOutlineCardGiftcard
-                        }
-                        iconBg={
-                          donasi.type === "DANA"
-                            ? "bg-teal-100/50"
-                            : "bg-blue-100/50"
-                        }
-                        iconColor={
-                          donasi.type === "DANA"
-                            ? "text-teal-600"
-                            : "text-blue-600"
-                        }
-                      />
-                    ))
+                    donations.map((donasi) => {
+                      // Normalize enum values that may be serialized as objects
+                      const donasiStatus = typeof donasi.status === "object"
+                        ? (donasi.status as any)?.value ?? donasi.status
+                        : donasi.status;
+                      const donasiType = typeof donasi.type === "object"
+                        ? (donasi.type as any)?.value ?? donasi.type
+                        : donasi.type;
+
+                      const isPendingMidtrans =
+                        donasiType === "DANA" &&
+                        donasiStatus === "PENDING" &&
+                        !!donasi.snap_token &&
+                        donasi.payment_channel !== "MANUAL";
+
+                      return (
+                        <div key={donasi.id}>
+                          <HistoryCard
+                            title={
+                              donasiType === "DANA"
+                                ? `Rp ${parseFloat(donasi.amount || "0").toLocaleString("id-ID")}`
+                                : donasi.item_donations
+                                    .map(
+                                      (it) => `${it.itemName_snapshot} (${it.qty})`,
+                                    )
+                                    .join(", ") || "Donasi Barang"
+                            }
+                            subtitleTop={`Donasi ${donasiType === "DANA" ? "Dana" : "Barang"}`}
+                            date={formatDate(donasi.created_at)}
+                            statusBadge={renderStatusBadge(donasiStatus, "donation")}
+                            icon={
+                              donasiType === "DANA" ? MdAttachMoney : MdOutlineCardGiftcard
+                            }
+                            iconBg={
+                              donasiType === "DANA" ? "bg-teal-100/50" : "bg-blue-100/50"
+                            }
+                            iconColor={
+                              donasiType === "DANA" ? "text-teal-600" : "text-blue-600"
+                            }
+                          />
+
+                          {/* Lanjutkan Pembayaran banner — only for PENDING Midtrans DANA */}
+                          {isPendingMidtrans && (
+                            <div className="mx-1 -mt-2 bg-amber-50 border border-amber-200/60 rounded-b-2xl px-5 py-3 flex items-center justify-between gap-4">
+                              <span className="text-xs text-amber-700 font-medium">
+                                Pembayaran belum diselesaikan. Token masih aktif.
+                              </span>
+                              <button
+                                onClick={() => resumePayment(donasi)}
+                                disabled={isResumingPayment === donasi.id}
+                                className="flex-shrink-0 px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5"
+                              >
+                                {isResumingPayment === donasi.id ? (
+                                  <>
+                                    <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                    Memuat...
+                                  </>
+                                ) : (
+                                  "Lanjutkan Pembayaran"
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -1556,6 +1683,13 @@ export default function ProfilPublikPage() {
           </div>
         </div>
       )}
+
+      {/* Midtrans Snap — required for resuming pending payments from history */}
+      <Script
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        strategy="lazyOnload"
+      />
     </div>
   );
 }
